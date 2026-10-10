@@ -159,11 +159,22 @@ func Unit(s string) error {
 	return nil
 }
 
+// UILanguages are the interface languages shipped with BPANEL (web/src/lib/i18n).
+var UILanguages = []string{"en", "tr"}
+
+// Lang accepts a language tag ("tr", "en-US") whose base language has a
+// shipped translation; any other well-formed tag is refused, so a stored
+// preference can never point at a language the UI cannot show.
 func Lang(s string) error {
 	if !reLang.MatchString(s) {
 		return errors.New("invalid_language")
 	}
-	return nil
+	for _, l := range UILanguages {
+		if s[:2] == l {
+			return nil
+		}
+	}
+	return errors.New("invalid_language")
 }
 
 func Snapshot(s string) error {

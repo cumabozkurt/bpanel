@@ -152,3 +152,16 @@ func FuzzCronCommand(f *testing.F) {
 		}
 	})
 }
+
+func TestLangOnlyShippedLanguages(t *testing.T) {
+	for _, ok := range []string{"en", "tr", "en-US", "tr-TR"} {
+		if err := Lang(ok); err != nil {
+			t.Errorf("Lang(%q) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []string{"", "xx", "de", "EN", "en_US", "tr-tr", "english", "../en"} {
+		if err := Lang(bad); err == nil {
+			t.Errorf("Lang(%q) = nil, want invalid_language", bad)
+		}
+	}
+}
