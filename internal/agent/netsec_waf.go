@@ -220,6 +220,13 @@ func (a *Agent) wafApply(ctx context.Context, p rpc.NetsecWafApplyParams) (rpc.N
 			b.restore()
 		}
 	}
+	if pr.Server == "apache" && c.Mode != netsec.WAFOff {
+		bk = append(bk, backupFile(wp(wafApacheBaseConf)))
+		if err := ensureApacheModSecBase(); err != nil {
+			rollback()
+			return res, errf("waf_write_failed", "cannot write the ModSecurity base config")
+		}
+	}
 	if c.Mode == netsec.WAFOff {
 		// off: no snippet at all, so the re-rendered vhost carries no directive
 		_ = os.Remove(wp(rulesFile))
@@ -268,6 +275,41 @@ func (a *Agent) wafApply(ctx context.Context, p rpc.NetsecWafApplyParams) (rpc.N
 		res.Reason = "vhost_not_wired"
 	}
 	return res, nil
+}
+
+// Debian and Ubuntu ship mod_security2's base settings only as
+// modsecurity.conf-recommended, which security2.conf does not load: without
+// it there is no audit log (SecAuditLog) and no request-body inspection.
+var (
+	wafApacheBaseConf        = "/etc/modsecurity/modsecurity.conf"
+	wafApacheBaseRecommended = "/etc/modsecurity/modsecurity.conf-recommended"
+)
+
+// ensureApacheModSecBase installs the recommended base config when none
+// exists, with the engine Off globally: every domain's mode comes from its
+// own include (SecRuleEngine On / DetectionOnly), so sites without a WAF
+// setting are not inspected. An existing modsecurity.conf is never touched.
+func ensureApacheModSecBase() error {
+	if _, err := os.Stat(wp(wafApacheBaseConf)); err == nil {
+		return nil
+	}
+	rec, err := os.ReadFile(wp(wafApacheBaseRecommended))
+	if err != nil {
+		return nil // no recommended file (e.g. AlmaLinux ships its own base config)
+	}
+	lines := strings.Split(string(rec), "\n")
+	for i, l := range lines {
+		switch t := strings.TrimSpace(l); {
+		case strings.HasPrefix(t, "SecRuleEngine "):
+			lines[i] = "SecRuleEngine Off"
+		case strings.HasPrefix(t, "SecRequestBodyLimitAction "):
+			// inspect the first 13 MB of large uploads instead of refusing them
+			lines[i] = "SecRequestBodyLimitAction ProcessPartial"
+		}
+	}
+	body := "# Installed by BOZKURT PANEL from modsecurity.conf-recommended; the engine is\n" +
+		"# Off here and switched on per domain by /etc/bpanel/waf/<domain>.conf.\n" + strings.Join(lines, "\n")
+	return wafWriteAtomic(wp(wafApacheBaseConf), []byte(body))
 }
 
 // wafIncludesFor returns the per-domain WAF snippet paths the vhost templates

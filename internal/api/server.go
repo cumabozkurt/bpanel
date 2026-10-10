@@ -750,6 +750,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.netsecLoop(ctx) // v0.4 netsec.go: block expiry
 	go s.usagexLoop(ctx) // v0.4 usagex.go: bandwidth collector
 	go s.leechLoop(ctx)  // v1.1 webx.go: leech protection sweep
+	go s.bfLoop(ctx)     // v1.1 usagex.go: re-push the fail2ban allowlist
 	select {
 	case <-ctx.Done():
 	case err := <-errc:

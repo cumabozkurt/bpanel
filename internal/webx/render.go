@@ -121,16 +121,21 @@ func (r RenderCtx) referers(c *Config) string {
 		parts = append(parts, "none", "blocked")
 	}
 	parts = append(parts, "server_names")
-	// nginx rejects a repeated referer ("conflicting parameter"), so a user
-	// listing their own domain as allowed must not render it twice.
+	// nginx rejects a repeated referer ("conflicting parameter"), and
+	// "server_names" already expands to the vhost's server names, so neither a
+	// domain listed twice nor one of the server names may be rendered again.
 	seen := map[string]bool{}
+	for _, n := range r.Names {
+		seen[strings.ToLower(n)] = true
+	}
 	for _, d := range append([]string{c.Domain}, c.Hotlink.Allowed...) {
 		d = strings.ToLower(d)
-		if seen[d] {
-			continue
+		for _, p := range []string{d, "*." + d} {
+			if !seen[p] {
+				seen[p] = true
+				parts = append(parts, p)
+			}
 		}
-		seen[d] = true
-		parts = append(parts, d, "*."+d)
 	}
 	return "valid_referers " + strings.Join(parts, " ") + ";"
 }

@@ -2,6 +2,88 @@
 
 All notable changes to BOZKURT PANEL (BPANEL). Dates are Europe/Istanbul.
 
+## v1.1.0 — 2026-10-11 (cPanel/WHM parity + container E2E)
+
+v1.1.0 closes the cPanel/WHM rows that v1.0.0 listed as **not planned** or **partial**, and runs
+every feature row end to end in an Ubuntu 24.04 container with systemd as PID 1 and the real
+services (Postfix, Dovecot, Rspamd, PowerDNS, MariaDB, PostgreSQL, nginx + Apache, ModSecurity +
+CRS, ClamAV, YARA, nftables, fail2ban, Radicale, mlmmj). The E2E found real bugs, fixed below.
+Evidence: `docs/evidence/e2e-v1/SUMMARY.md`. Archives are still **unsigned** (no release key).
+
+### Added (user panel)
+- **Email Routing** (local / backup MX / remote, Postfix transport maps), **BoxTrapper**
+  (Sieve-based challenge/allow-list), **Email Encryption** (per-account GnuPG keyring: import,
+  generate, export public keys, delete).
+- **Calendars & Contacts**: CalDAV/CardDAV with Radicale (bcrypt logins, per-account collections).
+- **SSH Access › Manage SSH Keys** (import, generate, authorise, delete).
+- **Visitors** (per-domain access-log viewer with filters), **Leech Protection** (per-user login
+  limits for protected directories), **Indexes** (per-directory listing mode), **Apache Handlers**.
+- **Site Publisher** (templates written into a docroot), **Images** (thumbnailer, scaler,
+  converter), **PostgreSQL** read-only table browser, **Cloudflare** DNS sync (API token
+  in the secret store; dry-run diff before apply).
+### Added (admin panel)
+- **Mail Queue Manager** (list, inspect, queue actions), **Mail Troubleshooter** (route
+  trace + MX/SPF lookups), **IP Functions** (add/remove IPs, assign to accounts), **Change
+  Hostname**, **Tweak Settings**, **PHP extensions** per version (distribution packages),
+  **billing events + WHMCS-style hooks** (signed `account.*` webhooks and a reference PHP module).
+- Migration `0022_v11.sql` (mail routing, BoxTrapper, DAV logins, account IPs, Cloudflare links).
+- Installer (profile `full`): optional packages gnupg, radicale, python3-bcrypt, ruby, bundler,
+  postgresql client (EL: gnupg2, ruby, rubygem-bundler, postgresql).
+- UI: 376 new strings, EN = TR (3 015 keys); every page reachable from `tools.js`.
+
+### Fixed (found by the container E2E)
+- **Secret store unusable since v0.4**: the API (read-only `/etc` under `ProtectSystem=strict`)
+  could not create `/etc/bpanel/secret.key`, so webhooks, Cloudflare and the Transfer Tool failed
+  with `secrets_unavailable`. The key now lives in `/var/lib/bpanel/keys/secret.key` (0600,
+  bpanel); upgrade copies an existing legacy key.
+- **Mail**: the Sieve activation link `~/.dovecot.sieve` and Dovecot's duplicate database
+  `~/.dovecot.lda-dupes` sat in the Maildir++ root, which listed them as folders and made
+  `fileinto` into a new folder fail after any vacation reply. The link is now `~/dovecot.sieve` and
+  Dovecot's home is `<mailbox>/bpanel-home` (2.3 `override_fields`, 2.4 `fields`, both tested);
+  upgrade migrates existing mailboxes.
+- **Rspamd allow/deny lists** written as `*@domain` never matched; entries are normalised to
+  `@domain` (deny-listed senders are now rejected with 554).
+- **Email routing / mailing lists**: Postfix `transport_maps` pointed at
+  `/etc/postfix/bpanel_mlmmj_transport` while the agent wrote `/etc/postfix/bpanel/…`; mlmmj
+  tools were run by bare name and refused ("must be invoked with full path").
+- **DNSSEC** could not be enabled: PowerDNS needs `gsqlite3-dnssec=yes`; disabling DNSSEC on an
+  unsigned zone is now a no-op instead of an error.
+- **Hotlink protection** could never be enabled on nginx ("conflicting parameter"): the own
+  domain was rendered after `server_names`, which already contains it; server names and
+  duplicate allowed domains are no longer repeated.
+- **Mailing lists** never received mail: Postfix rejected the list address ("User unknown in
+  virtual mailbox table") before reading the transport map; the list address is now an identity
+  alias (removed with the list).
+- **DNSSEC**: signed answers appeared only after the PowerDNS cache expired; the zone is now
+  purged from the cache (`pdns_control purge`) on enable/disable.
+- **Git Version Control**: pushing to a panel-created repository was refused (checked-out branch
+  of a non-bare repository); new repositories set `receive.denyCurrentBranch=updateInstead`.
+- **WAF on Debian/Ubuntu Apache** had no audit log and no request-body inspection, because only
+  `modsecurity.conf-recommended` exists; the first WAF apply installs it as `modsecurity.conf`
+  with the engine Off globally (each domain's include switches it on) and
+  `SecRequestBodyLimitAction ProcessPartial`. An existing `modsecurity.conf` is never touched.
+- **Brute-force allowlist** entries were lost whenever fail2ban restarted (runtime `ignoreip`
+  only); the API re-pushes the allowlist to every jail every 5 minutes.
+- **Directory privacy / error pages** returned 500: `/var/lib/bpanel/webx` was 0700, nginx could
+  not read the htpasswd files (now 0711).
+- **BPanel Shield** quarantined 19 WordPress core files (`php_backtick_input` matched Markdown
+  backticks in docblocks); the rule now only fires on code lines. Regression test runs every
+  heuristic over the WordPress tree (1 512 PHP files, 0 hits).
+- **E-mail alerts** always failed (`obsx_smtp_unavailable`): Go's `smtp.SendMail` upgraded to
+  STARTTLS and rejected the host certificate for `127.0.0.1`; loopback delivery is now plaintext.
+- **Transfer Tool**: imported zone files were applied empty (zone text dropped over RPC), and
+  mailbox passwords were reset; cPanel crypt hashes (`$6$`, `$5$`, `$2y$`, `$1$`) are now kept.
+- **Radicale** storage was root-owned (permission denied); **hostname** change failed in
+  containers (`/etc/hostname` bind mount: EBUSY); agent validation errors answered 502 instead of
+  409/422.
+
+### Changed
+- Version **1.1.0** everywhere (`internal/version`, `Makefile`, `install.sh`, `web/package.json`,
+  `docs/openapi.json`).
+- `docs/feature-matrix.md` rewritten from the E2E evidence; "not planned" removed.
+- GitHub Pages site fully bilingual (EN/TR) with automatic language detection and a persistent
+  switcher.
+
 ## v1.0.0 — 2026-10-10 (first public open-source release)
 
 v1.0.0 is the first public release of BOZKURT PANEL on GitHub

@@ -130,6 +130,9 @@ func runCaged(ctx context.Context, timeout time.Duration, e passwdEntry, chdir s
 
 func gitArgs(args ...string) []string { return devx.GitEnvArgv(gitBin, args...) }
 
+// gitInitConfig lets users push to the checked-out branch of a new repository.
+var gitInitConfig = []string{"config", "receive.denyCurrentBranch", "updateInstead"}
+
 func devxErr(err error) error {
 	if c := devx.Code(err); c != "" {
 		return errf(c, "%s", c)
@@ -238,6 +241,12 @@ func (a *Agent) gitInit(ctx context.Context, p rpc.GitRepoRef) (rpc.GitInfo, err
 		return rpc.GitInfo{}, err
 	}
 	if _, err := runCaged(ctx, gitInfoTimeout, e, e.home, nil, nil, gitArgs("-c", "init.defaultBranch=main", "init", "--quiet", "--", rel)...); err != nil {
+		return rpc.GitInfo{}, err
+	}
+	// A panel repository is non-bare (it has a working tree, like cPanel's Git
+	// Version Control), so a push to its checked-out branch is refused by
+	// default. updateInstead accepts the push and updates the clean work tree.
+	if _, err := runCaged(ctx, gitInfoTimeout, e, abs, nil, nil, gitArgs(gitInitConfig...)...); err != nil {
 		return rpc.GitInfo{}, err
 	}
 	a.Log.Info("git.init", "user", e.name, "path", rel)

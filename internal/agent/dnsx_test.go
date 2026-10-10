@@ -40,7 +40,7 @@ func newDnsxEnv(t *testing.T, installed bool) (*Agent, *dnsxFake, string) {
 	dnsxReloadPostfx = func(a *Agent, ctx context.Context) error { return f.fail["reload"] }
 	MlmmjSpool = filepath.Join(d, "spool")
 	MlmmjTransport = filepath.Join(d, "postfix", "bpanel_mlmmj_transport")
-	a := New(Config{OwnersDir: filepath.Join(d, "owners"), NetsecDir: filepath.Join(d, "ns"), NoSystemd: true}, &distro.Layout{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	a := New(Config{OwnersDir: filepath.Join(d, "owners"), NetsecDir: filepath.Join(d, "ns"), NoSystemd: true}, &distro.Layout{PostfixDir: filepath.Join(d, "postfix")}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	return a, f, d
 }
 
@@ -91,6 +91,9 @@ func TestMailingListAgent(t *testing.T) {
 	if !strings.Contains(string(m), "news@bob.test mlmmj:bob.test/news\n") {
 		t.Errorf("map: %s", m)
 	}
+	if va, _ := os.ReadFile(filepath.Join(a.postfixDir(), "valias")); !strings.Contains(string(va), "news@bob.test news@bob.test") {
+		t.Errorf("list address not a virtual recipient: %q", va)
+	}
 	if b, _ := os.ReadFile(filepath.Join(MlmmjSpool, "bob.test", "news", "control", "listaddress")); string(b) != "news@bob.test\n" {
 		t.Errorf("listaddress %q", b)
 	}
@@ -132,6 +135,9 @@ func TestMailingListAgent(t *testing.T) {
 	if m3, _ := os.ReadFile(MlmmjTransport); strings.Contains(string(m3), "news@") {
 		t.Error("deleted list still mapped")
 	}
+	if va, _ := os.ReadFile(filepath.Join(a.postfixDir(), "valias")); strings.Contains(string(va), "news@") {
+		t.Errorf("deleted list alias kept: %q", va)
+	}
 	a2, _, _ := newDnsxEnv(t, false)
 	_ = a2.claim(kindMail, "bob.test", "bob", "")
 	if st, err := a2.listApply(ctx, req); err != nil || st.Status != "not_installed" {
@@ -150,5 +156,29 @@ func TestMlmmjBinAbsolute(t *testing.T) {
 	}
 	if got := mlmmjBin("mlmmj-nope"); got != "mlmmj-nope" {
 		t.Fatalf("missing tool: %q", got)
+	}
+}
+
+// Enabling or disabling DNSSEC purges the zone from the PowerDNS caches, or
+// unsigned answers keep being served until the cache expires.
+func TestDNSSECPurgesCache(t *testing.T) {
+	a, f, _ := newDnsxEnv(t, true)
+	if err := a.claim(kindZone, "bob.test", "bob", ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, act := range []string{"enable", "disable"} {
+		f.calls = nil
+		if _, err := a.dnssec(context.Background(), rpc.DNSSECReq{Owner: "bob", Zone: "bob.test", Action: act}); err != nil {
+			t.Fatal(act, err)
+		}
+		found := false
+		for _, c := range f.calls {
+			if len(c) == 3 && c[0] == "pdns_control" && c[1] == "purge" && c[2] == "bob.test$" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%s: no cache purge in %v", act, f.calls)
+		}
 	}
 }

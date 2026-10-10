@@ -103,3 +103,34 @@ func TestWafApplyAndRollbackOnConfigTestFailure(t *testing.T) {
 		t.Fatal("path domain accepted")
 	}
 }
+
+// On Debian/Ubuntu Apache only modsecurity.conf-recommended exists; the first
+// apply installs it as modsecurity.conf with the engine Off globally, and a
+// later apply never overwrites an admin's own file.
+func TestWafApacheBaseConfigInstalled(t *testing.T) {
+	_, root := wafEnv(t, false)
+	rec := "SecRuleEngine DetectionOnly\nSecRequestBodyAccess On\nSecAuditLog /var/log/apache2/modsec_audit.log\n"
+	if err := os.MkdirAll(root+"/etc/modsecurity", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(root+wafApacheBaseRecommended, []byte(rec), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := ensureApacheModSecBase(); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := os.ReadFile(root + wafApacheBaseConf)
+	if !strings.Contains(string(got), "\nSecRuleEngine Off\n") || strings.Contains(string(got), "DetectionOnly") ||
+		!strings.Contains(string(got), "SecAuditLog /var/log/apache2/modsec_audit.log") {
+		t.Fatalf("base config:\n%s", got)
+	}
+	if err := os.WriteFile(root+wafApacheBaseConf, []byte("# admin\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := ensureApacheModSecBase(); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := os.ReadFile(root + wafApacheBaseConf); string(got) != "# admin\n" {
+		t.Fatalf("admin file overwritten: %s", got)
+	}
+}

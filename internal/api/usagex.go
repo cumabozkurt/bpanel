@@ -779,3 +779,66 @@ func (s *Server) bfPush(ctx context.Context, ip string, remove bool) string {
 	}
 	return out.Status
 }
+
+// bfResync re-pushes the whole allowlist to every running jail. fail2ban keeps
+// addignoreip changes only in memory, so a fail2ban restart (package update,
+// reboot) would silently drop them; the loop below heals that within
+// bfResyncEvery. addignoreip of an IP already present is a no-op.
+func (s *Server) bfResync(ctx context.Context) (int, string) {
+	rows, err := s.Store.DB.QueryContext(ctx, `SELECT ip FROM bf_allowlist ORDER BY id`)
+	if err != nil {
+		return 0, "error"
+	}
+	var ips []string
+	for rows.Next() {
+		var ip string
+		if rows.Scan(&ip) == nil {
+			ips = append(ips, ip)
+		}
+	}
+	rows.Close()
+	if len(ips) == 0 {
+		return 0, "done"
+	}
+	st := s.f2bStatus(ctx)
+	if st.Status != "ok" {
+		return 0, st.Status
+	}
+	jails := make([]string, 0, len(st.Jails))
+	for _, j := range st.Jails {
+		jails = append(jails, j.Name)
+	}
+	if len(jails) == 0 {
+		return 0, "done"
+	}
+	n := 0
+	for _, ip := range ips {
+		var out rpc.F2BActionResult
+		if err := s.Agent.Call(ctx, rpc.MF2BIgnore, rpc.F2BIgnoreParams{Jails: jails, IP: ip}, &out); err != nil {
+			return n, nsAgentCode(err)
+		}
+		n++
+	}
+	return n, "done"
+}
+
+// bfResyncEvery is how often bfLoop re-applies the allowlist.
+var bfResyncEvery = 5 * time.Minute
+
+// bfLoop runs bfResync shortly after start and then every bfResyncEvery.
+func (s *Server) bfLoop(ctx context.Context) {
+	d := 30 * time.Second
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(d):
+		}
+		d = bfResyncEvery
+		cctx, cancel := context.WithTimeout(ctx, time.Minute)
+		if n, st := s.bfResync(cctx); st != "done" && st != "not_installed" && st != "not_running" && s.Log != nil {
+			s.Log.Warn("brute-force allowlist resync", "status", st, "pushed", n)
+		}
+		cancel()
+	}
+}

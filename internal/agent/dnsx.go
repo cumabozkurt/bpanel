@@ -60,6 +60,15 @@ func dnsxCmd(ctx context.Context, argv ...string) (string, error) {
 	return dnsxRun(cctx, nil, argv...)
 }
 
+// pdnsPurge drops the zone from PowerDNS' packet and query caches so a DNSSEC
+// change is answered at once (otherwise unsigned answers are served from the
+// cache for up to cache-ttl seconds). Best effort: the cache expires anyway.
+func pdnsPurge(ctx context.Context, zone string) {
+	if dnsxHave("pdns_control") {
+		_, _ = dnsxCmd(ctx, "pdns_control", "purge", zone+"$")
+	}
+}
+
 func (a *Agent) dnssec(ctx context.Context, p rpc.DNSSECReq) (rpc.DNSSECStatus, error) {
 	res := rpc.DNSSECStatus{DS: []string{}, DNSKEY: []string{}}
 	if err := checkZone(p.Zone); err != nil {
@@ -86,6 +95,7 @@ func (a *Agent) dnssec(ctx context.Context, p rpc.DNSSECReq) (rpc.DNSSECStatus, 
 			return res, errf("dnssec_failed", "rectify-zone: %s", lastLines(err.Error(), 2))
 		}
 		_, _ = dnsxCmd(ctx, "pdnsutil", "increase-serial", zone)
+		pdnsPurge(ctx, zone)
 		a.Log.Info("dnssec enabled", "zone", zone, "owner", p.Owner)
 	case "disable":
 		if _, err := dnsxCmd(ctx, "pdnsutil", "disable-dnssec", zone); err != nil {
@@ -96,6 +106,7 @@ func (a *Agent) dnssec(ctx context.Context, p rpc.DNSSECReq) (rpc.DNSSECStatus, 
 		}
 		_, _ = dnsxCmd(ctx, "pdnsutil", "rectify-zone", zone)
 		_, _ = dnsxCmd(ctx, "pdnsutil", "increase-serial", zone)
+		pdnsPurge(ctx, zone)
 		a.Log.Info("dnssec disabled", "zone", zone, "owner", p.Owner)
 	default:
 		return res, errf("invalid_action", "%s", p.Action)
@@ -269,8 +280,16 @@ func (a *Agent) listApply(ctx context.Context, p rpc.ListReq) (rpc.ListStatus, e
 			})
 			_ = os.Lchown(filepath.Dir(dir), uid, gid)
 		}
+		// The list address must be a known recipient of its virtual domain, or
+		// smtpd rejects it ("User unknown in virtual mailbox table") before the
+		// transport map is consulted: an identity alias makes it one.
+		if err := a.ensureIdentityAlias(ctx, addr); err != nil {
+			_ = os.RemoveAll(dir)
+			return res, errf("mlist_failed", "alias: %v", err)
+		}
 		if err := a.writeTransport(ctx); err != nil {
 			_ = os.RemoveAll(dir)
+			_ = a.dropIdentityAlias(ctx, addr)
 			return res, err
 		}
 		a.Log.Info("mailing list created", "list", addr, "user", p.User)
@@ -288,6 +307,9 @@ func (a *Agent) listApply(ctx context.Context, p rpc.ListReq) (rpc.ListStatus, e
 			return res, err
 		}
 		_ = os.RemoveAll(parked)
+		if err := a.dropIdentityAlias(ctx, addr); err != nil {
+			a.Log.Warn("mailing list alias not removed", "list", addr, "err", err)
+		}
 		a.Log.Info("mailing list deleted", "list", addr, "user", p.User)
 	default:
 		return res, errf("invalid_action", "%s", p.Action)

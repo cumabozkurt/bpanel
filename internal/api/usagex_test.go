@@ -3,6 +3,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -10,6 +11,9 @@ import (
 
 	rpc "github.com/cumabozkurt/bpanel/internal/agentrpc"
 )
+
+// f2bFakeRunning makes the fake agent report a running fail2ban.
+var f2bFakeRunning bool
 
 func fakeUsagex(method string, b []byte) (any, bool) {
 	switch method {
@@ -27,6 +31,9 @@ func fakeUsagex(method string, b []byte) (any, bool) {
 		}
 		return out, true
 	case rpc.MF2BStatus:
+		if f2bFakeRunning {
+			return rpc.F2BStatusResult{Status: "ok", Jails: []rpc.F2BJail{{Name: "bpanel"}, {Name: "sshd"}}}, true
+		}
 		return rpc.F2BStatusResult{Status: "not_installed", Reason: "fail2ban-client was not found", Jails: []rpc.F2BJail{}}, true
 	case rpc.MF2BUnban, rpc.MF2BIgnore:
 		return rpc.F2BActionResult{Status: "not_installed"}, true
@@ -179,5 +186,42 @@ func TestBruteForce(t *testing.T) {
 	}
 	if code, _ := root.call("DELETE", "/api/v1/admin/brute-force/allowlist/1", nil); code != 200 {
 		t.Fatalf("del: %d", code)
+	}
+}
+
+// The allowlist is re-pushed to every jail (fail2ban forgets runtime
+// ignoreip entries when it restarts).
+func TestBruteForceAllowlistResync(t *testing.T) {
+	e := newEnv(t)
+	f2bFakeRunning = true
+	t.Cleanup(func() { f2bFakeRunning = false })
+	ctx := context.Background()
+	for _, ip := range []string{"198.51.100.10", "203.0.113.0/24"} {
+		if _, err := e.srv.Store.DB.ExecContext(ctx, `INSERT INTO bf_allowlist(ip) VALUES(?)`, ip); err != nil {
+			t.Fatal(err)
+		}
+	}
+	e.ag.mu.Lock()
+	e.ag.calls = nil
+	e.ag.mu.Unlock()
+	if n, st := e.srv.bfResync(ctx); n != 2 || st != "done" {
+		t.Fatalf("resync: %d %s", n, st)
+	}
+	e.ag.mu.Lock()
+	defer e.ag.mu.Unlock()
+	got := map[string]bool{}
+	for _, c := range e.ag.calls {
+		if c.Method != rpc.MF2BIgnore {
+			continue
+		}
+		var p rpc.F2BIgnoreParams
+		_ = json.Unmarshal(c.Params, &p)
+		if p.Remove || len(p.Jails) != 2 {
+			t.Errorf("params %+v", p)
+		}
+		got[p.IP] = true
+	}
+	if !got["198.51.100.10"] || !got["203.0.113.0/24"] {
+		t.Fatalf("pushed %v", got)
 	}
 }

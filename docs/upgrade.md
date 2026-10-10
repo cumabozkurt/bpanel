@@ -1,5 +1,56 @@
 # Upgrading
 
+## v1.0.0 → v1.1.0
+
+v1.1.0 adds one database migration (`0022_v11.sql`: mail routing, BoxTrapper, DAV logins, account
+IPs, Cloudflare links; additive, no existing table changes), new optional packages and several
+configuration fixes. Sites and mail stay online; Postfix, Dovecot, PowerDNS, nginx and Apache are
+reloaded or restarted once.
+
+```sh
+V=1.1.0; A=amd64            # A=arm64 on ARM servers
+curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
+curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
+sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+tar -xzf bpanel-$V-linux-$A.tar.gz && cd bpanel-$V-linux-$A
+sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh upgrade --yes   # archives are unsigned: check the SHA-256
+```
+
+Steps are recorded as `upgrade-1.1.0:<step>` (a re-run skips finished steps; `--force` repeats
+them). The pre-upgrade backup goes to `/var/backups/bpanel/upgrade-1.0.0-to-1.1.0-<UTC time>/`.
+What changes on the server:
+
+- **Packages (profile `full`, optional, installed when available):** gnupg, radicale,
+  python3-bcrypt, ruby, ruby-bundler, postgresql-client (AlmaLinux: gnupg2, ruby, rubygem-bundler,
+  postgresql). A missing package only turns its page into `not_installed`.
+- **Secret key moved** from `/etc/bpanel/secret.key` (which the sandboxed API could not create) to
+  `/var/lib/bpanel/keys/secret.key` (0600, `bpanel`). An existing key is copied, so stored secrets
+  stay readable; `panel.json` `secret_key_file` is updated.
+- **Dovecot:** the Sieve active link becomes `~/dovecot.sieve` (was `~/.dovecot.sieve`) and
+  Dovecot's home becomes `<mailbox>/bpanel-home` (the Maildir stays where it is). The upgrade renames
+  the links and moves `.dovecot.lda-dupes*` out of every Maildir root under `/home/*/mail/`.
+  Mail clients that showed folders called `dovecot` / `dovecot.lda-dupes` stop showing them.
+- **PowerDNS:** `gsqlite3-dnssec=yes` is added (needed for DNSSEC; the schema already has the tables).
+- **Postfix:** `transport_maps` now points at `/etc/postfix/bpanel/bpanel_mlmmj_transport` (the
+  file the agent writes), which activates Email Routing and mailing-list transports.
+- **WAF (Debian/Ubuntu Apache):** if `/etc/modsecurity/modsecurity.conf` does not exist, the
+  next WAF apply creates it from `modsecurity.conf-recommended` with `SecRuleEngine Off` (each
+  domain's include sets its own mode) and `SecRequestBodyLimitAction ProcessPartial`. This
+  enables the audit log `/var/log/apache2/modsec_audit.log` and request-body inspection.
+- **Brute-force allowlist:** re-pushed to fail2ban every 5 minutes (it used to vanish when
+  fail2ban restarted).
+- **Web extras:** `/var/lib/bpanel/webx` becomes 0711 so nginx can read htpasswd files and custom
+  error pages. Radicale's storage is owned by the `radicale` user.
+- **New RBAC permissions:** `mailqueue.read|write` (Mail Queue Manager, Mail Troubleshooter),
+  `network.read|write` (IP Functions, hostname) and `software.read|write` (PHP extensions), granted
+  to `super_admin` and `server_admin`; `security_admin` gets the `.read` ones. User pages use the
+  existing `hosting.read` / `hosting.write`. Custom staff roles must be granted them explicitly.
+
+**Rollback to v1.0.0:** migration 0022 only adds tables, so the v1.0.0 binaries run on the new
+database. Stop `bpanel-api` and `bpanel-agent`, put the v1.0.0 binaries back into
+`/usr/local/lib/bpanel`, start them and run `bpanel selftest`. The Dovecot/PowerDNS/Postfix changes
+are compatible with v1.0.0 and can stay.
+
 ## v0.4.0 → v1.0.0
 
 v1.0.0 is a release-audit version of v0.4.0: **no new database migration, no new package, no new
