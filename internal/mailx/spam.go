@@ -26,6 +26,11 @@ var reAccount = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
 // NormalizeEntry turns "user@x.y", "@x.y" or "x.y" into "user@x.y" / "@x.y".
 func NormalizeEntry(s string) (string, bool) {
 	s = strings.ToLower(strings.TrimSpace(s))
+	// cPanel-style "*@domain" means the whole domain; Rspamd's settings
+	// module matches a domain as "@domain" and would take "*@…" literally.
+	if strings.HasPrefix(s, "*@") {
+		s = s[1:]
+	}
 	if strings.HasPrefix(s, "@") {
 		return s, IsDomain(s[1:])
 	}

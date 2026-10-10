@@ -54,3 +54,41 @@ func TestDovecotSieveActiveNotDotPrefixed(t *testing.T) {
 		}
 	}
 }
+
+func TestDovecotHomeOutsideMaildirRoot(t *testing.T) {
+	for _, v24 := range []bool{false, true} {
+		c := DovecotConf(v24, "c", "k", "p", "h.example")
+		if !strings.Contains(c, "home=%{userdb:home}/bpanel-home") && !strings.Contains(c, "home = %{userdb:home}/bpanel-home") {
+			t.Fatalf("v24=%v: Dovecot home not moved out of the Maildir root:\n%s", v24, c)
+		}
+		// the mail path must be bound before home is replaced
+		mi := strings.Index(c, "mail_path = %{userdb:home}")
+		if !v24 {
+			mi = strings.Index(c, "mail=maildir:%{userdb:home}")
+		}
+		hi := strings.Index(c, "/bpanel-home")
+		if mi < 0 || mi > hi {
+			t.Fatalf("v24=%v: mail path must precede the home override", v24)
+		}
+	}
+}
+
+func TestMigrateDovecotHome(t *testing.T) {
+	box := filepath.Join(t.TempDir(), "box")
+	_ = os.MkdirAll(filepath.Join(box, ".dovecot.lda-dupes.locks"), 0o700)
+	_ = os.WriteFile(filepath.Join(box, ".dovecot.lda-dupes"), []byte("d"), 0o600)
+	_ = os.Symlink("/etc/passwd", filepath.Join(box, "x"))
+	migrateDovecotHome(box)
+	if b, err := os.ReadFile(filepath.Join(box, "bpanel-home", ".dovecot.lda-dupes")); err != nil || string(b) != "d" {
+		t.Fatalf("dupes not moved: %v", err)
+	}
+	for _, n := range []string{".dovecot.lda-dupes", ".dovecot.lda-dupes.locks"} {
+		if _, err := os.Lstat(filepath.Join(box, n)); !os.IsNotExist(err) {
+			t.Errorf("%s left in the Maildir root", n)
+		}
+	}
+	if fi, err := os.Stat(filepath.Join(box, "bpanel-home")); err != nil || fi.Mode().Perm() != 0o700 {
+		t.Fatalf("home dir: %v %v", fi, err)
+	}
+	migrateDovecotHome(box) // idempotent
+}

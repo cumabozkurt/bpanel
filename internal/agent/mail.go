@@ -379,7 +379,9 @@ func (a *Agent) mailboxCreate(ctx context.Context, p rpc.Mailbox) (rpc.Empty, er
 	if err := mkdirOwned(root, "mail/"+domain, 0o750, e.uid, e.gid, false); err != nil {
 		return rpc.Empty{}, err
 	}
-	for _, d := range []string{"", "/cur", "/new", "/tmp"} {
+	// bpanel-home is Dovecot's home (the Maildir root must not be the home:
+	// Maildir++ mistakes .dovecot.lda-dupes for a folder; see DovecotConf)
+	for _, d := range []string{"", "/cur", "/new", "/tmp", "/" + DovecotHomeDir} {
 		if err := mkdirOwned(root, "mail/"+domain+"/"+local+d, 0o700, e.uid, e.gid, false); err != nil {
 			return rpc.Empty{}, err
 		}
@@ -546,14 +548,22 @@ func (a *Agent) mailboxPassword(ctx context.Context, p rpc.Mailbox) (rpc.Empty, 
 	if err != nil {
 		return rpc.Empty{}, err
 	}
-	if err := validate.Password(p.Password); err != nil {
+	stored := ""
+	if p.CryptHash != "" {
+		if stored = ImportedMailHash(p.CryptHash); stored == "" {
+			return rpc.Empty{}, errf("invalid_password_hash", "unsupported or malformed crypt hash")
+		}
+	} else if err := validate.Password(p.Password); err != nil {
 		return rpc.Empty{}, errf(err.Error(), "password")
 	}
 	if err := a.mustOwn(kindMail, domain, p.User); err != nil { // CODE-27
 		return rpc.Empty{}, err
 	}
 	defer a.lock("mail")()
-	err = a.updatePasswd(local+"@"+domain, func(f []string) []string { f[0] = HashMailPassword(p.Password); return f })
+	if stored == "" {
+		stored = HashMailPassword(p.Password)
+	}
+	err = a.updatePasswd(local+"@"+domain, func(f []string) []string { f[0] = stored; return f })
 	a.fixDovecotPerms()
 	return rpc.Empty{}, err
 }

@@ -64,7 +64,7 @@ func (s *Server) obsx() *obsxState {
 // obsxSMTPAddr / obsxSend are swapped by tests.
 var (
 	obsxSMTPAddr = "127.0.0.1:25"
-	obsxSendMail = smtp.SendMail
+	obsxSendMail = obsxLocalSendMail
 	obsxPost     = func(s *Server, ctx context.Context, u, ctype string, body []byte) (int, error) {
 		req, err := http.NewRequestWithContext(ctx, "POST", u, bytes.NewReader(body))
 		if err != nil {
@@ -1289,3 +1289,52 @@ func (s *Server) obsxPrune(ctx context.Context) {
 }
 
 var _ = store.Select[int]
+
+// obsxLocalSendMail hands a message to the local MTA on loopback. Unlike
+// smtp.SendMail it does not upgrade to STARTTLS: the local Postfix presents
+// the host certificate (self-signed or issued for the host name, never for
+// "127.0.0.1"), so verification always failed and every e-mail alert was
+// lost with obsx_smtp_unavailable (found by the v1.1 E2E). Plaintext never
+// leaves the host.
+func obsxLocalSendMail(addr string, _ smtp.Auth, from string, to []string, msg []byte) error {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return err
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return smtp.SendMail(addr, nil, from, to, msg)
+	}
+	conn, err := net.DialTimeout("tcp", addr, 10*time.Second)
+	if err != nil {
+		return err
+	}
+	_ = conn.SetDeadline(time.Now().Add(30 * time.Second))
+	c, err := smtp.NewClient(conn, host)
+	if err != nil {
+		conn.Close()
+		return err
+	}
+	defer c.Close()
+	if err := c.Hello("localhost"); err != nil {
+		return err
+	}
+	if err := c.Mail(from); err != nil {
+		return err
+	}
+	for _, r := range to {
+		if err := c.Rcpt(r); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write(msg); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	return c.Quit()
+}

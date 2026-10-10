@@ -1391,6 +1391,7 @@
 		"invalid_record_content": "That record value is not valid.",
 		"invalid_ipv4": "That is not a valid IPv4 address.",
 		"invalid_ipv6": "That is not a valid IPv6 address.",
+		"invalid_password_hash": "The imported password hash is not supported.",
 		"invalid_quota": "That quota is not valid.",
 		"db_prefix_required": "The name must start with your username prefix.",
 		"invalid_db_name": "Use lowercase letters, digits and underscores.",

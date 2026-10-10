@@ -654,6 +654,10 @@ func DovecotVersion24(versionOutput string) bool {
 // The per-mailbox quota comes from the passwd-file extra field: 2.3 reads
 // userdb_quota_rule=*:storage=<N>M, 2.4 reads userdb_quota_storage_size=<N>M
 // (2.4 silently ignores quota_rule: verified with doveadm quota get).
+// DovecotHomeDir is Dovecot's home inside a mailbox directory (see the
+// userdb blocks below and agent.DovecotHomeDir).
+const DovecotHomeDir = "bpanel-home"
+
 func DovecotConf(v24 bool, cert, key, passwd, hostname string) string {
 	if !v24 {
 		return fmt.Sprintf(`# Managed by BOZKURT PANEL (Dovecot 2.3 syntax)
@@ -675,6 +679,10 @@ passdb {
 userdb {
   driver = passwd-file
   args = username_format=%%u %[3]s
+  # The passwd-file home is the Maildir root; Dovecot's own home (duplicate
+  # DB, locks) lives in a non-dot subdirectory so Maildir++ never lists it
+  # as a folder. mail and sieve are expanded before home is replaced.
+  override_fields = mail=maildir:%%{userdb:home} sieve=file:%%{userdb:home}/sieve;active=%%{userdb:home}/dovecot.sieve home=%%{userdb:home}/`+DovecotHomeDir+`
 }
 service lmtp {
   unix_listener /var/spool/postfix/private/dovecot-lmtp {
@@ -727,6 +735,16 @@ passdb passwd-file {
 }
 userdb passwd-file {
   passwd_file_path = %[3]s
+  # The passwd-file home is the Maildir root; Dovecot's own home (duplicate
+  # DB, locks) lives in a non-dot subdirectory so Maildir++ never lists it
+  # as a folder. The mail and sieve paths keep the original home.
+  fields {
+    mail_path = %%{userdb:home}
+    mail_inbox_path = %%{userdb:home}
+    sieve_script/personal/sieve_script_path = %%{userdb:home}/sieve
+    sieve_script/personal/sieve_script_active_path = %%{userdb:home}/dovecot.sieve
+    home = %%{userdb:home}/`+DovecotHomeDir+`
+  }
 }
 service lmtp {
   unix_listener /var/spool/postfix/private/dovecot-lmtp {

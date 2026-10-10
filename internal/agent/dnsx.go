@@ -5,6 +5,7 @@ package agent
 import (
 	"context"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"sort"
@@ -88,7 +89,10 @@ func (a *Agent) dnssec(ctx context.Context, p rpc.DNSSECReq) (rpc.DNSSECStatus, 
 		a.Log.Info("dnssec enabled", "zone", zone, "owner", p.Owner)
 	case "disable":
 		if _, err := dnsxCmd(ctx, "pdnsutil", "disable-dnssec", zone); err != nil {
-			return res, errf("dnssec_failed", "disable-dnssec: %s", lastLines(err.Error(), 2))
+			// a zone that was never secured has nothing to disable
+			if !strings.Contains(err.Error(), "No keys for zone") {
+				return res, errf("dnssec_failed", "disable-dnssec: %s", lastLines(err.Error(), 2))
+			}
 		}
 		_, _ = dnsxCmd(ctx, "pdnsutil", "rectify-zone", zone)
 		_, _ = dnsxCmd(ctx, "pdnsutil", "increase-serial", zone)
@@ -116,6 +120,16 @@ func (a *Agent) mlmmjTransport() string {
 		return MlmmjTransport
 	}
 	return filepath.Join(a.postfixDir(), "bpanel_mlmmj_transport")
+}
+
+// mlmmjBin resolves an mlmmj tool to its absolute path: mlmmj refuses to run
+// when invoked by bare name ("All mlmmj binaries have to be invoked with
+// full path"), found by the v1.1 E2E.
+func mlmmjBin(name string) string {
+	if p, err := exec.LookPath(name); err == nil && filepath.IsAbs(p) {
+		return p
+	}
+	return name
 }
 
 func mlmmjMissing() string {
@@ -306,13 +320,13 @@ func (a *Agent) listSubs(ctx context.Context, p rpc.ListSubsReq) (rpc.ListStatus
 			bin = "mlmmj-unsub"
 		}
 		// -q: no owner notification, -s: no welcome/goodbye mail (panel-driven)
-		if _, err := dnsxCmd(ctx, bin, "-L", dir, "-a", strings.ToLower(p.Address), "-q", "-s"); err != nil {
+		if _, err := dnsxCmd(ctx, mlmmjBin(bin), "-L", dir, "-a", strings.ToLower(p.Address), "-q", "-s"); err != nil {
 			return res, errf("mlist_failed", "%s: %s", bin, lastLines(err.Error(), 2))
 		}
 	default:
 		return res, errf("invalid_action", "%s", p.Action)
 	}
-	out, err := dnsxCmd(ctx, "mlmmj-list", "-L", dir)
+	out, err := dnsxCmd(ctx, mlmmjBin("mlmmj-list"), "-L", dir)
 	if err != nil {
 		return res, errf("mlist_failed", "mlmmj-list")
 	}

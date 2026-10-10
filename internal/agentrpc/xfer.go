@@ -40,6 +40,9 @@ type XferAnalyseResult struct {
 	// MailHashes carries mailbox crypt hashes to the API only (the API never
 	// returns them to a browser).
 	MailHashes map[string]string `json:"mail_hashes,omitempty"`
+	// ZoneTexts carries the zone files (by domain) to the API, which imports
+	// them; xfer.Zone.Text is not serialised.
+	ZoneTexts map[string]string `json:"zone_texts,omitempty"`
 }
 
 type XferFetch struct {

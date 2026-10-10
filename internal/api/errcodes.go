@@ -208,6 +208,7 @@ var ErrorCodes = []string{
 	"invalid_package",
 	"invalid_params",
 	"invalid_parent",
+	"invalid_password_hash",
 	"invalid_path",
 	"invalid_perms",
 	"invalid_phone",

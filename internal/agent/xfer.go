@@ -99,7 +99,12 @@ func (a *Agent) xferAnalyse(ctx context.Context, p rpc.XferArchiveRef) (rpc.Xfer
 	if err != nil {
 		return rpc.XferAnalyseResult{}, xferErr(err)
 	}
-	res := rpc.XferAnalyseResult{Model: *m, MailHashes: map[string]string{}}
+	res := rpc.XferAnalyseResult{Model: *m, MailHashes: map[string]string{}, ZoneTexts: map[string]string{}}
+	for _, z := range m.Zones {
+		if z.Text != "" {
+			res.ZoneTexts[z.Domain] = z.Text
+		}
+	}
 	for _, mb := range m.Mailboxes {
 		if mb.Hash != "" {
 			res.MailHashes[mb.Address] = mb.Hash

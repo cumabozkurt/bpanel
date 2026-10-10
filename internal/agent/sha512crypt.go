@@ -3,6 +3,7 @@ package agent
 import (
 	"crypto/rand"
 	"crypto/sha512"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -137,4 +138,25 @@ func sha512Crypt(pw []byte, salt string, rounds int) string {
 	}
 	enc(0, 0, c[63], 2)
 	return out.String()
+}
+
+var reImportedHash = regexp.MustCompile(`^\$(6|5|2[aby]|1)\$[A-Za-z0-9./$=,]{8,200}$`)
+
+// ImportedMailHash maps a crypt(3) hash from another panel (cPanel's
+// /etc/<domain>/shadow, Plesk, Hestia) to a Dovecot passwd-file scheme, or ""
+// when it is not a supported, well-formed hash (no ':' or newline can pass).
+func ImportedMailHash(h string) string {
+	if !reImportedHash.MatchString(h) {
+		return ""
+	}
+	switch {
+	case strings.HasPrefix(h, "$6$"):
+		return "{SHA512-CRYPT}" + h
+	case strings.HasPrefix(h, "$5$"):
+		return "{SHA256-CRYPT}" + h
+	case strings.HasPrefix(h, "$1$"):
+		return "{MD5-CRYPT}" + h
+	default:
+		return "{BLF-CRYPT}" + h
+	}
 }

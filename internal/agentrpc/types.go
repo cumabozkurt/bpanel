@@ -325,6 +325,10 @@ type Mailbox struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	QuotaMB  int64  `json:"quota_mb"`
+	// CryptHash (mail.box.password only) installs an existing crypt(3) hash
+	// instead of hashing Password: the Transfer Tool keeps migrated
+	// mailboxes' passwords. $6$, $5$, $2y$ (bcrypt) and legacy $1$.
+	CryptHash string `json:"crypt_hash,omitempty"`
 }
 
 type MailboxRef struct {

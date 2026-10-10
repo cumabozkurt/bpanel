@@ -406,6 +406,13 @@ func (s *Server) xferDoImport(ctx context.Context, actorID int64, in XferImportR
 		return nil, err
 	}
 	m := &an.Model
+	// zone texts do not survive the model's JSON (Zone.Text is json:"-"):
+	// before v1.1 every imported zone was applied empty (found by the E2E)
+	for i := range m.Zones {
+		if m.Zones[i].Text == "" {
+			m.Zones[i].Text = an.ZoneTexts[m.Zones[i].Domain]
+		}
+	}
 	rep := &XferReport{Format: m.Format, Username: m.Account.Username, Steps: []XferStep{}, Unsupported: m.Unsupported, Warnings: m.Warnings}
 	_, _ = s.Store.DB.ExecContext(ctx, `UPDATE xfer_runs SET format=?, username=?, status='running' WHERE archive=? AND status='queued' AND kind='import'`, m.Format, m.Account.Username, in.Archive)
 	if c := s.xferConflicts(ctx, m); len(c) > 0 {
@@ -510,10 +517,19 @@ func (s *Server) xferDoImport(ctx context.Context, actorID int64, in XferImportR
 				req.QuotaMB = LimitOf(mb.QuotaMB)
 			}
 			_, err := s.createMailbox(nil, asUser(ctx, u, req))
-			if err != nil {
+			switch {
+			case err != nil:
 				rep.add("mailbox", mb.Address, "failed", errCode(err))
-			} else {
-				rep.add("mailbox", mb.Address, "action_required", "created with a random password (password hashes are not imported yet); set a new password")
+			case an.MailHashes[mb.Address] != "":
+				// keep the old password: install the archive's crypt hash
+				herr := s.Agent.Call(ctx, rpc.MMailboxPassword, rpc.Mailbox{User: u.Username, Email: mb.Address, CryptHash: an.MailHashes[mb.Address]}, nil)
+				if herr == nil {
+					rep.add("mailbox", mb.Address, "ok", "password kept (hash imported)")
+				} else {
+					rep.add("mailbox", mb.Address, "action_required", "created with a random password ("+errCode(herr)+"); set a new password")
+				}
+			default:
+				rep.add("mailbox", mb.Address, "action_required", "created with a random password (no password hash in the archive); set a new password")
 			}
 		}
 		for _, f := range m.Forwarders {

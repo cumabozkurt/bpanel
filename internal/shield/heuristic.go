@@ -65,7 +65,10 @@ var HeuristicRules = []HeurRule{
 	{ID: "php_input_callable", Verdict: Infected, Severity: SevHigh, Desc: "request input used as a function name",
 		Match: reRule(`\$_(?:GET|POST|REQUEST|COOKIE)\s*\[[^\]]{1,40}\]\s*\(`)},
 	{ID: "php_backtick_input", Verdict: Infected, Severity: SevHigh, Desc: "shell backticks around request input",
-		Match: reRule("`[^`]{0,40}\\$_(?:GET|POST|REQUEST|COOKIE)\\b[^`]*`")},
+		// One line, code context only: docblocks and comments ("* see `$_POST`")
+		// quote request variables in Markdown backticks; WordPress core has
+		// 19 such files, which v1.0 quarantined (found by the v1.1 E2E).
+		Match: reRule("(?m)^[ \\t]*[^ \\t*/#\\n][^\\n`]*`[^`\\n]{0,40}\\$_(?:GET|POST|REQUEST|COOKIE)\\b[^`\\n]{0,80}`")},
 	{ID: "webshell_marker", Verdict: Infected, Severity: SevCritical, Desc: "known web shell marker (c99/r57/WSO/b374k/FilesMan)",
 		Match: func(d []byte, _ string, _ FileType) bool {
 			for _, m := range webshellMarks {

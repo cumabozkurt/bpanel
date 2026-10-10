@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cumabozkurt/bpanel/internal/agent"
@@ -383,6 +384,7 @@ func (in *Installer) cfgPowerDNS(ctx context.Context) error {
 	conf := fmt.Sprintf(`# Managed by BOZKURT PANEL
 launch=gsqlite3
 gsqlite3-database=%s
+gsqlite3-dnssec=yes
 local-address=0.0.0.0, ::
 api=yes
 api-key=%s
@@ -849,6 +851,39 @@ func (in *Installer) cfgFail2ban(ctx context.Context) error {
 // fileinto into a new folder (BoxTrapper) then failed with a temporary
 // error. Only plain directories are walked (no symlinks are followed) and
 // the link itself is renamed, never its target.
+// migrateDovecotHome creates <box>/bpanel-home (owned like the box) and moves
+// Dovecot's duplicate DB out of the Maildir root, where Maildir++ listed it
+// as the folders "dovecot", "dovecot.lda-dupes" and "dovecot.lda-dupes.locks".
+func migrateDovecotHome(box string) {
+	fi, err := os.Lstat(box)
+	if err != nil || !fi.IsDir() {
+		return
+	}
+	home := filepath.Join(box, DovecotHomeDir)
+	if hi, err := os.Lstat(home); err == nil && !hi.IsDir() {
+		return // something else is there: leave it alone
+	} else if err != nil {
+		if os.Mkdir(home, 0o700) != nil {
+			return
+		}
+		if st, ok := fi.Sys().(*syscall.Stat_t); ok {
+			_ = os.Lchown(home, int(st.Uid), int(st.Gid))
+		}
+	}
+	for _, n := range []string{".dovecot.lda-dupes", ".dovecot.lda-dupes.locks"} {
+		p := filepath.Join(box, n)
+		pi, err := os.Lstat(p)
+		if err != nil || pi.Mode()&os.ModeSymlink != 0 {
+			continue
+		}
+		if _, err := os.Lstat(filepath.Join(home, n)); err == nil {
+			_ = os.RemoveAll(p)
+			continue
+		}
+		_ = os.Rename(p, filepath.Join(home, n))
+	}
+}
+
 func migrateSieveActive(homeRoot string) int {
 	n := 0
 	isDir := func(p string) bool {
@@ -872,6 +907,7 @@ func migrateSieveActive(homeRoot string) int {
 				if !isDir(box) {
 					continue
 				}
+				migrateDovecotHome(box)
 				old, nw := filepath.Join(box, ".dovecot.sieve"), filepath.Join(box, "dovecot.sieve")
 				fi, err := os.Lstat(old)
 				if err != nil || (fi.Mode()&os.ModeSymlink == 0 && !fi.Mode().IsRegular()) {

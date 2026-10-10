@@ -138,3 +138,17 @@ func TestMailingListAgent(t *testing.T) {
 		t.Errorf("not installed: %+v %v", st, err)
 	}
 }
+
+func TestMlmmjBinAbsolute(t *testing.T) {
+	d := t.TempDir()
+	if err := os.WriteFile(filepath.Join(d, "mlmmj-sub"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", d)
+	if got := mlmmjBin("mlmmj-sub"); got != filepath.Join(d, "mlmmj-sub") {
+		t.Fatalf("got %q", got)
+	}
+	if got := mlmmjBin("mlmmj-nope"); got != "mlmmj-nope" {
+		t.Fatalf("missing tool: %q", got)
+	}
+}

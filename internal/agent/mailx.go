@@ -16,6 +16,13 @@ import (
 	"github.com/cumabozkurt/bpanel/internal/mailx"
 )
 
+// DovecotHomeDir is the Dovecot home inside each mailbox directory (the
+// installer's userdb sets home=<box>/bpanel-home, mail=<box>): with
+// home == Maildir root, Maildir++ lists Dovecot's own ~/.dovecot.lda-dupes as
+// a folder and fileinto fails ("stat(.dovecot.lda-dupes/tmp): Not a
+// directory"). The name has no leading dot, so Maildir++ ignores it.
+const DovecotHomeDir = "bpanel-home"
+
 // v0.4 user mail tools. Sieve scripts live in the mailbox home
 // (/home/<user>/mail/<domain>/<local>/sieve/bpanel.sieve, owned by the
 // account) and are activated through ~/dovecot.sieve, matching the
@@ -118,6 +125,9 @@ func (a *Agent) mailSieveApply(ctx context.Context, p rpc.MailSieveReq) (rpc.Mai
 			_ = root.Remove(active)
 		}
 		return rpc.MailxStatus{Status: "inactive"}, nil
+	}
+	if err := mkdirOwned(root, box+"/"+DovecotHomeDir, 0o700, e.uid, e.gid, false); err != nil {
+		return res, err
 	}
 	if err := mkdirOwned(root, box+"/sieve", 0o700, e.uid, e.gid, false); err != nil {
 		return res, err
