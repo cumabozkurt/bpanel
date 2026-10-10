@@ -1,0 +1,1 @@
+import"./BiNM6hyl.js";import{b as p,r}from"./DReLEgsB.js";import{V as s}from"./CsxhIFlu.js";var n=new Set(["$$slots","$$events","$$legacy"]);function m(o,t){let a=r(t,n);const e={name:"upload",size:24,node:[["path",{d:"M12 3v12"}],["path",{d:"m17 8-5-5-5 5"}],["path",{d:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"}]]};s(o,p(()=>a,{get icon(){return e}}))}export{m as U};
