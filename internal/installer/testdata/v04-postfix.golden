@@ -1,10 +1,10 @@
 # debian
 postconf -M mlmmj/unix=mlmmj unix - n n - - pipe flags=ORhu user=mlmmj argv=/usr/bin/mlmmj-receive -F -L /var/spool/mlmmj/$nexthop
-postconf -e transport_maps=hash:/etc/postfix/bpanel_mlmmj_transport
+postconf -e transport_maps=hash:/etc/postfix/bpanel/bpanel_mlmmj_transport
 postconf -e recipient_delimiter=+
 postconf -e mlmmj_destination_recipient_limit=1
 # rhel
 postconf -M mlmmj/unix=mlmmj unix - n n - - pipe flags=ORhu user=mlmmj argv=/usr/bin/mlmmj-receive -F -L /var/spool/mlmmj/$nexthop
-postconf -e transport_maps=lmdb:/etc/postfix/bpanel_mlmmj_transport
+postconf -e transport_maps=lmdb:/etc/postfix/bpanel/bpanel_mlmmj_transport
 postconf -e recipient_delimiter=+
 postconf -e mlmmj_destination_recipient_limit=1

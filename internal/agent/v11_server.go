@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -325,16 +326,31 @@ func (a *Agent) sysHostname(ctx context.Context, p rpc.SysHostnameParams) (rpc.S
 	defer a.lock("hostname")()
 	prev, _ := os.Hostname()
 	res := rpc.SysHostnameResult{Previous: prev, Hostname: h, Steps: []string{}}
-	if !a.Cfg.NoSystemd && v11Have("hostnamectl") {
+	direct := a.Cfg.NoSystemd || !v11Have("hostnamectl")
+	if !direct {
 		if _, err := v11Cmd(ctx, nil, "hostnamectl", "set-hostname", h); err != nil {
-			return res, errf("action_failed", "hostnamectl: %s", lastLines(err.Error(), 2))
+			// systemd-hostnamed renames over /etc/hostname, which fails with
+			// EBUSY where the file is a bind mount (containers): fall back to
+			// writing it in place.
+			res.Steps = append(res.Steps, "hostnamectl failed: "+lastLines(err.Error(), 1))
+			direct = true
+		} else {
+			res.Steps = append(res.Steps, "hostnamectl set-hostname")
 		}
-		res.Steps = append(res.Steps, "hostnamectl set-hostname")
-	} else {
-		if err := writeAtomic(hostnameFile, []byte(h+"\n"), 0o644, -1, -1); err != nil {
-			return res, errf("action_failed", "write %s", hostnameFile)
+	}
+	if direct {
+		if err := writeMaybeBindMounted(hostnameFile, []byte(h+"\n")); err != nil {
+			return res, errf("action_failed", "write %s: %v", hostnameFile, err)
 		}
-		if err := sethostname(h); err != nil {
+		// The agent unit has ProtectHostname=yes (private UTS namespace), so
+		// under systemd the kernel host name is set from a transient unit.
+		if !a.Cfg.NoSystemd && v11Have("systemd-run") && v11Have("hostname") {
+			if _, err := v11Cmd(ctx, nil, "systemd-run", "--quiet", "--wait", "--collect", "hostname", h); err != nil {
+				res.Steps = append(res.Steps, "hostname: "+lastLines(err.Error(), 1))
+			} else {
+				res.Steps = append(res.Steps, hostnameFile+" + hostname (transient unit)")
+			}
+		} else if err := sethostname(h); err != nil {
 			res.Steps = append(res.Steps, "sethostname: "+err.Error())
 		} else {
 			res.Steps = append(res.Steps, hostnameFile+" + sethostname")
@@ -342,7 +358,7 @@ func (a *Agent) sysHostname(ctx context.Context, p rpc.SysHostnameParams) (rpc.S
 	}
 	if b, err := os.ReadFile(hostsFile); err == nil {
 		if nb := RewriteHosts(string(b), prev, h); nb != string(b) {
-			if err := writeAtomic(hostsFile, []byte(nb), 0o644, -1, -1); err == nil {
+			if err := writeMaybeBindMounted(hostsFile, []byte(nb)); err == nil {
 				res.Steps = append(res.Steps, hostsFile)
 			}
 		}
@@ -369,6 +385,25 @@ func (a *Agent) sysHostname(ctx context.Context, p rpc.SysHostnameParams) (rpc.S
 	}
 	a.Cfg.Hostname = h
 	return res, nil
+}
+
+// writeMaybeBindMounted replaces a small root-owned system file atomically
+// and, when the rename is refused because the file is a bind mount (EBUSY in
+// containers), rewrites it in place instead.
+func writeMaybeBindMounted(path string, b []byte) error {
+	err := writeAtomic(path, b, 0o644, -1, -1)
+	if err == nil || !errors.Is(err, syscall.EBUSY) {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC|syscall.O_NOFOLLOW, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }
 
 // ---- IP functions ------------------------------------------------------------------

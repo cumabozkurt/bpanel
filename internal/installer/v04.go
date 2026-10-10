@@ -61,6 +61,19 @@ func V04OptionalPackages(l *distro.Layout, o Options) []OptionalPackage {
 	if o.Profile == "full" {
 		// mlmmj: Ubuntu universe; AlmaLinux 9 via EPEL when available.
 		p = append(p, OptionalPackage{"mlmmj", "mailing lists (dnsx)"})
+		// v1.1 parity tools (all free): GnuPG keyrings, CalDAV/CardDAV
+		// (Radicale + bcrypt for its htpasswd), Ruby apps, the PostgreSQL
+		// web UI client. A missing one only makes that tool report
+		// not_installed.
+		if l.Family == distro.Debian {
+			p = append(p, OptionalPackage{"gnupg", "email encryption (GnuPG)"}, OptionalPackage{"radicale", "calendars & contacts (CalDAV/CardDAV)"},
+				OptionalPackage{"python3-bcrypt", "calendars & contacts (bcrypt logins)"},
+				OptionalPackage{"ruby", "Ruby applications"}, OptionalPackage{"ruby-bundler", "Ruby applications (bundler)"},
+				OptionalPackage{"postgresql-client", "PostgreSQL web UI (psql)"})
+		} else {
+			p = append(p, OptionalPackage{"gnupg2", "email encryption (GnuPG)"}, OptionalPackage{"ruby", "Ruby applications"}, OptionalPackage{"rubygem-bundler", "Ruby applications (bundler)"},
+				OptionalPackage{"postgresql", "PostgreSQL web UI (psql)"})
+		}
 	}
 	if o.Smart {
 		p = append(p, OptionalPackage{"smartmontools", "disk health (obsx)"})
@@ -80,7 +93,7 @@ func V04OptionalPackages(l *distro.Layout, o Options) []OptionalPackage {
 func V04Dirs() []Dir {
 	return []Dir{
 		{"/var/lib/bpanel/xfer", 0o700, "root:root"},    // migrations/transfers (xfer)
-		{"/var/lib/bpanel/webx", 0o700, "root:root"},    // per-domain web extras state (webx)
+		{"/var/lib/bpanel/webx", 0o711, "root:root"},    // per-domain web extras state (webx); nginx/Apache traverse it (htpasswd, error pages)
 		{"/var/lib/bpanel/appx", 0o750, "root:root"},    // app units + proxy maps (appx)
 		{"/var/lib/bpanel/fim", 0o700, "root:root"},     // file-integrity baselines (shield)
 		{"/var/lib/bpanel/plugins", 0o750, "root:root"}, // plugin state (clusterx)
@@ -93,9 +106,12 @@ func V04Dirs() []Dir {
 // $nexthop is "<domain>/<list>" (dnsx.TransportMap).
 const MlmmjMasterEntry = "mlmmj/unix=mlmmj unix - n n - - pipe flags=ORhu user=mlmmj argv=/usr/bin/mlmmj-receive -F -L " + MlmmjSpool + "/$nexthop"
 
-// MlmmjTransportPath is the managed transport map (written by the agent).
+// MlmmjTransportPath is the managed transport map, written by the agent in
+// its map directory (<postfix>/bpanel/). Before v1.1 the installer pointed
+// transport_maps at <postfix>/bpanel_mlmmj_transport, a file the agent never
+// wrote, so mailing-list and email-routing transports were not applied.
 func MlmmjTransportPath(l *distro.Layout) string {
-	return filepath.Join(l.PostfixDir, "bpanel_mlmmj_transport")
+	return filepath.Join(l.PostfixDir, "bpanel", "bpanel_mlmmj_transport")
 }
 
 // V04PostfixSettings are the main.cf settings for the mailing-list transport.

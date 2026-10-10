@@ -7,7 +7,8 @@ import {
 	Network, ArrowRightLeft, FileWarning, FileText, BarChart3, Gauge, KeyRound, Smartphone, Ban, Image,
 	Code2, Settings2, Boxes, Puzzle, Clock, Terminal, Search, Languages, Contact, Palette, UserCog, Activity,
 	Package, UserPlus, UserX, PauseCircle, ListChecks, Cpu, RefreshCw, Info, ScrollText, Settings, BookOpen,
-	Truck, LayoutGrid, Layers, Shield, Webhook, MonitorCog, PlugZap
+	Truck, LayoutGrid, Layers, Shield, Webhook, MonitorCog, PlugZap,
+	Route, ShieldQuestion, KeySquare, CalendarDays, LayoutTemplate, Cloud, Stethoscope, SlidersHorizontal, Receipt, FolderTree, Cog
 } from '@lucide/svelte';
 
 export const userGroups = [
@@ -22,7 +23,11 @@ export const userGroups = [
 		{ id: 'email_filters', icon: Filter, to: '/email/filters', kw: 'sieve rules folder', feature: 'mail' },
 		{ id: 'spam_filters', icon: ShieldAlert, to: '/email/spam', kw: 'rspamd junk whitelist blacklist', feature: 'mail' },
 		{ id: 'mailing_lists', icon: Users, to: '/email/lists', kw: 'mlmmj list newsletter subscribers', feature: 'mail' },
-		{ id: 'track_delivery', icon: Truck, to: '/email/track', kw: 'mail log bounce postfix', feature: 'mail' }
+		{ id: 'track_delivery', icon: Truck, to: '/email/track', kw: 'mail log bounce postfix', feature: 'mail' },
+		{ id: 'email_routing', icon: Route, to: '/email/routing', kw: 'mx local remote backup routing yönlendirme', feature: 'email_routing' },
+		{ id: 'boxtrapper', icon: ShieldQuestion, to: '/email/boxtrapper', kw: 'whitelist quarantine challenge karantina beyaz liste', feature: 'boxtrapper' },
+		{ id: 'encryption', icon: KeySquare, to: '/email/encryption', kw: 'gpg gnupg pgp encryption şifreleme anahtar', feature: 'encryption' },
+		{ id: 'calendars', icon: CalendarDays, to: '/calendars', kw: 'caldav carddav calendar contacts radicale takvim kişiler', feature: 'calendars' }
 	] },
 	{ id: 'files', icon: FolderOpen, tools: [
 		{ id: 'file_manager', icon: FolderOpen, to: '/files', kw: 'upload edit zip chmod' },
@@ -32,7 +37,10 @@ export const userGroups = [
 		{ id: 'backups', icon: Archive, to: '/backups', kw: 'restic snapshot' },
 		{ id: 'file_restore', icon: History, to: '/backups', kw: 'restore' },
 		{ id: 'directory_privacy', icon: Lock, to: '/web/privacy', kw: 'password protect htpasswd basic auth parola koruma' },
-		{ id: 'git', icon: GitBranch, to: '/git', kw: 'git version control repository clone deploy depo sürüm' }
+		{ id: 'git', icon: GitBranch, to: '/git', kw: 'git version control repository clone deploy depo sürüm' },
+		{ id: 'images', icon: Image, to: '/images', kw: 'thumbnail scale convert resize görsel küçük resim', feature: 'images' },
+		{ id: 'directory_indexes', icon: FolderTree, to: '/web/indexes', kw: 'autoindex listing indexes dizin listeleme' },
+		{ id: 'leech_protection', icon: ShieldAlert, to: '/web/leech', kw: 'password sharing leech sızma paylaşım', feature: 'leech_protection' }
 	] },
 	{ id: 'databases', icon: Database, tools: [
 		{ id: 'mysql_databases', icon: Database, to: '/databases', kw: 'mariadb mysql user' },
@@ -40,6 +48,7 @@ export const userGroups = [
 		{ id: 'phpmyadmin', icon: Table2, action: 'phpmyadmin', kw: 'sql' },
 		{ id: 'remote_mysql', icon: Network, to: '/databases/remote', kw: 'remote mysql mariadb host ip uzak' },
 		{ id: 'postgresql', icon: Database, to: '/postgresql', kw: 'postgres pgsql psql' },
+		{ id: 'pg_browser', icon: Table2, to: '/postgresql/browser', kw: 'phppgadmin pgadmin sql query sorgu', feature: 'pg_browser' },
 		{ id: 'db_processes', icon: Activity, to: '/databases/processes', kw: 'processlist slow query kill sorgu' }
 	] },
 	{ id: 'domains', icon: Globe, tools: [
@@ -49,12 +58,14 @@ export const userGroups = [
 		{ id: 'redirects', icon: ArrowRightLeft, to: '/domains?redirects=1', kw: '301' },
 		{ id: 'zone_editor', icon: Network, to: '/dns', kw: 'dns record mx txt cname', feature: 'dns' },
 		{ id: 'dns_tools', icon: Network, to: '/dnsx', kw: 'dnssec ds import export bind zone file history revert check', feature: 'dns' },
-		{ id: 'dynamic_dns', icon: RefreshCw, to: '/ddns', kw: 'ddns dynamic dns dyndns home ip dinamik' }
+		{ id: 'dynamic_dns', icon: RefreshCw, to: '/ddns', kw: 'ddns dynamic dns dyndns home ip dinamik' },
+		{ id: 'site_publisher', icon: LayoutTemplate, to: '/site-publisher', kw: 'template website builder site şablon', feature: 'site_publisher' },
+		{ id: 'cloudflare', icon: Cloud, to: '/cloudflare', kw: 'cloudflare cdn proxy dns', feature: 'cloudflare' }
 	] },
 	{ id: 'metrics', icon: BarChart3, tools: [
 		{ id: 'errors', icon: FileWarning, to: '/logs/error', kw: 'error log' },
 		{ id: 'raw_access', icon: FileText, to: '/logs/access', kw: 'access log visitors' },
-		{ id: 'visitors', icon: Users, to: '/logs/access', kw: 'visits' },
+		{ id: 'visitors', icon: Users, to: '/stats/visitors', kw: 'visits awstats webalizer analytics ziyaretçi istatistik', feature: 'visitors' },
 		{ id: 'bandwidth', icon: Activity, to: '/bandwidth', kw: 'traffic transfer trafik bant genişliği' },
 		{ id: 'resource_usage', icon: Gauge, to: '/usage', kw: 'cpu memory io kaynak kullanımı' }
 	] },
@@ -62,6 +73,7 @@ export const userGroups = [
 		{ id: 'ssl_status', icon: ShieldCheck, to: '/ssl', kw: 'autossl lets encrypt https certificate' },
 		{ id: 'two_factor', icon: Smartphone, to: '/security', kw: '2fa totp' },
 		{ id: 'ssh_access', icon: KeyRound, to: '/ftp', kw: 'sftp ssh' },
+		{ id: 'ssh_keys', icon: KeyRound, to: '/ssh-keys', kw: 'ssh key authorized_keys ed25519 rsa anahtar', feature: 'ssh_keys' },
 		{ id: 'ip_blocker', icon: Ban, to: '/web/ip-blocker', kw: 'deny block ip cidr engelle' },
 		{ id: 'hotlink', icon: Image, to: '/web/hotlink', kw: 'referer referrer bandwidth images' },
 		{ id: 'api_tokens', icon: Webhook, to: '/api-tokens', kw: 'api token bearer anahtar' },
@@ -73,14 +85,15 @@ export const userGroups = [
 		{ id: 'php_ini', icon: Settings2, to: '/php-ini', kw: 'php.ini memory_limit upload timezone' },
 		{ id: 'wordpress', icon: LayoutGrid, to: '/wordpress', kw: 'wp blog cms maintenance wp-cli bakım' },
 		{ id: 'app_installer', icon: Puzzle, to: '/installer', kw: 'softaculous joomla drupal nextcloud install kurulum uygulama' },
-		{ id: 'nodejs', icon: Layers, to: '/apps', kw: 'node npm python pip wsgi application manager uygulama yöneticisi' }
+		{ id: 'nodejs', icon: Layers, to: '/apps', kw: 'node npm python pip wsgi ruby rack rails gem bundler application manager uygulama yöneticisi' }
 	] },
 	{ id: 'advanced', icon: Settings2, tools: [
 		{ id: 'cron_jobs', icon: Clock, to: '/cron', kw: 'schedule' },
 		{ id: 'terminal', icon: Terminal, to: '/terminal', kw: 'shell ssh console bash konsol' },
 		{ id: 'track_dns', icon: Search, to: '/track-dns', kw: 'dig nslookup traceroute lookup dns izle' },
 		{ id: 'error_pages', icon: FileWarning, to: '/web/error-pages', kw: '404 500 errordocument hata sayfası' },
-		{ id: 'mime_types', icon: FileText, to: '/web/mime', kw: 'content-type addtype' }
+		{ id: 'mime_types', icon: FileText, to: '/web/mime', kw: 'content-type addtype' },
+		{ id: 'apache_handlers', icon: Cog, to: '/web/handlers', kw: 'handler addhandler ssi shtml işleyici' }
 	] },
 	{ id: 'preferences', icon: UserCog, tools: [
 		{ id: 'password_security', icon: KeyRound, to: '/security', kw: 'password' },
@@ -97,7 +110,10 @@ export const adminGroups = [
 		{ id: 'server_info', icon: Info, to: '/server', kw: 'cpu memory kernel', adminOnly: true },
 		{ id: 'update_prefs', icon: RefreshCw, to: '/update-prefs', kw: 'apt dnf upgrade security reboot güncelleme', adminOnly: true },
 		{ id: 'monitoring', icon: Activity, to: '/monitoring', kw: 'health smart raid ntp prometheus grafana fim integrity retention izleme sağlık', adminOnly: true },
-		{ id: 'alerts', icon: FileWarning, to: '/alerts', kw: 'alert incident telegram slack discord notification uyarı olay bildirim', adminOnly: true }
+		{ id: 'alerts', icon: FileWarning, to: '/alerts', kw: 'alert incident telegram slack discord notification uyarı olay bildirim', adminOnly: true },
+		{ id: 'change_hostname', icon: Server, to: '/hostname', kw: 'hostname fqdn sunucu adı', adminOnly: true },
+		{ id: 'ip_functions', icon: Network, to: '/ips', kw: 'ip address dedicated additional ip adresi özel', adminOnly: true },
+		{ id: 'tweak_settings', icon: SlidersHorizontal, to: '/tweak-settings', kw: 'tweak settings feature toggle ince ayar', adminOnly: true }
 	] },
 	{ id: 'security_center', icon: Shield, tools: [
 		{ id: 'two_factor', icon: Smartphone, to: '/security', kw: '2fa totp password' },
@@ -133,11 +149,16 @@ export const adminGroups = [
 	] },
 	{ id: 'service_config', icon: Cpu, adminOnly: true, tools: [
 		{ id: 'php_versions', icon: Code2, to: '/php', kw: 'multiphp fpm' },
+		{ id: 'php_extensions', icon: Puzzle, to: '/php-extensions', kw: 'easyapache extension module pecl intl imagick eklenti' },
 		{ id: 'service_manager', icon: Cpu, to: '/services', kw: 'nginx apache mariadb' },
 		{ id: 'restart_services', icon: RefreshCw, to: '/services', kw: 'restart' },
 		{ id: 'integrations', icon: Cpu, to: '/integrations', kw: 'providers license imunify monarx detect' },
 		{ id: 'db_settings', icon: Database, to: '/db-settings', kw: 'mysql postgresql remote 3306 max connections veritabanı', adminOnly: true },
 		{ id: 'servers', icon: Server, to: '/servers', kw: 'multi server node cluster mtls agent sunucu düğüm', adminOnly: true }
+	] },
+	{ id: 'mail_admin', icon: Mail, adminOnly: true, tools: [
+		{ id: 'mail_queue', icon: Inbox, to: '/mail-queue', kw: 'postfix queue deferred hold flush kuyruk' },
+		{ id: 'mail_troubleshooter', icon: Stethoscope, to: '/mail-troubleshooter', kw: 'trace route mx spf dmarc sorun giderici' }
 	] },
 	{ id: 'dns_functions', icon: Network, adminOnly: true, tools: [
 		{ id: 'nameservers', icon: Network, to: '/settings', kw: 'ns' },
@@ -149,6 +170,7 @@ export const adminGroups = [
 	] },
 	{ id: 'development', icon: Code2, tools: [
 		{ id: 'api_docs', icon: BookOpen, href: '/openapi.json', kw: 'openapi rest' },
+		{ id: 'billing', icon: Receipt, to: '/billing', adminOnly: true, kw: 'whmcs billing hostbill blesta provisioning fatura' },
 		{ id: 'plugins', icon: PlugZap, to: '/plugins', adminOnly: true, kw: 'plugin extension addon ed25519 eklenti' }
 	] }
 ];
@@ -178,7 +200,7 @@ export function allTools(realm, role = 'admin', features) {
 export const hasFeature = (features, name) => !features || features[name] !== false;
 
 /** Admin-realm paths that only the server administrator may open (route guard in App.svelte). */
-export const ADMIN_ONLY_PATHS = ['/services', '/integrations', '/php', '/server', '/audit', '/settings', '/brute-force', '/edit-reseller', '/update-prefs', '/monitoring', '/alerts', '/db-settings', '/servers', '/dns-cluster', '/plugins', '/transfer'];
+export const ADMIN_ONLY_PATHS = ['/services', '/integrations', '/php', '/server', '/audit', '/settings', '/brute-force', '/edit-reseller', '/update-prefs', '/monitoring', '/alerts', '/db-settings', '/servers', '/dns-cluster', '/plugins', '/transfer', '/mail-queue', '/mail-troubleshooter', '/ips', '/hostname', '/tweak-settings', '/php-extensions', '/billing'];
 export function isAdminOnlyTool(id) {
 	for (const g of adminGroups) for (const x of g.tools) if (x.id === id) return !!(g.adminOnly || x.adminOnly);
 	return false;

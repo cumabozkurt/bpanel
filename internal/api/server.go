@@ -188,7 +188,8 @@ func agentStatus(code string) int {
 	switch code {
 	case "not_found", "no_such_user", "invalid_token":
 		return http.StatusNotFound
-	case "already_exists", "user_exists", "home_exists", "zone_exists", "php_version_in_use", "not_empty", "mail_domain_disabled":
+	case "already_exists", "user_exists", "home_exists", "zone_exists", "php_version_in_use", "not_empty", "mail_domain_disabled",
+		"ip_exists", "ssh_key_exists", "owned_by_another_account":
 		return http.StatusConflict
 	case "permission_denied", "unit_not_allowed", "not_managed", "symlink_in_path", "refused", "helper_must_not_run_as_root":
 		return http.StatusForbidden
@@ -198,7 +199,8 @@ func agentStatus(code string) int {
 		return http.StatusInsufficientStorage
 	case "is_directory", "not_a_directory", "binary_file", "not_regular_file", "bad_upload", "bad_upload_offset", "bad_offset",
 		"bad_zip", "bad_zip_entry", "copy_into_self", "unknown_op", "bad_params", "reserved_username", "db_prefix_required",
-		"php_not_installed", "unknown_php_version", "snapshot_kind_mismatch":
+		"php_not_installed", "unknown_php_version", "snapshot_kind_mismatch",
+		"ssh_invalid_name", "ssh_invalid_key", "php_ext_unknown", "php_version_missing", "not_installed":
 		return http.StatusUnprocessableEntity
 	case "private_dir", "bad_request", "too_long":
 		return http.StatusBadRequest

@@ -1,5 +1,5 @@
 /var/lib/bpanel/xfer -rwx------ root:root
-/var/lib/bpanel/webx -rwx------ root:root
+/var/lib/bpanel/webx -rwx--x--x root:root
 /var/lib/bpanel/appx -rwxr-x--- root:root
 /var/lib/bpanel/fim -rwx------ root:root
 /var/lib/bpanel/plugins -rwxr-x--- root:root

@@ -699,7 +699,7 @@ protocol imap {
 }
 plugin {
   quota = maildir:User quota
-  sieve = file:~/sieve;active=~/.dovecot.sieve
+  sieve = file:~/sieve;active=~/dovecot.sieve
 }
 `, cert, key, passwd, hostname)
 	}
@@ -761,7 +761,7 @@ quota "User quota" {
 sieve_script personal {
   driver = file
   path = ~/sieve
-  active_path = ~/.dovecot.sieve
+  active_path = ~/dovecot.sieve
 }
 `, cert, key, passwd, hostname)
 }

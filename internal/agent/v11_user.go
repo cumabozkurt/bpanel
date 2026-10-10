@@ -42,6 +42,7 @@ var (
 	DavDir       = "/var/lib/bpanel/dav"
 	DavUsersFile = "/etc/radicale/bpanel-users"
 	DavConfig    = "/etc/radicale/config"
+	DavStorage   = "/var/lib/radicale/collections"
 	// gpgBin / v11Have are variables for tests.
 	gpgBin  = "gpg"
 	v11Have = have
@@ -338,6 +339,20 @@ func (a *Agent) davRender(ctx context.Context) (rpc.DavStatusResult, error) {
 	}
 	if err := writeAtomic(DavUsersFile, data, 0o640, uid, gid); err != nil {
 		return rpc.DavStatusResult{}, errf("action_failed", "write %s", DavUsersFile)
+	}
+	// Radicale runs as the radicale user and keeps its lock file in the
+	// storage folder; some packages leave that folder root-owned (E2E v1.1).
+	if os.Geteuid() == 0 {
+		if pw, err := lookupUser("radicale"); err == nil {
+			if err := os.MkdirAll(DavStorage, 0o750); err == nil {
+				if fi, err := os.Lstat(DavStorage); err == nil && fi.IsDir() {
+					if st, ok := fi.Sys().(*syscall.Stat_t); ok && int(st.Uid) != pw.uid {
+						_ = os.Lchown(DavStorage, pw.uid, pw.gid)
+						_ = os.Chmod(DavStorage, 0o750)
+					}
+				}
+			}
+		}
 	}
 	if cur, err := os.ReadFile(DavConfig); err != nil || !bytes.Contains(cur, []byte("BOZKURT PANEL")) {
 		if err := writeAtomic(DavConfig, []byte(DavConfigText), 0o644, -1, -1); err != nil {

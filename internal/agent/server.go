@@ -505,7 +505,7 @@ func (a *Agent) ping(ctx context.Context, _ rpc.Empty) (rpc.PingResult, error) {
 }
 
 // Version is set by main via ldflags.
-var Version = "1.0.0"
+var Version = "1.1.0"
 
 func errf(code, format string, args ...any) error {
 	return &rpc.Error{Code: code, Message: fmt.Sprintf(format, args...)}

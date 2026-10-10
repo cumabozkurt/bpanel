@@ -507,6 +507,7 @@ func (in *Installer) cfgDovecot(ctx context.Context) error {
 	if err := in.writeFile(dd+"/conf.d/99-bpanel.conf", conf, 0o644); err != nil {
 		return err
 	}
+	migrateSieveActive("/home")
 	if err := in.sh(ctx, "doveconf", "-n"); err != nil {
 		return err
 	}
@@ -840,4 +841,51 @@ func (in *Installer) cfgFail2ban(ctx context.Context) error {
 		return err
 	}
 	return in.systemctl(ctx, "restart", "fail2ban")
+}
+
+// migrateSieveActive moves the active Sieve link of every mailbox from
+// ~/.dovecot.sieve to ~/dovecot.sieve (v1.1). The mailbox home is also the
+// Maildir++ root, where a dot-prefixed entry is taken for a folder: a
+// fileinto into a new folder (BoxTrapper) then failed with a temporary
+// error. Only plain directories are walked (no symlinks are followed) and
+// the link itself is renamed, never its target.
+func migrateSieveActive(homeRoot string) int {
+	n := 0
+	isDir := func(p string) bool {
+		fi, err := os.Lstat(p)
+		return err == nil && fi.IsDir()
+	}
+	users, _ := os.ReadDir(homeRoot)
+	for _, u := range users {
+		mail := filepath.Join(homeRoot, u.Name(), "mail")
+		if !isDir(filepath.Join(homeRoot, u.Name())) || !isDir(mail) {
+			continue
+		}
+		doms, _ := os.ReadDir(mail)
+		for _, d := range doms {
+			if !isDir(filepath.Join(mail, d.Name())) {
+				continue
+			}
+			boxes, _ := os.ReadDir(filepath.Join(mail, d.Name()))
+			for _, b := range boxes {
+				box := filepath.Join(mail, d.Name(), b.Name())
+				if !isDir(box) {
+					continue
+				}
+				old, nw := filepath.Join(box, ".dovecot.sieve"), filepath.Join(box, "dovecot.sieve")
+				fi, err := os.Lstat(old)
+				if err != nil || (fi.Mode()&os.ModeSymlink == 0 && !fi.Mode().IsRegular()) {
+					continue
+				}
+				if _, err := os.Lstat(nw); err == nil {
+					continue
+				}
+				if os.Rename(old, nw) == nil {
+					_ = os.Remove(filepath.Join(box, ".dovecot.svbin"))
+					n++
+				}
+			}
+		}
+	}
+	return n
 }

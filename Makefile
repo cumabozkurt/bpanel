@@ -1,6 +1,6 @@
 # BOZKURT PANEL — build helpers. Requires Go 1.27+, Node 20+ and pnpm.
 # SPDX-License-Identifier: Apache-2.0
-VERSION ?= 1.0.0
+VERSION ?= 1.1.0
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X github.com/cumabozkurt/bpanel/internal/version.Version=$(VERSION) -X github.com/cumabozkurt/bpanel/internal/version.Commit=$(COMMIT)
 GOOS    ?= linux

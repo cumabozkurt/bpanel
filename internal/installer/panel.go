@@ -2,6 +2,7 @@ package installer
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -26,6 +27,11 @@ const (
 	// by the API user inside the root-owned /var/lib/bpanel.
 	DBPath       = "/var/lib/bpanel/db/bpanel.db"
 	legacyDBPath = "/var/lib/bpanel/bpanel.db"
+	// SecretKeyPath is the secret-store master key. bpanel-api runs with
+	// ProtectSystem=strict, so it cannot create (or rotate) a key under
+	// /etc/bpanel; the key lives in a directory owned by the API user.
+	SecretKeyPath       = "/var/lib/bpanel/keys/secret.key"
+	legacySecretKeyPath = "/etc/bpanel/secret.key"
 )
 
 // apiConfig returns the installed API configuration (defaults if missing).
@@ -154,6 +160,12 @@ func (in *Installer) panel(ctx context.Context) error {
 	}
 	pcfg.Hostname = in.O.Hostname
 	pcfg.ServerIP = in.S.ServerIP
+	if pcfg.SecretKeyFile == "" || pcfg.SecretKeyFile == legacySecretKeyPath {
+		if err := in.ensureSecretKey(ctx, SecretKeyPath, legacySecretKeyPath); err != nil {
+			return err
+		}
+		pcfg.SecretKeyFile = SecretKeyPath
+	}
 	pb, _ := json.MarshalIndent(pcfg, "", "  ")
 	if err := in.writeFile(apiConfigPath, string(pb)+"\n", 0o640); err != nil {
 		return err
@@ -349,4 +361,38 @@ func (in *Installer) hostnameSSL(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// ensureSecretKey makes sure the secret-store master key exists at path,
+// readable and writable (rotation) by the API user only. A key created
+// earlier at the legacy path is carried over so sealed values stay readable.
+func (in *Installer) ensureSecretKey(ctx context.Context, path, legacy string) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		key, err := os.ReadFile(legacy)
+		if err != nil || len(key) != 32 {
+			key = make([]byte, 32)
+			if _, err := rand.Read(key); err != nil {
+				return err
+			}
+		}
+		if err := os.WriteFile(path+".tmp", key, 0o600); err != nil {
+			return err
+		}
+		if err := os.Rename(path+".tmp", path); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	if err := os.Chmod(dir, 0o700); err != nil {
+		return err
+	}
+	if err := os.Chmod(path, 0o600); err != nil {
+		return err
+	}
+	return in.sh(ctx, "chown", "-R", "bpanel:bpanel", dir)
 }

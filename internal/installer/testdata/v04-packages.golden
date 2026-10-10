@@ -1,6 +1,6 @@
 debian/minimal: chrony traceroute git | optional: smartmontools crowdsec crowdsec-firewall-bouncer
 debian/web: chrony traceroute git | optional: smartmontools crowdsec crowdsec-firewall-bouncer
-debian/full: chrony traceroute git | optional: mlmmj smartmontools crowdsec crowdsec-firewall-bouncer
+debian/full: chrony traceroute git | optional: mlmmj gnupg radicale python3-bcrypt ruby ruby-bundler postgresql-client smartmontools crowdsec crowdsec-firewall-bouncer
 rhel/minimal: chrony traceroute git | optional: smartmontools
 rhel/web: chrony traceroute git | optional: smartmontools
-rhel/full: chrony traceroute git | optional: mlmmj smartmontools
+rhel/full: chrony traceroute git | optional: mlmmj gnupg2 ruby rubygem-bundler postgresql smartmontools

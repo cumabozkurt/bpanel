@@ -18,8 +18,9 @@ import (
 
 // v0.4 user mail tools. Sieve scripts live in the mailbox home
 // (/home/<user>/mail/<domain>/<local>/sieve/bpanel.sieve, owned by the
-// account) and are activated through ~/.dovecot.sieve, matching the
-// installer's "sieve = file:~/sieve;active=~/.dovecot.sieve". Spam rules are
+// account) and are activated through ~/dovecot.sieve, matching the
+// installer's "sieve = file:~/sieve;active=~/dovecot.sieve" (before v1.1 the
+// link was ~/.dovecot.sieve, which Maildir++ mistook for a folder). Spam rules are
 // Rspamd settings-module files under RspamdBpanelDir, included from
 // local.d/settings.conf. Track Delivery reads the Postfix log.
 
@@ -104,7 +105,12 @@ func (a *Agent) mailSieveApply(ctx context.Context, p rpc.MailSieveReq) (rpc.Mai
 	if st, err := root.Lstat(box); err != nil || !st.IsDir() {
 		return res, errf("not_found", "%s", addr)
 	}
-	active, script0 := box+"/.dovecot.sieve", box+"/sieve/bpanel.sieve"
+	active, script0 := box+"/dovecot.sieve", box+"/sieve/bpanel.sieve"
+	// pre-v1.1 activation link (a Maildir++ "folder" by name): drop it.
+	if t, err := root.Readlink(box + "/.dovecot.sieve"); err == nil && t == "sieve/bpanel.sieve" {
+		_ = root.Remove(box + "/.dovecot.sieve")
+		_ = root.Remove(box + "/.dovecot.svbin")
+	}
 	if script == "" {
 		_ = root.Remove(script0)
 		_ = root.Remove(box + "/sieve/bpanel.svbin")

@@ -28,7 +28,7 @@ and UI can hide or refuse what is not installed instead of failing with 502
 
    ```json
    {
-     "version": "1.0.0",
+     "version": "1.1.0",
      "profile": "minimal",
      "features": {"apache": false, "backups": true, "cron": true, "dns": false, "ftp": false,
                   "mail": false, "mysql": true, "php": true, "phpmyadmin": true, "sftp": true,
