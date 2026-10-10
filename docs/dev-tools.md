@@ -1,0 +1,36 @@
+# Developer tools (v0.4 devx)
+
+Git Version Control, Terminal, Track DNS and Dynamic DNS — the four former "soon" tools of the user panel. Everything is free/open-source (git, tar, traceroute/tracepath, golang.org/x/net/websocket, miekg/dns); no paid component.
+
+Code: `internal/devx` (pure logic + PTY), `internal/agentrpc/devx.go`, `internal/agent/devx.go`, `internal/api/devx.go`, `internal/mockagent/devx.go`, migration `0014_devx.sql`, pages `web/src/lib/pages/user/{Git,GitRepo,Terminal,TrackDNS,DynamicDNS}.svelte`, i18n `devx.*`.
+
+## Git Version Control (`/git`)
+- API: `GET/POST /user/git`, `GET/PUT/DELETE /user/git/{id}` (`?files=1` also deletes the directory), `POST /user/git/{id}/deploy {pull, deploy}`. Rows in `git_repos` are scoped by `user_id`; another account's id answers 404.
+- Clone URLs: only `https://host/path`, `ssh://[user@]host[:port]/path` and scp-style `user@host:path` (normalised to ssh://). Refused: `file://`, local/relative paths, `http://`, `git://`, `ext::`/`fd::` helpers, credentials in the URL, option-looking hosts (`-o…`), query/fragment, `..`.
+- SSRF: the API resolves the host and applies the webhook guard (`blockedIP`: loopback, RFC1918, CGNAT, link-local/metadata, ULA, documentation, multicast…); the super-admin's `webhook_allow_private` setting applies here too. The agent re-resolves and re-checks right before git connects (narrows DNS rebinding), and also re-checks `remote.origin.url` before every pull.
+- Paths: relative to the home, no `..`, no `.git` segment, no `.ssh/.bpanel/etc/mail/logs/tmp/.config/.gnupg`; symlinked components refused (`os.Root` + `checkNoSymlinks`). Default path `repositories/<name>`. Deploy path must be `public_html[/…]` or an own domain's docroot, must exist and must not overlap the repository.
+- Execution: every git command runs as the account uid via `bpanel-agent cage-exec` (account cgroup slice, setgroups/setgid/setuid, no_new_privs) — root never runs git on a user-controlled repository (hooks/fsmonitor/config). argv only, through `/usr/bin/env GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/bin/false SSH_ASKPASS=/bin/false GIT_CONFIG_NOSYSTEM=1 GIT_SSH_COMMAND="ssh -o BatchMode=yes …"` plus `-c protocol.allow=never -c protocol.https.allow=always -c protocol.ssh.allow=always -c protocol.file.allow=never -c credential.helper= -c core.hooksPath=/dev/null`. Timeouts: clone 5 min, pull/deploy 2 min, info 20 s; output capped at 64 KiB. Clones use `--no-recurse-submodules`.
+- Deploy: `git pull --ff-only` and/or `git archive HEAD | tar -x` into the deploy path, both caged (tracked files only, `.git` never reaches the docroot). Private repositories: the user puts a deploy key in `~/.ssh` (ssh runs as the user).
+- Rate limit 30/min (burst 20) per account. Audit: `git.clone/init/update/deploy/delete`.
+
+## Terminal (`/terminal`)
+- `GET /user/terminal` (status) and `GET /user/terminal/ws` (WebSocket, `golang.org/x/net/websocket`).
+- Preconditions (checked before the agent is asked for a PTY): browser session (API tokens refused), account active, `shell_access` enabled by the admin (adminx Modify Account), re-authentication within `DefaultReauthWindow` (10 min; the page asks for the password and calls `/account/reauth`), `Upgrade: websocket`, and `Origin` host equal to the request host (cross-site WebSocket hijacking). Response compression is skipped for this path (hijack).
+- Agent: `term.open/write/read/resize/close`. The PTY is opened with stdlib syscalls; the account's login shell (must be one of bash/sh/dash/zsh/bpanel-cage-shell — `nologin`/`false` → `shell_disabled`) runs through `cage-exec` as its uid with a new session and controlling tty. Sessions are bound to the account (another account's id → `terminal_not_found`); max 3 per account, 64 total; output buffer 1 MiB; idle 15 min / max age 8 h reaped by the agent; the API also closes after 15 min without input. Audit: `terminal.open`/`terminal.close` (with duration) and agent log lines.
+- Bridge: the API long-polls `term.read` (1 s) over the existing request/response agent socket, so no new agent transport was needed.
+- UI is a plain-text terminal (no xterm.js dependency): ANSI codes are stripped, keystrokes/Ctrl-keys/arrows/paste are sent; full-screen programs (vim, top) do not render properly. Swapping in xterm.js (MIT) later only touches `Terminal.svelte`.
+
+## Track DNS (`/track-dns`)
+- `GET /user/dns-lookup?host=&type=A|AAAA|MX|TXT|NS|CNAME|CAA` — Go resolver (`PreferGo`) with a 5 s timeout; CAA via miekg/dns against the first `/etc/resolv.conf` server. Status `ok|nxdomain|timeout|error`. 30/min per account.
+- `POST /user/traceroute {host}` — agent runs `traceroute -n -w 2 -q 1 -m 20 HOST` or `tracepath -n -m 20 HOST` (60 s timeout), `not_installed` when neither exists. Hosts are validated (no leading `-`, hostname/IP only) and targets resolving to private/reserved addresses are refused (tenants may not map the internal network). 3/min (burst 2) per account.
+
+## Dynamic DNS (`/ddns`)
+- `GET /user/ddns`, `POST /user/ddns {domain_id}` (enable or rotate; token shown once), `DELETE /user/ddns/{id}`. Subdomains (`kind='sub'`) of the caller only.
+- Tokens: `bpd_` + 32 random bytes (base64url); only `sha256(token)` is stored (`ddns_hosts.token_hash`, UNIQUE). 256-bit random tokens make a slow KDF unnecessary.
+- Public endpoint (user realm, no session): `GET|POST /ddns/update?token=…[&ip=…|&myip=…]` (token also accepted as `Authorization: Bearer` or POST form). The client IP (trusted-proxy aware `clientIP`) is used when no ip is given; IPv4 sets the A, IPv6 the AAAA rrset (TTL 300) of exactly that subdomain in its parent zone through the existing `dns.rrset.replace` agent action (owner-checked). dyndns-style answers: `good <ip>`, `nochg <ip>`, `badauth`, `badip`, `abuse` (429), `911`. Rate limits: 30/min per IP, 10/min (burst 5) per token. Suspended accounts get `badauth`. Updates are audited as system events `ddns.update`.
+
+## Verified here
+- `go test ./internal/devx` (URL parser incl. file://, ext::, credentials, SSRF guard incl. mixed public+loopback answers and IPv4-mapped IPv6, path rules, tokens, real PTY).
+- `go test ./internal/agent -run Devx`: clone rejections (no git ever started), symlink parent refused, real `git init` → commit → info → deploy via git archive|tar → `.git` not exported → file:// origin refused on pull → remove; traceroute validation/not_installed; **real PTY terminal session** (`/bin/sh`, echo round-trip, cross-account read refused, resize, close). The cage itself is replaced by a pass-through in tests (it needs root + cgroup v2; covered by internal/isolation).
+- `go test ./internal/api -run Devx`: git SSRF/file:// rejection over HTTP, ownership (404 for another account on every repo route), deploy params; Track DNS validation + traceroute private-target refusal + rate limit; DDNS token hashing, update good/nochg/AAAA/badip/badauth, rotation, ownership; terminal WebSocket refused without shell access / with a foreign Origin / without recent auth, and a real WS handshake bridging input to `term.write` and closing with `term.close`.
+- Not verified: cage-exec as a real non-root uid with a real cgroup slice for git/terminal (needs a provisioned account), traceroute against the internet (no traceroute in the sandbox), CAA against a live resolver.

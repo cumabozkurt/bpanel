@@ -1,0 +1,21 @@
+# Prometheus scrape config for BPANEL (free software: Prometheus, Apache-2.0).
+# Option A (recommended): Prometheus on the panel host, loopback scrape, no token.
+#   Requires Monitoring -> Settings -> "Allow unauthenticated /metrics scrapes from localhost" (default on).
+scrape_configs:
+  - job_name: bpanel
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true   # self-signed panel certificate; use ca_file with a real CA instead
+    static_configs:
+      - targets: ["127.0.0.1:2087"]   # admin realm port of your installation
+    metrics_path: /metrics
+    scrape_interval: 60s
+
+# Option B: remote Prometheus with an admin API token (Security -> API tokens).
+#  - job_name: bpanel-remote
+#    scheme: https
+#    authorization:
+#      type: Bearer
+#      credentials_file: /etc/prometheus/bpanel.token
+#    static_configs:
+#      - targets: ["panel.example.com:2087"]

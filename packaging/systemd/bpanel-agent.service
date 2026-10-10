@@ -1,0 +1,35 @@
+[Unit]
+Description=BOZKURT PANEL agent (root, unix socket only)
+After=network.target
+Before=bpanel-api.service
+
+[Service]
+Type=simple
+# Remove stale restic locks left by a killed backup (R2-PERF-14). Only the
+# agent runs restic, so no lock can be live while it is stopped. Never fatal.
+ExecStartPre=-/usr/local/lib/bpanel/bpanel-installer restic-unlock
+ExecStart=/usr/local/bin/bpanel-agent --config /etc/bpanel/agent.json
+Restart=always
+RestartSec=2
+RuntimeDirectory=bpanel
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+UMask=0022
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_FSETID CAP_SETUID CAP_SETGID CAP_SETPCAP CAP_KILL CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RESOURCE CAP_AUDIT_WRITE CAP_SETFCAP CAP_MKNOD CAP_IPC_LOCK CAP_NET_BIND_SERVICE CAP_SYS_CHROOT
+RestrictAddressFamilies=AF_UNIX AF_NETLINK AF_INET AF_INET6
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectKernelTunables=yes
+ProtectClock=yes
+ProtectHostname=yes
+PrivateTmp=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=~user
+SystemCallArchitectures=native
+SystemCallFilter=~@clock @cpu-emulation @debug @module @obsolete @raw-io @reboot @swap
+SystemCallErrorNumber=EPERM
+KeyringMode=private
+
+[Install]
+WantedBy=multi-user.target

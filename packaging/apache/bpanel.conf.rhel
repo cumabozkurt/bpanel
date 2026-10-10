@@ -1,0 +1,8 @@
+# Managed by BOZKURT PANEL
+ServerTokens Prod
+ServerSignature Off
+<IfModule remoteip_module>
+    RemoteIPHeader X-Real-IP
+    RemoteIPInternalProxy 127.0.0.1
+</IfModule>
+IncludeOptional /etc/httpd/bpanel.d/*.conf

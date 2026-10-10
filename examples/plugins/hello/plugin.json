@@ -1,0 +1,9 @@
+{
+  "name": "hello",
+  "version": "1.0.0",
+  "author": "BPanel example",
+  "license": "Apache-2.0",
+  "description": "Smallest possible BPanel plugin: one static page, no hooks, no agent actions.",
+  "permissions": ["ui.page"],
+  "ui_entry": "index.html"
+}

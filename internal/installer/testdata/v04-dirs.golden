@@ -1,0 +1,7 @@
+/var/lib/bpanel/xfer -rwx------ root:root
+/var/lib/bpanel/webx -rwx------ root:root
+/var/lib/bpanel/appx -rwxr-x--- root:root
+/var/lib/bpanel/fim -rwx------ root:root
+/var/lib/bpanel/plugins -rwxr-x--- root:root
+/usr/local/bpanel -rwxr-xr-x root:root
+/usr/local/bpanel/plugins -rwxr-xr-x root:root

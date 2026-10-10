@@ -1,0 +1,9 @@
+/bin/
+/dist/
+web/node_modules/
+web/.svelte-kit/
+web/build/
+*.minisig.key
+*.key
+!docs/release-key.pub
+.env

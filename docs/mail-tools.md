@@ -1,0 +1,19 @@
+# User mail tools (v0.4 "mailx")
+
+Autoresponders, Email Filters, Spam Filters, Track Delivery. Free stack only: Dovecot Pigeonhole (Sieve), Rspamd, Postfix logs.
+
+## Design
+- `internal/mailx` (pure, unit-tested): Sieve generator (`Generate`), Rspamd settings renderer (`RenderRspamd`), Postfix log parser (`ParseLog`). All tenant input is validated (no control chars / newlines in one-line fields, strict header/folder/email/domain charsets, length caps) and escaped again on output (Sieve quoted-string escaping of `"` and `\`; `:matches` wildcards escaped for "begins with").
+- Agent actions (`internal/agent/mailx.go`, gated by `accountField["user"]` + `mustOwn(kindMail, domain, user)`):
+  - `mail.sieve.apply`: writes `~/sieve/bpanel.sieve` in the mailbox home (`/home/<user>/mail/<domain>/<local>/`, owned by the account uid like the Maildir; via `os.Root`, no symlink traversal, O_EXCL temp + rename), activates via `~/.dovecot.sieve -> sieve/bpanel.sieve` (installer config `sieve = file:~/sieve;active=~/.dovecot.sieve`), compiles with `sievec` run as the account (30 s timeout). No `sievec` → status `not_installed` (script saved, inactive engine). Compile failure → deactivated + `sieve_compile_failed`. A previously active regular-file script is kept as `sieve/previous-active.sieve`; a Roundcube managesieve activation is replaced.
+  - `mail.spam.apply`: per-account `/etc/rspamd/bpanel.d/<user>.conf` (settings module rules: deny → reject, allow → `want_spam`, base rule → `add header` at the required score or `want_spam` when disabled), included by a panel-managed `/etc/rspamd/local.d/settings.conf` (refuses with `rspamd_settings_conflict` if that file is unmanaged). `rspamadm configtest` (rollback on failure → `rspamd_config_invalid`), then `systemctl reload rspamd`. No rspamd → `not_installed`.
+  - `mail.log.search`: last 8 MiB / 50 000 lines of `/var/log/mail.log` or `/var/log/maillog`, else `journalctl -u postfix* -n 50000` (20 s timeout); parsed to time/queue id/from/to/status/relay/dsn/delay/detail; only entries whose sender or recipient domain is one of the account's mail domains are returned (API re-filters as defence in depth); ≤ 500 results.
+- API (`internal/api/mailx.go`, user realm, own mailboxes/domains only): `GET /user/email/autoresponders`, `PUT|DELETE /user/email/autoresponders/{mailboxId}`, `GET|POST /user/email/filters`, `DELETE /user/email/filters/{id}`, `GET|PUT /user/email/spam`, `GET /user/email/track?q=&limit=`. The agent is called first; DB rows change only after success. Audit: `email.autoresponder`, `email.filter`, `email.spam`.
+- Migration `0010_mailx.sql`: `mail_autoresponders`, `mail_filters`, `mail_sieve_status`, `mail_spam` (additive, cascade on mailbox/user delete).
+- UI: `/email/autoresponders`, `/email/filters`, `/email/spam`, `/email/track`; `mailx.*` keys EN+TR.
+
+## Verified
+Unit tests (generator, injection with quotes/newlines/backslashes/braces, validation, rspamd render, log parser incl. ownership filter, rejects, ISO + syslog timestamps), API test (cross-tenant 404s, validation 400s, agent only receives own user/domains), agent gate classification test.
+
+## Not verified
+Not run against real Dovecot/Pigeonhole/Rspamd/Postfix in this sandbox (not installed): `sievec` compile, rspamd settings semantics (`rcpt`/`from` "@domain" matching, priority between allow/deny rules, glob include) and the journalctl unit glob are per upstream docs only. Folder names use "." as hierarchy separator (Maildir++ default, matches the installer's Dovecot config). The vacation spam skip relies on an `X-Spam`/`X-Spam-Flag: Yes` header (Rspamd milter_headers). Mailing lists remain `soon`.

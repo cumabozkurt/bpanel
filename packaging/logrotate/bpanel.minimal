@@ -1,0 +1,23 @@
+# Managed by BOZKURT PANEL
+/var/log/bpanel/install.log {
+    monthly
+    rotate 3
+    missingok
+    notifempty
+    compress
+    nocreate
+}
+
+/var/log/bpanel/domlogs/*.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    create 0640 root bpanel
+    postrotate
+        [ ! -s /run/nginx.pid ] || kill -USR1 "$(cat /run/nginx.pid)" 2>/dev/null || true
+    endscript
+}

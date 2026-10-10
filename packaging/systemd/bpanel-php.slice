@@ -1,0 +1,11 @@
+# Managed by BOZKURT PANEL
+[Unit]
+Description=BOZKURT PANEL: PHP-FPM of all hosting accounts
+Before=slices.target
+
+[Slice]
+CPUWeight=50
+IOWeight=50
+MemoryHigh=85%
+MemoryMax=92%
+TasksMax=80%

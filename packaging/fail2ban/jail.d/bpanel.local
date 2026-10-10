@@ -1,0 +1,37 @@
+# Managed by BOZKURT PANEL
+[DEFAULT]
+banaction = nftables-multiport
+banaction_allports = nftables-allports
+bantime = 1h
+findtime = 10m
+maxretry = 6
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+backend = systemd
+port = 22
+journalmatch = _SYSTEMD_UNIT=ssh.service + _SYSTEMD_UNIT=sshd.service + _COMM=sshd + _COMM=sshd-session
+
+[bpanel]
+enabled = true
+backend = systemd
+filter = bpanel
+port = 2082,2083,2086,2087,2095,2096
+maxretry = 8
+
+[roundcube-auth]
+enabled = true
+backend = systemd
+port = 2095,2096
+
+[dovecot]
+enabled = true
+backend = systemd
+port = pop3,pop3s,imap,imaps,submission,465,sieve
+
+[postfix-sasl]
+enabled = true
+backend = systemd
+filter = postfix[mode=auth]
+port = smtp,465,submission,imap,imaps,pop3,pop3s

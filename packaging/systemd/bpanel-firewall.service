@@ -1,0 +1,17 @@
+[Unit]
+Description=BOZKURT PANEL firewall (nftables table inet bpanel)
+Wants=network-pre.target
+Before=network-pre.target shutdown.target
+After=nftables.service
+Conflicts=shutdown.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/bpanel/nftables.conf
+ExecReload=/usr/sbin/nft -f /etc/bpanel/nftables.conf
+ExecStop=/usr/sbin/nft delete table inet bpanel
+
+[Install]
+WantedBy=multi-user.target

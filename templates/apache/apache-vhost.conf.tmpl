@@ -1,0 +1,28 @@
+# Managed by BOZKURT PANEL (template v{{.TemplateVersion}}) — changes are overwritten.
+<VirtualHost 127.0.0.1:8080>
+    ServerName {{safe .Domain}}
+{{- range .Aliases}}
+    ServerAlias {{safe .}}
+{{- end}}
+    DocumentRoot "{{safe .DocRoot}}"
+    SetEnvIf X-Forwarded-Proto "^https$" HTTPS=on
+    <Directory "{{safe .DocRoot}}">
+        Options -Indexes +SymLinksIfOwnerMatch
+        # .htaccess may not re-enable FollowSymLinks or ExecCGI (shared-hosting symlink attacks)
+        AllowOverride AuthConfig FileInfo Indexes Limit Options=Indexes,MultiViews,SymLinksIfOwnerMatch
+        Require all granted
+    </Directory>
+    <FilesMatch "\.php$">
+        SetHandler "proxy:unix:{{safe .PHPSocket}}|fcgi://localhost"
+    </FilesMatch>
+    ErrorLog "/var/log/bpanel/domlogs/{{safe .Domain}}.apache-error.log"
+    CustomLog /dev/null common
+{{- if .ApacheWAFInclude}}
+    # per-domain WAF (mod_security2); rendered only when WAF mode != off
+    IncludeOptional "{{safe .ApacheWAFInclude}}"
+{{- end}}
+{{- if .ApacheWebXInclude}}
+    # per-domain web extras (directory privacy, hotlink, error pages, MIME types, IP blocker)
+    Include "{{safe .ApacheWebXInclude}}"
+{{- end}}
+</VirtualHost>

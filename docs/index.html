@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BOZKURT PANEL (BPANEL) — free, open-source cPanel/WHM-style hosting control panel</title>
+<meta name="description" content="BOZKURT PANEL is a free, Apache-2.0 web hosting control panel with a cPanel/WHM-style layout and the same ports for Ubuntu 24.04 LTS and AlmaLinux 9. Email, DNS, databases, PHP, backups, firewall, malware protection, isolation and multi-server.">
+<meta property="og:title" content="BOZKURT PANEL v1.0.0 — open-source hosting control panel">
+<meta property="og:description" content="cPanel/WHM-style layout and ports, 100% free software, for Ubuntu 24.04 and AlmaLinux 9.">
+<meta property="og:image" content="https://cumabozkurt.github.io/bpanel/screenshots/v1-admin-dashboard.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#"><img src="assets/logo.svg" alt="">BOZKURT <span>PANEL</span></a>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#screenshots">Screenshots</a></li>
+    <li><a href="#ports">Ports</a></li>
+    <li><a href="#install">Install</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#status">Status</a></li>
+    <li><a href="#tr">Türkçe</a></li>
+    <li><a href="https://github.com/cumabozkurt/bpanel">GitHub</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="pill">v1.0.0 · first public release · Apache-2.0</span>
+    <h1>The <em>free, open-source</em> hosting control panel with a cPanel/WHM feel.</h1>
+    <p class="lead">BOZKURT PANEL (BPANEL) gives your customers a familiar cPanel-style panel on port 2083 and you a WHM-style admin on 2087 — on <b>Ubuntu 24.04 LTS</b> and <b>AlmaLinux 9</b>, built only from free software.</p>
+    <div class="cta">
+      <a class="btn primary" href="#install">Get started</a>
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel">★ View on GitHub</a>
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.0.0">Release v1.0.0</a>
+    </div>
+    <div class="meta"><span>◆ Go + SvelteKit</span><span>◆ English &amp; Türkçe</span><span>◆ amd64 &amp; arm64</span><span>◆ No licence fees, ever</span></div>
+  </div>
+  <img class="shot" src="screenshots/v1-admin-dashboard.png" alt="BPANEL admin dashboard">
+</div></header>
+
+<section id="features"><div class="wrap">
+  <h2>Everything a shared-hosting server needs</h2>
+  <p class="sub">96 cPanel/WHM tools are wired up — about 82 % of the cPanel/WHM feature list. Anything that needs software the server lacks answers <code>not_installed</code> with a reason instead of pretending to work.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ico">✉</span>Email</h3><p>Mailboxes, forwarders, catch-all, Roundcube webmail, SPF/DKIM/DMARC, autoresponders, Sieve filters, Rspamd spam filters, delivery tracking and mlmmj mailing lists.</p></div>
+    <div class="card"><h3><span class="ico">🗂</span>Files &amp; web</h3><p>File manager with editor, disk usage, FTP/SFTP, directory privacy, hotlink protection, error pages, MIME types, IP blocker and Git version control with deploy.</p></div>
+    <div class="card"><h3><span class="ico">🛢</span>Databases</h3><p>MariaDB with wizard, phpMyAdmin single sign-on, remote MySQL hosts, PostgreSQL databases and users, and a live process list.</p></div>
+    <div class="card"><h3><span class="ico">🌐</span>Domains &amp; DNS</h3><p>Addon, sub and alias domains, redirects, PowerDNS zone editor, DNSSEC, BIND import/export, zone history with revert, Dynamic DNS and DNS clustering.</p></div>
+    <div class="card"><h3><span class="ico">⚙</span>Software</h3><p>MultiPHP 8.1–8.5 with INI editor, App Installer (WordPress, Joomla, Drupal, Nextcloud), WordPress Toolkit, Node.js/Python apps, cron and a browser terminal.</p></div>
+    <div class="card"><h3><span class="ico">🧭</span>WHM-style admin</h3><p>Accounts, packages, resellers with privileges, services, SQL settings, bandwidth, update preferences, cPanel <code>cpmove</code> Transfer Tool, plugins and API tokens.</p></div>
+    <div class="card"><h3><span class="ico">🛡</span>BPanel Shield</h3><p>Real-time malware scanning with ClamAV, YARA and heuristics, a safe upload pipeline, encrypted quarantine and restore.</p></div>
+    <div class="card"><h3><span class="ico">🔥</span>Network security</h3><p>nftables firewall with lockout guard and confirm-or-rollback, fail2ban / CrowdSec, per-domain ModSecurity with the OWASP Core Rule Set.</p></div>
+    <div class="card"><h3><span class="ico">📦</span>Isolation</h3><p>CloudLinux-style limits for free: per-account cgroup v2 slices (CPU, RAM, IO, tasks), a bubblewrap cage for shell and cron, hardened PHP-FPM pools.</p></div>
+    <div class="card"><h3><span class="ico">💾</span>Backups</h3><p>restic backups to local disk, SFTP or S3-compatible storage, retention, scheduled jobs and automatic restore verification.</p></div>
+    <div class="card"><h3><span class="ico">📈</span>Monitoring</h3><p>OS health, SMART, time sync, Prometheus <code>/metrics</code>, alerts to e-mail, Telegram, Slack or Discord, incidents and file-integrity monitoring.</p></div>
+    <div class="card"><h3><span class="ico">🔗</span>Multi-server &amp; API</h3><p>Remote nodes over mTLS with a built-in CA, RBAC with 2FA and step-up auth, HMAC-signed webhooks and an OpenAPI 3.1 description of every route.</p></div>
+  </div>
+</div></section>
+
+<section id="screenshots"><div class="wrap">
+  <h2>Screenshots</h2>
+  <p class="sub">Captured from the v1.0.0 build (dev mode with demo data). Click to enlarge. More in <a href="https://github.com/cumabozkurt/bpanel/tree/main/docs/screenshots">docs/screenshots</a>, including Turkish and dark-mode captures.</p>
+  <div class="gallery">
+    <figure><img src="screenshots/v1-user-dashboard.png" alt="User tools" loading="lazy"><figcaption>User panel (cPanel equivalent, port 2083)</figcaption></figure>
+    <figure><img src="screenshots/v1-admin-dashboard.png" alt="Admin dashboard" loading="lazy"><figcaption>Admin panel (WHM equivalent, port 2087)</figcaption></figure>
+    <figure><img src="screenshots/v1-shield.png" alt="BPanel Shield" loading="lazy"><figcaption>BPanel Shield malware protection</figcaption></figure>
+    <figure><img src="screenshots/v1-firewall.png" alt="Firewall" loading="lazy"><figcaption>nftables firewall with rollback</figcaption></figure>
+    <figure><img src="screenshots/v1-monitoring.png" alt="Monitoring" loading="lazy"><figcaption>Monitoring, alerts and FIM</figcaption></figure>
+    <figure><img src="screenshots/v1-app-installer.png" alt="App Installer" loading="lazy"><figcaption>App Installer</figcaption></figure>
+    <figure><img src="screenshots/v1-file-manager.png" alt="File manager" loading="lazy"><figcaption>File manager</figcaption></figure>
+    <figure><img src="screenshots/v1-zone-editor.png" alt="DNS zone editor" loading="lazy"><figcaption>PowerDNS zone editor</figcaption></figure>
+    <figure><img src="screenshots/22-user-dashboard-dark-en.png" alt="Dark mode" loading="lazy"><figcaption>Dark mode</figcaption></figure>
+    <figure><img src="screenshots/v1-servers.png" alt="Servers" loading="lazy"><figcaption>Multi-server management</figcaption></figure>
+    <figure><img src="screenshots/v1-resource-usage.png" alt="Resource usage" loading="lazy"><figcaption>Per-account resource usage</figcaption></figure>
+    <figure><img src="screenshots/41-admin-dashboard-tr.png" alt="Turkish admin" loading="lazy"><figcaption>Fully translated: Türkçe</figcaption></figure>
+  </div>
+</div></section>
+
+<section id="ports"><div class="wrap two">
+  <div>
+    <h2>Same ports as cPanel/WHM</h2>
+    <p class="sub">Your customers' bookmarks and firewall rules keep working. Every interface sits at the root path; plain HTTP redirects to HTTPS.</p>
+    <table>
+      <tr><th>Interface</th><th>HTTPS</th><th>HTTP → HTTPS</th></tr>
+      <tr><td>User panel (cPanel equivalent)</td><td><b>2083</b></td><td>2082</td></tr>
+      <tr><td>Admin panel (WHM equivalent)</td><td><b>2087</b></td><td>2086</td></tr>
+      <tr><td>Webmail (Roundcube)</td><td><b>2096</b></td><td>2095</td></tr>
+    </table>
+  </div>
+  <div>
+    <h2>Install profiles</h2>
+    <p class="sub">Pick what the server should run; add features later with an upgrade.</p>
+    <table>
+      <tr><th>Profile</th><th>Installs</th></tr>
+      <tr><td><b>minimal</b></td><td>Nginx, PHP-FPM, MariaDB, nftables firewall, fail2ban, SFTP, restic</td></tr>
+      <tr><td><b>web</b></td><td>minimal + Apache (<code>.htaccess</code>), PowerDNS, Pure-FTPd</td></tr>
+      <tr><td><b>full</b></td><td>web + Postfix, Dovecot, Rspamd, Roundcube, mlmmj</td></tr>
+    </table>
+  </div>
+</div></section>
+
+<section id="install"><div class="wrap two">
+  <div>
+    <h2>Install</h2>
+    <p class="sub">On a <b>fresh</b> Ubuntu 24.04 LTS or AlmaLinux 9 server (x86_64 or aarch64, 2 GB RAM, 20 GB disk), as root.</p>
+    <div class="note"><b>v1.0.0 archives are not signed yet</b> and BPANEL has not yet been run on a real Ubuntu 24.04 / AlmaLinux 9 server with systemd. Verify the SHA-256 and use a disposable VPS first.</div>
+<pre><span class="c"># 1. download v1.0.0 and check it (A=arm64 on ARM servers)</span>
+V=1.0.0; A=amd64
+curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
+curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
+sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+
+<span class="c"># 2. unpack and install</span>
+tar -xzf bpanel-$V-linux-$A.tar.gz &amp;&amp; cd bpanel-$V-linux-$A
+sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh \
+  --hostname panel.example.com --email admin@example.com \
+  --profile full --lang en --yes</pre>
+    <p class="sub" style="margin:0">The installer is staged and resumable, waits for cloud-init and apt locks, and prints the panel URLs plus a one-time admin login link at the end.</p>
+  </div>
+  <div>
+    <h2>Build from source</h2>
+    <p class="sub">Go 1.27+, Node 20+ and pnpm. The built UI is committed, so <code>go build ./...</code> works on a fresh clone.</p>
+<pre>git clone https://github.com/cumabozkurt/bpanel.git
+cd bpanel
+make web embed      <span class="c"># build the SvelteKit UI</span>
+make vet test       <span class="c"># go vet + go test</span>
+make build          <span class="c"># binaries in bin/</span>
+make dev            <span class="c"># mock agent on :2083 / :2087, no root</span>
+make release        <span class="c"># signed tarballs (needs your key)</span></pre>
+    <h3 style="margin:22px 0 8px">Upgrade &amp; uninstall</h3>
+<pre>sudo bpanel-installer upgrade
+sudo bpanel-installer uninstall          <span class="c"># sites keep running</span>
+sudo bpanel-installer uninstall --purge  <span class="c"># also panel DB + secrets</span></pre>
+  </div>
+</div></section>
+
+<section id="architecture"><div class="wrap">
+  <h2>Secure by design</h2>
+  <p class="sub">The web-facing API never runs as root. Every privileged change goes through a small root agent that only knows a fixed list of typed actions — no shell, no "run command".</p>
+  <div class="arch">
+    <div class="card"><h3><code>bpanel-api</code></h3><p>Go HTTP API + embedded SvelteKit UI. Runs as the unprivileged <code>bpanel</code> user under systemd hardening. SQLite state, RBAC, CSRF, argon2id, TOTP 2FA.</p></div>
+    <div class="card"><h3><code>bpanel-agent</code></h3><p>Root helper on <code>/run/bpanel/agent.sock</code>, accepts only the API's uid (SO_PEERCRED). Strictly decoded parameters, argv-only execution, tenant ownership checks.</p></div>
+    <div class="card"><h3><code>bpanel-installer</code></h3><p>Staged, resumable installer, upgrader and uninstaller that leaves sites running. Renders every config for review; SELinux and nftables aware.</p></div>
+    <div class="card"><h3><code>bpanel</code> CLI</h3><p><code>version</code>, <code>login-link</code>, <code>admin</code>, <code>selftest</code>, <code>doctor</code>, <code>openapi</code> — server-side admin tasks.</p></div>
+  </div>
+  <p class="sub" style="margin-top:22px">Stack it configures: Nginx (+ optional Apache), PHP-FPM, MariaDB, PowerDNS, Postfix + Dovecot + Rspamd, Roundcube, phpMyAdmin, Pure-FTPd, Let's Encrypt (lego), restic and nftables. Read <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/architecture.md">architecture.md</a> and <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/security.md">security.md</a>.</p>
+</div></section>
+
+<section id="status"><div class="wrap">
+  <h2>Honest status</h2>
+  <p class="sub">We publish what has been verified — and what has not.</p>
+  <div class="status">
+    <div class="stat"><b>96</b><span>cPanel/WHM tools wired</span></div>
+    <div class="stat"><b>≈82 %</b><span>feature parity implemented</span></div>
+    <div class="stat"><b>≈34 %</b><span>verified end to end in a container</span></div>
+    <div class="stat"><b>2639</b><span>UI strings, EN = TR</span></div>
+  </div>
+  <div class="two">
+    <div class="card"><h3>Verified for v1.0.0</h3><ul class="check">
+      <li><code>go vet</code>, <code>go test ./...</code> and <code>go test -race ./...</code> green</li>
+      <li>16 fuzz targets on parsers of untrusted input</li>
+      <li><code>govulncheck</code>: 0 reachable vulnerabilities; <code>pnpm audit</code>: 0</li>
+      <li>install.sh signature checks with minisign and OpenSSL</li>
+      <li>Generated configs passed <code>nginx -t</code>, <code>apache2ctl</code>, <code>php-fpm -t</code>, <code>postfix check</code> (v0.4 audit)</li>
+    </ul></div>
+    <div class="card"><h3>Not yet</h3><ul class="check todo">
+      <li>Run on a real Ubuntu 24.04 / AlmaLinux 9 VM with systemd as PID 1</li>
+      <li>Release signing key → signed archives and <code>curl | bash</code> install</li>
+      <li>Per-tenant PHP-FPM cgroups; cert reload fan-out to mail/FTP</li>
+      <li>See the <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/feature-matrix.md">feature matrix</a> and <a href="https://github.com/cumabozkurt/bpanel#known-limitations">known limitations</a></li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section id="tr" lang="tr"><div class="wrap two">
+  <div>
+    <h2>Türkçe</h2>
+    <p class="sub"><b>BOZKURT PANEL</b>, cPanel/WHM düzenini ve portlarını (kullanıcı 2083, yönetici 2087, web posta 2096) kullanan, <b>Ubuntu 24.04 LTS</b> ve <b>AlmaLinux 9</b> için açık kaynaklı (Apache-2.0) bir web hosting kontrol panelidir. Tamamen ücretsiz yazılımdır: ücretli bileşen, lisans veya API yoktur. Arayüz baştan sona Türkçedir.</p>
+    <p class="sub">E-posta, DNS, veritabanları, MultiPHP, yedekleme, güvenlik duvarı, zararlı yazılım taraması (BPanel Shield), hesap izolasyonu, izleme ve çoklu sunucu desteği içerir.</p>
+  </div>
+  <div>
+    <div class="note"><b>v1.0.0 arşivleri henüz imzalı değil</b> ve gerçek bir Ubuntu 24.04 / AlmaLinux 9 sunucuda systemd ile denenmedi. Önce silinebilir bir VPS'te deneyin.</div>
+<pre>V=1.0.0; A=amd64
+curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
+tar -xzf bpanel-$V-linux-$A.tar.gz &amp;&amp; cd bpanel-$V-linux-$A
+sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh \
+  --hostname panel.ornek.com.tr --email admin@ornek.com.tr \
+  --profile full --lang tr --yes</pre>
+    <p class="sub" style="margin:0">Ayrıntılar: <a href="https://github.com/cumabozkurt/bpanel#türkçe">README (Türkçe)</a></p>
+  </div>
+</div></section>
+
+<section><div class="wrap two">
+  <div>
+    <h2>Free software, Apache-2.0</h2>
+    <p class="sub">BPANEL is licensed under the <a href="https://github.com/cumabozkurt/bpanel/blob/main/LICENSE">Apache License 2.0</a>. Every component it installs comes from the distribution repositories or free official upstream repositories — see <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/third-party-licenses.md">third-party licences</a>.</p>
+  </div>
+  <div>
+    <h2>Get involved</h2>
+    <p class="sub">Bug reports, translations and pull requests are welcome. Read <a href="https://github.com/cumabozkurt/bpanel/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>; report security issues privately via <a href="https://github.com/cumabozkurt/bpanel/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+    <div class="cta" style="margin:0">
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel/issues">Issues</a>
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel/blob/main/docs/index.md">Documentation</a>
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel/blob/main/CHANGELOG.md">Changelog</a>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>© 2026 BOZKURT PANEL contributors · Apache-2.0</span>
+  <span><a href="https://github.com/cumabozkurt/bpanel">GitHub</a> · <a href="https://github.com/cumabozkurt/bpanel/releases">Releases</a> · <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/openapi.json">OpenAPI</a></span>
+</div></footer>
+
+<div class="lb" id="lb"><img alt=""></div>
+<script>
+const lb=document.getElementById('lb'),li=lb.querySelector('img');
+document.querySelectorAll('.gallery img').forEach(i=>i.addEventListener('click',()=>{li.src=i.src;li.alt=i.alt;lb.classList.add('on')}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on')});
+</script>
+</body>
+</html>
