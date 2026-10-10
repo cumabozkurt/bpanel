@@ -1,0 +1,147 @@
+== setup
+PASS T001 [c-setup] admin login
+PASS T002 [packages] create package core-v11p
+PASS T003 [packages] edit package (disk 3000 MB)
+PASS T004 [accounts] create account cv11p (system user, vhost, zone, PHP-FPM pool)
+PASS T005 [accounts] system user + home exist
+PASS T006 [accounts] site served by nginx
+PASS T007 [accounts] zone served by PowerDNS
+PASS T008 [c-setup] user login
+== domains
+PASS T009 [domains] addon domain addv11p.e2e.test
+PASS T010 [domains] addon domain served from its docroot
+PASS T011 [domains] addon zone created
+PASS T012 [domains] subdomain blog.cv11p.e2e.test
+PASS T013 [domains] subdomain A record
+PASS T014 [domains] subdomain vhost answers
+PASS T015 [domains] alias (parked) domain
+PASS T016 [domains] alias serves the main site
+PASS T017 [redirects] redirect addon -> https://example.org/landing
+PASS T018 [redirects] 301 with Location
+PASS T019 [redirects] redirect removed
+PASS T020 [redirects] addon served again
+PASS T021 [domains] invalid domain name refused
+== files
+PASS T022 [files] mkdir
+PASS T023 [files] write file
+PASS T024 [files] file on disk, owned by the account
+PASS T025 [files] read file
+PASS T026 [files] copy
+PASS T027 [files] rename
+PASS T028 [files] chmod 0600
+PASS T029 [files] zip
+PASS T030 [files] list
+PASS T031 [files] upload (multipart)
+PASS T032 [files] download
+PASS T033 [files] path traversal refused
+PASS T034 [files] symlink escape refused
+PASS T035 [files] delete
+PASS T036 [disk] disk usage (dirs, databases, mail)
+== dns
+PASS T037 [zone] get zone
+PASS T038 [zone] add TXT record
+PASS T039 [zone] record served (dig)
+PASS T040 [zone] add A record
+PASS T041 [zone] A record served
+PASS T042 [zone] delete record
+PASS T043 [zone] record gone
+PASS T044 [zone] foreign zone refused
+== mail
+PASS T045 [email] create mailbox user1@cv11p.e2e.test
+PASS T046 [email] IMAP login (Dovecot, TLS)
+PASS T047 [email] wrong password refused
+PASS T048 [email] authenticated submission (587 STARTTLS) delivers
+PASS T049 [email] unauthenticated relay from outside refused (554 Relay access denied)
+PASS T050 [email] DKIM signature on outgoing mail
+PASS T051 [forwarders] forwarder sales@ -> user2@
+PASS T052 [forwarders] forwarded mail delivered
+PASS T053 [catchall] default address (catch-all) -> user1@
+PASS T054 [catchall] unknown recipient caught
+PASS T055 [deliverability] SPF/DKIM/DMARC status
+PASS T056 [deliverability] SPF, DKIM, DMARC records published
+PASS T057 [email-disk] mailbox usage reported
+PASS T058 [webmail] webmail URL
+PASS T059 [webmail] Roundcube answers
+== ftp
+PASS T060 [ftp] create FTP account
+PASS T061 [ftp] upload over FTPS (Pure-FTPd, explicit TLS)
+PASS T062 [ftp] uploaded file owned by the account
+PASS T063 [ftp] FTP chroot: / is the account dir
+PASS T064 [ftp] wrong password refused
+== databases
+PASS T065 [mysql] database wizard (db + user + grant)
+PASS T066 [mysql] database exists in MariaDB with the grant
+PASS T067 [phpmyadmin] single-sign-on URL
+PASS T068 [phpmyadmin] phpMyAdmin opens logged in (SSO, proxied on 2083)
+== backups
+PASS T069 [backups] run backup now (restic)
+PASS T070 [backups] snapshot listed
+PASS T071 [restore] restore one file
+PASS T072 [restore] file restored with its content
+== ssl
+PASS T073 [ssl] SSL/TLS status per domain
+PASS T074 [ssl] AutoSSL issues a certificate (ACME HTTP-01 against Pebble)
+PASS T075 [ssl] HTTPS vhost serves the issued certificate
+PASS T076 [ssl] site answers over HTTPS
+PASS T077 [ssl] legacy TLS 1.1 refused
+PASS T078 [ssl] status shows the certificate and its expiry
+== logs
+PASS T079 [logs] raw access log contains the request
+PASS T080 [logs] error log readable
+PASS T081 [logs] foreign domain refused
+== php
+PASS T082 [php] installed PHP versions
+PASS T083 [php] PHP runs through the account's FPM pool
+PASS T084 [php] FPM worker runs as the account user
+PASS T085 [php] set domain PHP version
+PASS T086 [php] unknown PHP version refused
+== cron
+PASS T087 [cron] add cron job
+PASS T088 [cron] installed in the account's crontab
+PASS T089 [cron] invalid schedule refused
+PASS T090 [cron] delete cron job
+PASS T091 [cron] removed from crontab
+== security
+PASS T092 [password] change own password
+PASS T093 [password] login with the new password
+PASS T094 [2fa] TOTP setup (secret + otpauth URL)
+PASS T095 [2fa] enable TOTP
+PASS T096 [2fa] login without a code is refused
+PASS T097 [2fa] login with the TOTP code
+PASS T098 [2fa] disable TOTP
+PASS T099 [sessions] list own sessions
+== prefs
+PASS T100 [prefs] set language TR + dark theme
+PASS T101 [prefs] persisted (auth/me)
+PASS T102 [prefs] unknown language refused
+== admin
+PASS T103 [server-info] server information
+PASS T104 [basic-setup] server settings
+PASS T105 [basic-setup] update settings (contact e-mail, nameservers)
+PASS T106 [basic-setup] settings persisted
+PASS T107 [audit] audit trail records the account's actions
+PASS T108 [accounts] list/search accounts
+== services
+PASS T109 [services] service status
+PASS T110 [services] restart a service (pure-ftpd)
+PASS T111 [services] service active again
+PASS T112 [services] critical unit cannot be stopped
+== lifecycle
+PASS T113 [suspend] mail login works before suspend (control)
+PASS T114 [suspend] suspend account
+PASS T115 [suspend] site shows the suspended page
+PASS T116 [suspend] suspended user cannot log in
+PASS T117 [suspend] mail login (IMAP) refused while suspended
+PASS T118 [suspend] SMTP AUTH refused while suspended
+PASS T119 [suspend] unsuspend
+PASS T120 [suspend] site back
+PASS T121 [suspend] mail login works again after unsuspend
+PASS T122 [accounts] admin sets the account password
+PASS T123 [accounts] user logs in with it
+PASS T124 [accounts] change package
+PASS T125 [accounts] admin login-as (one-time link)
+PASS T126 [terminate] terminate account
+PASS T127 [terminate] system user, home, vhost, zone, mailboxes and databases removed
+PASS T128 [packages] delete unused package
+== api
+PASS T129 [api-docs] OpenAPI document served (v1.1.0)

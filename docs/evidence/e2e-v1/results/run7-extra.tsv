@@ -1,0 +1,15 @@
+id	status	area	check	detail
+T001	PASS	x-setup	admin login	 
+T002	PASS	x-setup	create account xv11m	 
+T003	PASS	x-setup	user login	 
+T004	PASS	ruby	Ruby runtime detected	{   "runtime": "ruby",   "version": "3.2.3",   "path": "/usr/bin/ruby" } 
+T005	PASS	ruby	create Ruby app (runtime ruby 3.2.3)	 
+T006	PASS	ruby	start (systemd bpanel-app@ unit)	 
+T007	PASS	ruby	unit carries GEM_HOME/RACK_ENV (Ruby environment)	 
+T008	PASS	ruby	app reachable through the domain (/ruby)	 
+T009	PASS	ruby	app runs as the account user	 
+T010	PASS	ruby	stop	 
+T011	PASS	ruby	process gone after stop	 
+T012	PASS	ruby	delete	 
+T013	PASS	tdns	dns lookup NS of the own zone (resolver = own PowerDNS)	 
+T014	PASS	x-setup	terminate xv11m	 

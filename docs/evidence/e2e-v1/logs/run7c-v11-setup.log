@@ -1,0 +1,9 @@
+== setup
+PASS T001 [setup] admin login
+PASS T002 [setup] admin step-up reauth
+PASS T003 [setup] webhook settings allow_private (local receiver)
+PASS T004 [setup] billing webhook created (account.*)
+PASS T005 [setup] create hosting account uv11n
+PASS T006 [setup] user login
+PASS T007 [setup] mailbox info@uv11n.e2e.test
+PASS T008 [setup] ids resolved (domain 38, mailbox 20)

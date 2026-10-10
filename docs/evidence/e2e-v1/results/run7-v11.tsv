@@ -1,0 +1,160 @@
+id	status	area	check	detail
+T001	PASS	setup	admin login	 
+T002	PASS	setup	admin step-up reauth	 
+T003	PASS	setup	webhook settings allow_private (local receiver)	 
+T004	PASS	setup	billing webhook created (account.*)	 
+T005	PASS	setup	create hosting account uv11h	 
+T006	PASS	setup	user login	 
+T007	PASS	setup	mailbox info@uv11h.e2e.test	 
+T008	PASS	setup	ids resolved (domain 31, mailbox 16)	 
+T009	PASS	visitors	nginx wrote the domain access log	/var/log/bpanel/domlogs/uv11h.e2e.test.access.log 
+T010	PASS	visitors	domain list	 
+T011	PASS	visitors	stats of uv11h.e2e.test	 
+T012	PASS	visitors	real hits counted (>=7 requests, 404 seen, bot seen)	true 
+T013	PASS	visitors	foreign domain refused	 
+T014	PASS	routing	list routing	 
+T015	PASS	routing	set remote	 
+T016	PASS	routing	postfix transport_maps resolves uv11h.e2e.test -> smtp: (remote MX)	 
+T017	PASS	routing	remote mode: mail not delivered locally, handed to smtp (queued/deferred)	 
+T018	PASS	routing	mode persisted = remote	true 
+T019	PASS	routing	invalid mode refused	 
+T020	PASS	routing	back to local	 
+T021	PASS	routing	transport entry removed again	 
+T022	PASS	routing	local delivery works after switching back (swaks -> Maildir)	 
+T023	PASS	boxtrapper	list	 
+T024	PASS	boxtrapper	enable with lists	 
+T025	PASS	boxtrapper	sieve script installed for the mailbox	/home/uv11h/mail/uv11h.e2e.test/info/sieve/bpanel.sieve 
+T026	PASS	boxtrapper	active link is ~/dovecot.sieve (not a Maildir++ folder name)	sieve/bpanel.sieve 
+T027	PASS	boxtrapper	unknown sender quarantined in BoxTrapper folder	/home/uv11h/mail/uv11h.e2e.test/info/.BoxTrapper/dovecot.index.cache /home/uv11h/mail/uv11h.e2e.test/info/.BoxTrapper/new/1791671150.M387140P268912.panel.e2e.test,S=678,W=698 
+T028	PASS	boxtrapper	whitelisted sender delivered to INBOX	 
+T029	PASS	boxtrapper	disable	 
+T030	PASS	gpg	generate ed25519 key	 
+T031	PASS	gpg	list keys	 
+T032	PASS	gpg	key in the user's real keyring (gpg --list-keys)	 
+T033	PASS	gpg	export armored public key	 
+T034	PASS	gpg	delete key	 
+T035	PASS	gpg	re-import exported key	 
+T036	PASS	gpg	imported key listed	 
+T037	PASS	gpg	garbage import refused	 
+T038	PASS	dav	status	 
+T039	PASS	dav	enable DAV for info@	 
+T040	PASS	dav	PROPFIND principal via /dav proxy -> 207 (Radicale)	 
+T041	PASS	dav	MKCOL calendar -> 201	 
+T042	PASS	dav	PUT event -> 201	 
+T043	PASS	dav	GET event back	 
+T044	PASS	dav	wrong password -> 401	 
+T045	PASS	dav	disable DAV	 
+T046	PASS	dav	after disable -> 401	 
+T047	PASS	ssh	generate ed25519 (authorized)	 
+T048	PASS	ssh	private key returned once	 
+T049	PASS	ssh	authorized_keys contains the key	 
+T050	PASS	ssh	authorized_keys perms 0600 owned by uv11h	 
+T051	PASS	ssh	real SSH/SFTP login with the generated key	sftp> pwd Remote working directory: /uv11h 
+T052	PASS	ssh	import RSA public key	 
+T053	PASS	ssh	list	 
+T054	PASS	ssh	deauthorize	 
+T055	PASS	ssh	deauthorized key no longer logs in	 
+T056	PASS	ssh	path-traversal name refused	 
+T057	PASS	ssh	delete	 
+T058	PASS	sitepub	templates + domains	 
+T059	PASS	sitepub	publish business template	 
+T060	PASS	sitepub	site serves the published page	 
+T061	PASS	sitepub	index.html owned by the user	 
+T062	PASS	sitepub	no overwrite -> 409 site_exists	 
+T063	PASS	sitepub	unknown template refused	 
+T064	PASS	sitepub	fields are HTML-escaped	 
+T065	PASS	images	thumbnail	 
+T066	PASS	images	thumbnail file is a 120px-wide PNG	/home/uv11h/public_html/thumbnails/tn_e2e.png: PNG image data, 120 x 90, 8-bit/color RGB, non-interlaced 
+T067	PASS	images	scale 50%	 
+T068	PASS	images	scaled 320x240 written	 
+T069	PASS	images	convert to JPEG	 
+T070	PASS	images	JPEG written and owned by uv11h	 
+T071	PASS	images	path escape refused	 
+T072	PASS	pg	PostgreSQL server running in the container	active 
+T073	PASS	pg	create database uv11h_app	 
+T074	PASS	pg	browser info (psql available)	 
+T075	PASS	pg	DDL + INSERT via real psql	 
+T076	PASS	pg	SELECT returns rows	 
+T077	PASS	pg	tables lists widgets	 
+T078	PASS	pg	psql meta-command refused	 
+T079	PASS	pg	wrong role password -> pg_auth_failed	 
+T080	PASS	pg	statement_timeout enforced (15 s)	 
+T081	PASS	pg	role cannot read pg_authid (not superuser)	 
+T082	PASS	pg	1000-row cap	true 
+T083	PASS	cf	status (NS detection, not linked)	 
+T084	PASS	cf	invalid token refused (verify against API)	 
+T085	PASS	cf	link token (verified)	 
+T086	PASS	cf	token not stored in plain text in the DB	 
+T087	PASS	cf	dry-run lists missing records	 
+T088	PASS	cf	dry-run created nothing	 
+T089	PASS	cf	sync creates the missing records	 
+T090	PASS	cf	mock API received record creations (MX/TXT included)	 
+T091	PASS	cf	unlink	 
+T092	PASS	webx	indexes on for /pub	 
+T093	PASS	webx	directory listing served	 
+T094	PASS	webx	indexes off -> 403	 
+T095	PASS	webx	handler .foo -> text-plain	 
+T096	PASS	webx	.foo served as text/plain	Content-Type: text/plain 
+T097	PASS	webx	non-allowlisted handler refused	 
+T098	PASS	webx	protect /members (alice)	 
+T099	PASS	webx	leech limit 2 IPs	 
+T100	PASS	webx	leech scan disables alice (4 IPs > 2)	 
+T101	PASS	webx	disabled login now refused (401)	 
+T102	PASS	webx	re-enable alice	 
+T103	PASS	webx	re-enabled login works (200)	 
+T104	PASS	mailq	list queue	 
+T105	PASS	mailq	deferred message visible (qid 791253AA5F2)	 
+T106	PASS	mailq	?q filter	 
+T107	PASS	mailq	show message	 
+T108	PASS	mailq	hold	 
+T109	PASS	mailq	message is on hold (postqueue shows !)	 
+T110	PASS	mailq	release	 
+T111	PASS	mailq	requeue	 
+T112	PASS	mailq	invalid queue id refused	 
+T113	PASS	mailq	flush	 
+T114	PASS	mailq	delete	 
+T115	PASS	mailq	message gone from the real queue	 
+T116	PASS	trouble	trace local mailbox	 
+T117	PASS	trouble	trace says local/virtual delivery	true 
+T118	PASS	trouble	trace remote address	 
+T119	PASS	trouble	invalid address refused	 
+T120	PASS	ips	list interfaces	 
+T121	PASS	ips	add 198.51.100.77/32 on tap0	 
+T122	PASS	ips	address present on the interface	 
+T123	PASS	ips	persisted (netplan/ifcfg/bpanel unit)	 
+T124	PASS	ips	dev lo refused	 
+T125	PASS	ips	assign dedicated IP to uv11h	 
+T126	PASS	ips	DNS A of uv11h.e2e.test now 198.51.100.77 (dig @127.0.0.1)	 
+T127	PASS	ips	remove while assigned -> ip_in_use	 
+T128	PASS	ips	back to shared IP	 
+T129	PASS	ips	DNS A no longer the dedicated IP	 
+T130	PASS	ips	remove address	 
+T131	PASS	ips	address gone	 
+T132	PASS	hostname	change to panel2.e2e.test	 
+T133	PASS	hostname	system hostname changed	 
+T134	PASS	hostname	postfix myhostname changed	 
+T135	PASS	hostname	/etc/hosts updated	 
+T136	PASS	hostname	invalid hostname refused	 
+T137	PASS	hostname	restore panel.e2e.test	 
+T138	PASS	tweak	get catalogue	 
+T139	PASS	tweak	disable images tool	 
+T140	PASS	tweak	disabled tool -> 409 feature_disabled	 
+T141	PASS	tweak	re-enable	 
+T142	PASS	tweak	tool works again	 
+T143	PASS	tweak	out-of-range value refused	 
+T144	PASS	tweak	unknown key refused	 
+T145	PASS	phpext	list PHP 8.3 extensions	 
+T146	PASS	phpext	install bcmath (apt)	 
+T147	PASS	phpext	php8.3-bcmath installed and loaded	 
+T148	PASS	phpext	remove bcmath	 
+T149	PASS	phpext	bcmath gone	 
+T150	PASS	phpext	non-allowlisted ext refused	 
+T151	PASS	billing	billing info	 
+T152	PASS	billing	suspend	 
+T153	PASS	billing	unsuspend	 
+T154	PASS	billing	webhook account.created delivered	 
+T155	PASS	billing	webhook account.suspended delivered	 
+T156	PASS	billing	webhook account.unsuspended delivered	 
+T157	PASS	billing	HMAC signatures valid (sha256=HMAC(secret, ts.body))	5 signatures ok for 5 events 
+T158	PASS	whmcs	php -l server module	No syntax errors detected in /root/e2e/whmcs/modules/servers/bpanel/bpanel.php 
+T159	PASS	whmcs	php -l webhook receiver	No syntax errors detected in /root/e2e/whmcs/webhook-receiver/bpanel_webhook.php 

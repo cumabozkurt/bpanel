@@ -58,3 +58,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 @media (max-width:560px){.cards,.gallery,.arch,.status{grid-template-columns:1fr}}
 .two>*,.hero .grid>*{min-width:0}
 @media (min-width:901px){#install .wrap{grid-template-columns:1.35fr 1fr}}
+/* i18n: content blocks carry data-l="en" or data-l="tr"; <html lang> picks one (EN without JS) */
+html:not([lang=tr]) [data-l=tr],html[lang=tr] [data-l=en]{display:none!important}
+.lang{display:flex;gap:2px;margin-left:12px;border:1px solid var(--line);border-radius:9px;padding:2px;flex:none}
+.lang button{background:none;border:0;color:var(--mut);font:inherit;font-size:.82rem;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--acc);color:#04201d}
+.lang button:focus-visible{outline:2px solid var(--acc)}
+@media (max-width:900px){.lang{margin-left:auto}}
+.cards.four{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.cards.four{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.cards.four{grid-template-columns:1fr}}
+.new{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(37,99,235,.2);color:#93c5fd;margin-left:auto}

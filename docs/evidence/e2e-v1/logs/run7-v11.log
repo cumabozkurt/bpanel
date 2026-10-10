@@ -1,0 +1,179 @@
+== setup
+PASS T001 [setup] admin login
+PASS T002 [setup] admin step-up reauth
+PASS T003 [setup] webhook settings allow_private (local receiver)
+PASS T004 [setup] billing webhook created (account.*)
+PASS T005 [setup] create hosting account uv11h
+PASS T006 [setup] user login
+PASS T007 [setup] mailbox info@uv11h.e2e.test
+PASS T008 [setup] ids resolved (domain 31, mailbox 16)
+== visitors
+PASS T009 [visitors] nginx wrote the domain access log
+PASS T010 [visitors] domain list
+PASS T011 [visitors] stats of uv11h.e2e.test
+PASS T012 [visitors] real hits counted (>=7 requests, 404 seen, bot seen)
+PASS T013 [visitors] foreign domain refused
+== routing
+PASS T014 [routing] list routing
+PASS T015 [routing] set remote
+PASS T016 [routing] postfix transport_maps resolves uv11h.e2e.test -> smtp: (remote MX)
+PASS T017 [routing] remote mode: mail not delivered locally, handed to smtp (queued/deferred)
+PASS T018 [routing] mode persisted = remote
+PASS T019 [routing] invalid mode refused
+PASS T020 [routing] back to local
+PASS T021 [routing] transport entry removed again
+PASS T022 [routing] local delivery works after switching back (swaks -> Maildir)
+== boxtrapper
+PASS T023 [boxtrapper] list
+PASS T024 [boxtrapper] enable with lists
+PASS T025 [boxtrapper] sieve script installed for the mailbox
+PASS T026 [boxtrapper] active link is ~/dovecot.sieve (not a Maildir++ folder name)
+PASS T027 [boxtrapper] unknown sender quarantined in BoxTrapper folder
+PASS T028 [boxtrapper] whitelisted sender delivered to INBOX
+PASS T029 [boxtrapper] disable
+== gpg
+PASS T030 [gpg] generate ed25519 key
+PASS T031 [gpg] list keys
+PASS T032 [gpg] key in the user's real keyring (gpg --list-keys)
+PASS T033 [gpg] export armored public key
+PASS T034 [gpg] delete key
+PASS T035 [gpg] re-import exported key
+PASS T036 [gpg] imported key listed
+PASS T037 [gpg] garbage import refused
+== dav
+PASS T038 [dav] status
+PASS T039 [dav] enable DAV for info@
+PASS T040 [dav] PROPFIND principal via /dav proxy -> 207 (Radicale)
+PASS T041 [dav] MKCOL calendar -> 201
+PASS T042 [dav] PUT event -> 201
+PASS T043 [dav] GET event back
+PASS T044 [dav] wrong password -> 401
+PASS T045 [dav] disable DAV
+PASS T046 [dav] after disable -> 401
+== sshkeys
+PASS T047 [ssh] generate ed25519 (authorized)
+PASS T048 [ssh] private key returned once
+PASS T049 [ssh] authorized_keys contains the key
+PASS T050 [ssh] authorized_keys perms 0600 owned by uv11h
+PASS T051 [ssh] real SSH/SFTP login with the generated key
+PASS T052 [ssh] import RSA public key
+PASS T053 [ssh] list
+PASS T054 [ssh] deauthorize
+PASS T055 [ssh] deauthorized key no longer logs in
+PASS T056 [ssh] path-traversal name refused
+PASS T057 [ssh] delete
+== sitepub
+PASS T058 [sitepub] templates + domains
+PASS T059 [sitepub] publish business template
+PASS T060 [sitepub] site serves the published page
+PASS T061 [sitepub] index.html owned by the user
+PASS T062 [sitepub] no overwrite -> 409 site_exists
+PASS T063 [sitepub] unknown template refused
+PASS T064 [sitepub] fields are HTML-escaped
+== images
+PASS T065 [images] thumbnail
+PASS T066 [images] thumbnail file is a 120px-wide PNG
+PASS T067 [images] scale 50%
+PASS T068 [images] scaled 320x240 written
+PASS T069 [images] convert to JPEG
+PASS T070 [images] JPEG written and owned by uv11h
+PASS T071 [images] path escape refused
+== pg
+PASS T072 [pg] PostgreSQL server running in the container
+PASS T073 [pg] create database uv11h_app
+PASS T074 [pg] browser info (psql available)
+PASS T075 [pg] DDL + INSERT via real psql
+PASS T076 [pg] SELECT returns rows
+PASS T077 [pg] tables lists widgets
+PASS T078 [pg] psql meta-command refused
+PASS T079 [pg] wrong role password -> pg_auth_failed
+PASS T080 [pg] statement_timeout enforced (15 s)
+PASS T081 [pg] role cannot read pg_authid (not superuser)
+PASS T082 [pg] 1000-row cap
+== cloudflare
+PASS T083 [cf] status (NS detection, not linked)
+PASS T084 [cf] invalid token refused (verify against API)
+PASS T085 [cf] link token (verified)
+PASS T086 [cf] token not stored in plain text in the DB
+PASS T087 [cf] dry-run lists missing records
+PASS T088 [cf] dry-run created nothing
+PASS T089 [cf] sync creates the missing records
+PASS T090 [cf] mock API received record creations (MX/TXT included)
+PASS T091 [cf] unlink
+== webx
+PASS T092 [webx] indexes on for /pub
+PASS T093 [webx] directory listing served
+PASS T094 [webx] indexes off -> 403
+PASS T095 [webx] handler .foo -> text-plain
+PASS T096 [webx] .foo served as text/plain
+PASS T097 [webx] non-allowlisted handler refused
+PASS T098 [webx] protect /members (alice)
+PASS T099 [webx] leech limit 2 IPs
+PASS T100 [webx] leech scan disables alice (4 IPs > 2)
+PASS T101 [webx] disabled login now refused (401)
+PASS T102 [webx] re-enable alice
+PASS T103 [webx] re-enabled login works (200)
+== mailqueue
+PASS T104 [mailq] list queue
+PASS T105 [mailq] deferred message visible (qid 791253AA5F2)
+PASS T106 [mailq] ?q filter
+PASS T107 [mailq] show message
+PASS T108 [mailq] hold
+PASS T109 [mailq] message is on hold (postqueue shows !)
+PASS T110 [mailq] release
+PASS T111 [mailq] requeue
+PASS T112 [mailq] invalid queue id refused
+PASS T113 [mailq] flush
+PASS T114 [mailq] delete
+PASS T115 [mailq] message gone from the real queue
+== trouble
+PASS T116 [trouble] trace local mailbox
+PASS T117 [trouble] trace says local/virtual delivery
+PASS T118 [trouble] trace remote address
+PASS T119 [trouble] invalid address refused
+== ips
+PASS T120 [ips] list interfaces
+PASS T121 [ips] add 198.51.100.77/32 on tap0
+PASS T122 [ips] address present on the interface
+PASS T123 [ips] persisted (netplan/ifcfg/bpanel unit)
+PASS T124 [ips] dev lo refused
+PASS T125 [ips] assign dedicated IP to uv11h
+PASS T126 [ips] DNS A of uv11h.e2e.test now 198.51.100.77 (dig @127.0.0.1)
+PASS T127 [ips] remove while assigned -> ip_in_use
+PASS T128 [ips] back to shared IP
+PASS T129 [ips] DNS A no longer the dedicated IP
+PASS T130 [ips] remove address
+PASS T131 [ips] address gone
+== hostname
+PASS T132 [hostname] change to panel2.e2e.test
+PASS T133 [hostname] system hostname changed
+PASS T134 [hostname] postfix myhostname changed
+PASS T135 [hostname] /etc/hosts updated
+PASS T136 [hostname] invalid hostname refused
+PASS T137 [hostname] restore panel.e2e.test
+== tweak
+PASS T138 [tweak] get catalogue
+PASS T139 [tweak] disable images tool
+PASS T140 [tweak] disabled tool -> 409 feature_disabled
+PASS T141 [tweak] re-enable
+PASS T142 [tweak] tool works again
+PASS T143 [tweak] out-of-range value refused
+PASS T144 [tweak] unknown key refused
+== phpext
+PASS T145 [phpext] list PHP 8.3 extensions
+PASS T146 [phpext] install bcmath (apt)
+PASS T147 [phpext] php8.3-bcmath installed and loaded
+PASS T148 [phpext] remove bcmath
+PASS T149 [phpext] bcmath gone
+PASS T150 [phpext] non-allowlisted ext refused
+== billing
+PASS T151 [billing] billing info
+PASS T152 [billing] suspend
+PASS T153 [billing] unsuspend
+PASS T154 [billing] webhook account.created delivered
+PASS T155 [billing] webhook account.suspended delivered
+PASS T156 [billing] webhook account.unsuspended delivered
+PASS T157 [billing] HMAC signatures valid (sha256=HMAC(secret, ts.body))
+== whmcs
+PASS T158 [whmcs] php -l server module
+PASS T159 [whmcs] php -l webhook receiver

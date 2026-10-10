@@ -1,6 +1,6 @@
-# Installation (v1.0.0)
+# Installation (v1.1.0)
 
-> v1.0.0 archives on GitHub Releases are **not signed yet** (no release key). The one-command
+> v1.1.0 archives on GitHub Releases are **not signed yet** (no release key). The one-command
 > install below fails closed until signed releases exist; install from the unpacked archive with
 > `BPANEL_ALLOW_UNSIGNED=1` after checking the published SHA-256, or build and sign your own
 > release. Both paths are described in the [README](../README.md#install).

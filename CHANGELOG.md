@@ -87,11 +87,19 @@ Evidence: `docs/evidence/e2e-v1/SUMMARY.md`. Archives are still **unsigned** (no
 - **Radicale** storage was root-owned (permission denied); **hostname** change failed in
   containers (`/etc/hostname` bind mount: EBUSY); agent validation errors answered 502 instead of
   409/422.
+- **Preferences** accepted any well-formed language tag (`"xx"`), leaving the UI without a
+  translation; the account language (preferences and account creation) must now be a shipped UI
+  language (`en`, `tr`, optionally with a region such as `tr-TR`).
 
 ### Changed
 - Version **1.1.0** everywhere (`internal/version`, `Makefile`, `install.sh`, `web/package.json`,
   `docs/openapi.json`).
-- `docs/feature-matrix.md` rewritten from the E2E evidence; "not planned" removed.
+- `docs/feature-matrix.md` is now generated from the E2E results (`test/e2e/tools/matrix.py`):
+  **97 / 97 cPanel/WHM rows implemented (100 %) and 97 / 97 verified end to end in the container
+  (100 %)**; 521 checks, 520 passed, 0 failed, 1 skipped (environment). "not planned" and "partial"
+  are gone.
+- The E2E suites are published in `test/e2e/` (`v11.sh`, `v10.sh`, `core.sh`, `extra.sh`) with
+  the results, logs and UI smoke run in `docs/evidence/e2e-v1/`.
 - GitHub Pages site fully bilingual (EN/TR) with automatic language detection and a persistent
   switcher.
 

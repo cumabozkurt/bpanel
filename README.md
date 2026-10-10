@@ -2,7 +2,7 @@
   <img src="docs/assets/logo.svg" width="88" alt="BOZKURT PANEL logo">
 </p>
 
-<h1 align="center">BOZKURT PANEL (BPANEL) v1.0.0</h1>
+<h1 align="center">BOZKURT PANEL (BPANEL) v1.1.0</h1>
 
 <p align="center">
   <b>Free, open-source web hosting control panel with a cPanel/WHM-style layout and the same ports,<br>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.0.0"><img alt="Release" src="https://img.shields.io/github/v/release/cumabozkurt/bpanel?label=release&color=14b8a6"></a>
+  <a href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.1.0"><img alt="Release" src="https://img.shields.io/github/v/release/cumabozkurt/bpanel?label=release&color=14b8a6"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="https://github.com/cumabozkurt/bpanel/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cumabozkurt/bpanel/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Go 1.27" src="https://img.shields.io/badge/Go-1.27-00ADD8">
@@ -24,25 +24,27 @@
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/feature-matrix.md">Feature matrix</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="docs/release-notes/v1.0.0.md">Release notes</a> ·
+  <a href="docs/release-notes/v1.1.0.md">Release notes</a> ·
+  <a href="docs/evidence/e2e-v1/SUMMARY.md">E2E evidence</a> ·
   <a href="#türkçe">Türkçe</a>
 </p>
 
-> **Status: v1.0.0, first public open-source release** (the v0.4 cPanel/WHM parity + security
-> platform after a full release audit, see [`CHANGELOG.md`](CHANGELOG.md)). **100 % free software**:
-> no paid component, licence or API (`docs/architecture.md` §3). It builds; its unit, race, fuzz
-> and security regression tests pass; the generated configs passed the real `nginx -t` /
-> `apache2ctl` / `php-fpm -t` / `postfix check` tools; and a `minimal` install/uninstall was run as
-> root in a Debian 13 container. It has **not yet been run on a real Ubuntu 24.04 or AlmaLinux 9
-> server with systemd as PID 1**. Try it on a disposable VPS before production. See
-> [Known limitations](#known-limitations).
+> **Status: v1.1.0 — the full cPanel/WHM feature list, verified end to end in a container.**
+> All **97 / 97** cPanel/WHM feature rows of [`docs/feature-matrix.md`](docs/feature-matrix.md) are
+> implemented (**100 %**, nothing "not planned" or "partial" any more) and **every row passed an
+> end-to-end run** in an Ubuntu 24.04 container with systemd as PID 1 and the real services:
+> **520 checks passed, 0 failed, 1 skipped** ([E2E evidence](docs/evidence/e2e-v1/SUMMARY.md)).
+> **100 % free software**: no paid component, licence or API (`docs/architecture.md` §3). Unit, race,
+> fuzz and security regression tests pass. **Not yet done:** a run on a real VPS and on AlmaLinux 9,
+> and signed archives (v1.1.0 is unsigned; verify the SHA-256). Try it on a disposable server first.
+> See [Known limitations](#known-limitations).
 
 ![User dashboard](docs/screenshots/02-user-dashboard-en.png)
 
 ## Table of contents
 
 [Ports](#ports-same-as-cpanelwhm) · [Install](#install) · [Upgrade](#upgrade) · [Uninstall](#uninstall) ·
-[Features](#features-v100) · [Screenshots](#screenshots) · [Architecture](#architecture) ·
+[Features](#features-v110) · [Screenshots](#screenshots) · [Architecture](#architecture) ·
 [Security](#security-model) · [Languages](#languages) · [Build from source](#build-from-source) ·
 [Testing](#testing) · [Known limitations](#known-limitations) · [Contributing](#contributing) · [Licence](#licence)
 
@@ -87,14 +89,14 @@ package installation, run it again and it continues where it left off (an
 interrupted dpkg run is completed first). On a fresh VM it waits for cloud-init
 and unattended-upgrades to release the apt lock instead of failing.
 
-> **v1.0.0 is not signed yet.** `get.bozkurtpanel.com` is not online and the release signing
+> **v1.1.0 is not signed yet.** `get.bozkurtpanel.com` is not online and the release signing
 > key has not been generated (`make release-keygen`), so the `curl | bash` one-liner above
 > **fails closed** on purpose. Until signed releases exist you have two options:
 >
-> 1. **Use the v1.0.0 archive from GitHub Releases** (unsigned, SHA-256 checksums published):
+> 1. **Use the v1.1.0 archive from GitHub Releases** (unsigned, SHA-256 checksums published):
 >
 >    ```bash
->    V=1.0.0; A=amd64   # or arm64
+>    V=1.1.0; A=amd64   # or arm64
 >    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
 >    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
 >    sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
@@ -103,7 +105,7 @@ and unattended-upgrades to release the apt lock instead of failing.
 >    ```
 >
 > 2. **Build and sign it yourself**: `make release-keygen && make release` creates
->    `dist/bpanel-1.0.0-linux-amd64.tar.gz` signed with *your* key; copy it to the server,
+>    `dist/bpanel-1.1.0-linux-amd64.tar.gz` signed with *your* key; copy it to the server,
 >    unpack it and run `sudo ./install.sh`.
 >
 > `BPANEL_BASE_URL` points the script at another download location and `BPANEL_PUBKEY` at your
@@ -184,29 +186,33 @@ repository passwords stay so the backups in `/var/backups/bpanel` can still be r
 `/var/lib/bpanel/acme` and the Roundcube webmail. Distribution packages are never
 removed; use apt/dnf if you want them gone.
 
-## Features (v1.0.0)
+## Features (v1.1.0)
 
-Full table with status per feature: [`docs/feature-matrix.md`](docs/feature-matrix.md). About **82 %** of the
-cPanel/WHM feature set is implemented (96 tools wired, none left as "Soon"), about **34 %** verified end
-to end in a container; none yet on a real VM.
+Full table with status and E2E evidence per feature: [`docs/feature-matrix.md`](docs/feature-matrix.md).
+**100 %** of the cPanel/WHM feature list (97 rows) is implemented and **100 %** passed the container
+end-to-end run (520 / 521 checks passed, 1 skipped for an environment reason, 0 failed).
 Docs index: [`docs/index.md`](docs/index.md).
 
-- **Email:** accounts, forwarders, catch-all, Roundcube webmail, SPF/DKIM/DMARC, autoresponders, Sieve filters, Rspamd spam filters, delivery tracking, mailing lists (mlmmj).
-- **Files & web:** file manager, disk usage, FTP/SFTP, restic backups and restore, directory privacy, hotlink protection, error pages, MIME types, IP blocker, Git version control.
-- **Databases:** MariaDB + wizard, phpMyAdmin SSO, remote MySQL, PostgreSQL, process list.
-- **Domains & DNS:** addon/sub/alias domains, redirects, PowerDNS zone editor, DNSSEC, zone import/export and history, Dynamic DNS, DNS cluster.
-- **Software:** MultiPHP + INI editor, App Installer (WordPress, Joomla, Drupal, Nextcloud), WordPress Toolkit, Node.js/Python Application Manager, cron, browser terminal, Track DNS.
-- **WHM:** accounts, packages, resellers with privileges, modify account, services, update preferences, SQL settings, bandwidth, Transfer Tool (cPanel `cpmove` import), backup configuration, plugins, API tokens, OpenAPI.
+- **Email:** accounts, forwarders, catch-all, Roundcube webmail, SPF/DKIM/DMARC, autoresponders, Sieve filters, Rspamd spam filters, delivery tracking, mailing lists (mlmmj), **Email Routing, BoxTrapper, Email Encryption (GnuPG), Calendars & Contacts (CalDAV/CardDAV, Radicale)**.
+- **Files & web:** file manager, disk usage, FTP/SFTP, **SSH key manager**, restic backups and restore, directory privacy, hotlink protection, **leech protection, indexes, Apache handlers**, error pages, MIME types, IP blocker, **Images, Site Publisher**, Git version control, **Visitors** statistics.
+- **Databases:** MariaDB + wizard, phpMyAdmin SSO, remote MySQL, PostgreSQL + **built-in PostgreSQL browser** (phpPgAdmin replacement), process list.
+- **Domains & DNS:** addon/sub/alias domains, redirects, PowerDNS zone editor, DNSSEC, zone import/export and history, Dynamic DNS, DNS cluster, **Cloudflare sync**.
+- **Software:** MultiPHP + INI editor, App Installer (WordPress, Joomla, Drupal, Nextcloud), WordPress Toolkit, Node.js/Python/**Ruby** Application Manager, cron, browser terminal, Track DNS.
+- **WHM:** accounts, packages, resellers with privileges, modify account, services, update preferences, SQL settings, bandwidth, Transfer Tool (cPanel `cpmove` import), backup configuration, plugins, API tokens, OpenAPI, **Mail Queue Manager, Mail Troubleshooter, IP Functions, Change Hostname, Tweak Settings, PHP extensions (EasyApache equivalent), billing events + WHMCS module**.
 - **Beyond cPanel:** BPanel Shield (ClamAV/YARA/heuristics, quarantine), nftables firewall with rollback, fail2ban/CrowdSec, ModSecurity + OWASP CRS, per-account cgroup v2 isolation and bwrap cage, multi-server over mTLS, monitoring/alerts/FIM with Prometheus metrics, RBAC, security events and webhooks, encrypted secrets.
 
 ## Screenshots
 
 Captures live in [`docs/screenshots/`](docs/screenshots/) (EN/TR, light/dark, user and admin). The
-`v1-*.png` files were captured from the v1.0.0 build in dev mode (mock agent, demo data); the numbered
-files are the earlier v0.3 set with the same layout.
+`v11/*.jpg` files were captured from the E2E server running v1.1.0 (every new page in EN and TR); the
+`v1-*.png` files come from the v1.0.0 build in dev mode; the numbered files are the earlier v0.3 set.
 
 | | |
 |---|---|
+| ![Email Routing](docs/screenshots/v11/user_email_routing-en.jpg) | ![Mail queue](docs/screenshots/v11/admin_mail-queue-en.jpg) |
+| Email Routing (v1.1) | Mail Queue Manager (v1.1) |
+| ![Calendars](docs/screenshots/v11/user_calendars-en.jpg) | ![Billing](docs/screenshots/v11/admin_billing-en.jpg) |
+| Calendars & Contacts (v1.1) | Billing / WHMCS hooks (v1.1) |
 | ![Admin dashboard](docs/screenshots/v1-admin-dashboard.png) | ![BPanel Shield](docs/screenshots/v1-shield.png) |
 | WHM-style admin dashboard (port 2087) | BPanel Shield malware protection |
 | ![Firewall](docs/screenshots/v1-firewall.png) | ![Monitoring](docs/screenshots/v1-monitoring.png) |
@@ -256,7 +262,7 @@ Summarised from [`docs/security.md`](docs/security.md), [`docs/isolation.md`](do
 
 ## Languages
 
-English is the default and Turkish is fully translated (2639 keys each in v1.0.0,
+English is the default and Turkish is fully translated (3016 keys each in v1.1.0,
 checked by `make i18n`). Every page has a language switcher. Each user's choice is stored
 on their account (`PUT /api/v1/account/preferences`). Administrators set the
 server default in **Settings**. To add a language, copy
@@ -305,22 +311,26 @@ cd web && pnpm install && pnpm run build
 go test ./internal/xfer -run '^$' -fuzz FuzzCleanName -fuzztime 30s   # any of the 16 fuzz targets
 ```
 
-Results for v1.0.0 are in [`CHANGELOG.md`](CHANGELOG.md#v100--2026-10-10-first-public-open-source-release)
-and [`docs/release-notes/v1.0.0.md`](docs/release-notes/v1.0.0.md). CI runs vet, tests, the i18n
-check, the web build and the install.sh signature tests on every push.
+End-to-end suites (run inside a disposable server as root): [`test/e2e/`](test/e2e/). Results for
+v1.1.0: [`docs/evidence/e2e-v1/SUMMARY.md`](docs/evidence/e2e-v1/SUMMARY.md) (521 checks, 520 passed,
+0 failed). Release notes: [`docs/release-notes/v1.1.0.md`](docs/release-notes/v1.1.0.md). CI runs vet,
+tests, the i18n check, the web build and the install.sh signature tests on every push.
 
 ## Known limitations
 
-- **No real-server run yet (also true for v1.0.0).** v0.3 was verified in a Debian 13 arm64 container without
-  systemd as PID 1 and without nf_tables. A full run on Ubuntu 24.04 and AlmaLinux 9 VMs
-  (systemd, SELinux, `ssh.socket`, systemd-resolved, nftables, AutoSSL against Let's Encrypt
-  staging, `php.install` under the agent sandbox) is still required.
-- **v1.0.0 archives are unsigned; `curl | bash` install is blocked until a release key exists.** `install.sh` fails closed
+- **No run on a real VPS or on AlmaLinux 9 yet.** v1.1.0 was verified end to end in an Ubuntu 24.04
+  container with systemd as PID 1 and the real services (Postfix, Dovecot, Rspamd, PowerDNS, MariaDB,
+  PostgreSQL, nginx + Apache, ModSecurity + CRS, ClamAV, YARA, nftables, fail2ban, …). Still to do:
+  a real VPS (public DNS, Let's Encrypt production, real port 25), AlmaLinux 9 with SELinux
+  enforcing, SFTP/S3 backup targets, the real Cloudflare API (tested against a local mock) and
+  multi-server across two hosts.
+- **v1.1.0 archives are unsigned; `curl | bash` install is blocked until a release key exists.** `install.sh` fails closed
   while `BPANEL_RELEASE_PUBKEY` is `UNSET`. The maintainer must run `make release-keygen`
   (offline) and publish signed releases with `make release`.
-- **Feature parity (v1.0.0 = v0.4 feature set):** about 82% of the cPanel/WHM feature list is implemented and about 34%
-  is verified end to end in a container; most v0.4 tools are "working-unverified-on-real-host"
-  (see `docs/feature-matrix.md`). No tool is marked "Soon" any more.
+- **Feature parity (v1.1.0):** 97 / 97 cPanel/WHM rows implemented and verified in the container
+  (`docs/feature-matrix.md`). Some rows are free replacements rather than the same product (Rspamd for
+  SpamAssassin, mlmmj for Mailman, the built-in PostgreSQL browser for phpPgAdmin, BPanel Shield for
+  Imunify360, cgroup v2 + bubblewrap for CloudLinux); the notes column says so.
 - **`/home` is set to `root:root 0711`** at install so tenants cannot list other homes (the
   SFTP chroot is `ChrootDirectory /home`). Uninstall does not change it back.
 - **Agent ownership registry limit:** the root agent records which account owns each vhost,
@@ -328,8 +338,7 @@ check, the web build and the install.sh signature tests on every push.
   still name the right owner for a victim's domain (the API is the identity provider).
 - **Deferred code items:** CODE-21 (changing the server IP, nameservers or default PHP does not
   re-render existing zones/vhosts; the admin gets a warning), CODE-23 (no pagination on
-  user-side lists), CODE-25 (bandwidth stat is 0, inode limit unused, "SSH Access" links to
-  FTP), CODE-26 (`users.owner_id` has no `ON DELETE` rule; single SQLite connection).
+  user-side lists), CODE-25 (inode limit unused), CODE-26 (`users.owner_id` has no `ON DELETE` rule; single SQLite connection).
 - PHP-FPM pools share one `bpanel-php.slice`; true per-tenant FPM cgroups would need one FPM
   master per account. Cron jobs reach `user-<uid>.slice` through `pam_systemd`.
 - After a hostname certificate renewal, Postfix/Dovecot/Pure-FTPd are not reloaded
@@ -352,12 +361,15 @@ licences are listed in [`docs/third-party-licenses.md`](docs/third-party-license
 **BOZKURT PANEL (BPANEL)**, cPanel/WHM düzenini ve portlarını kullanan, açık kaynaklı
 (Apache-2.0) bir web hosting kontrol panelidir. **Ubuntu 24.04 LTS** ve **AlmaLinux 9** içindir.
 
-> **Durum: v1.0.0, ilk açık kaynak sürüm** (v0.4 cPanel/WHM eşdeğerliği + güvenlik platformu, kapsamlı sürüm denetiminden geçmiş hâliyle; bkz. `CHANGELOG.md`). Proje sitesi: <https://cumabozkurt.github.io/bpanel/>. **Tamamen ücretsiz yazılım**: ücretli bileşen, lisans veya API yok. Özellik tablosu: `docs/feature-matrix.md` (yaklaşık %82 uygulanmış, %34 konteynerde uçtan uca doğrulanmış). Derleniyor; birim, race ve güvenlik regresyon testleri geçiyor,
-> üretilen yapılandırmalar gerçek `nginx -t` / `apache2ctl` / `php-fpm -t` / `postfix check`
-> araçlarından geçiyor, fuzz testleri temiz ve `minimal` kurulum/kaldırma bir Debian 13 konteynerinde root olarak
-> denendi. **Henüz systemd çalışan gerçek bir Ubuntu 24.04 / AlmaLinux 9 sunucuda
-> çalıştırılmadı.** Canlı sistem yerine silinebilir bir VPS kullanın.
-> Bkz. [Bilinen sınırlamalar](#bilinen-sınırlamalar).
+> **Durum: v1.1.0 — cPanel/WHM özellik listesinin tamamı, konteynerde uçtan uca doğrulanmış.**
+> [`docs/feature-matrix.md`](docs/feature-matrix.md) içindeki **97 / 97** cPanel/WHM özellik satırının
+> tamamı uygulanmıştır (**%100**; "planlanmadı" ya da "kısmi" satır kalmadı) ve **her satır**, systemd'nin
+> PID 1 olduğu ve gerçek servislerin çalıştığı bir Ubuntu 24.04 konteynerinde **uçtan uca testten
+> geçmiştir**: **520 denetim geçti, 0 başarısız, 1 atlandı** ([E2E kanıtı](docs/evidence/e2e-v1/SUMMARY.md)).
+> Proje sitesi: <https://cumabozkurt.github.io/bpanel/>. **Tamamen ücretsiz yazılım**: ücretli bileşen,
+> lisans veya API yok. Birim, race, fuzz ve güvenlik regresyon testleri geçiyor. **Henüz yapılmayanlar:**
+> gerçek bir VPS ve AlmaLinux 9 üzerinde çalıştırma ile imzalı arşivler (v1.1.0 imzasızdır; SHA-256
+> değerini doğrulayın). Önce silinebilir bir sunucuda deneyin. Bkz. [Bilinen sınırlamalar](#bilinen-sınırlamalar).
 
 ![Kullanıcı paneli](docs/screenshots/20-user-dashboard-tr.png)
 
@@ -391,14 +403,14 @@ sürüm kabul edilmez. Anahtarı olmayan bir betik kurulum yapmaz. Kurulum aşam
 yarıda kalırsa (paket kurulumunun ortası dahil) komutu yeniden çalıştırın, kaldığı yerden
 devam eder. Yeni bir sunucuda apt kilidinin açılmasını bekler.
 
-> **v1.0.0 henüz imzalı değil.** `get.bozkurtpanel.com` yayında değil ve sürüm imzalama
+> **v1.1.0 henüz imzalı değil.** `get.bozkurtpanel.com` yayında değil ve sürüm imzalama
 > anahtarı üretilmedi (`make release-keygen`); bu yüzden yukarıdaki `curl | bash` komutu
 > bilerek kurulumu reddeder. İmzalı sürümler çıkana kadar:
 >
-> 1. **GitHub Releases'taki v1.0.0 arşivini kullanın** (imzasız, SHA-256 sağlamaları yayında):
+> 1. **GitHub Releases'taki v1.1.0 arşivini kullanın** (imzasız, SHA-256 sağlamaları yayında):
 >
 >    ```bash
->    V=1.0.0; A=amd64   # ya da arm64
+>    V=1.1.0; A=amd64   # ya da arm64
 >    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
 >    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
 >    sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
@@ -407,7 +419,7 @@ devam eder. Yeni bir sunucuda apt kilidinin açılmasını bekler.
 >    ```
 >
 > 2. **Kendiniz derleyip imzalayın:** `make release-keygen && make release`, kendi anahtarınızla
->    imzalı `dist/bpanel-1.0.0-linux-amd64.tar.gz` üretir; sunucuya kopyalayıp açın ve
+>    imzalı `dist/bpanel-1.1.0-linux-amd64.tar.gz` üretir; sunucuya kopyalayıp açın ve
 >    `sudo ./install.sh` çalıştırın.
 
 Profiller: `minimal` (Nginx + PHP-FPM + MariaDB; Apache yok, siteler yalnızca Nginx ile), `web` (+ `.htaccess` için Apache, PowerDNS, Pure-FTPd), `full` (+ Postfix/Dovecot e-posta, Rspamd, Roundcube web posta).
@@ -448,6 +460,20 @@ kuruluysa systemd-resolved dinleyicisi kapalı kalır. `--purge`, servislerin h�
 kullandığı dosyaları (`/etc/bpanel/ssl`, `/var/lib/bpanel/acme`, web posta) silmez ve
 bunları listeler. Dağıtım paketleri hiçbir zaman silinmez.
 
+### Özellikler (v1.1.0)
+
+Özellik başına durum ve E2E kanıtı: [`docs/feature-matrix.md`](docs/feature-matrix.md). cPanel/WHM
+özellik listesinin **%100**'ü (97 satır) uygulanmış ve **%100**'ü konteynerde uçtan uca testten geçmiştir
+(521 denetimden 520'si geçti, 1'i ortam nedeniyle atlandı, 0 başarısız).
+
+- **E-posta:** hesaplar, yönlendiriciler, catch-all, Roundcube web posta, SPF/DKIM/DMARC, otomatik yanıtlayıcılar, Sieve filtreleri, Rspamd spam filtreleri, teslimat takibi, e-posta listeleri (mlmmj), **E-posta Yönlendirme (routing), BoxTrapper, E-posta Şifreleme (GnuPG), Takvimler ve Kişiler (CalDAV/CardDAV, Radicale)**.
+- **Dosyalar ve web:** dosya yöneticisi, disk kullanımı, FTP/SFTP, **SSH anahtar yöneticisi**, restic yedekleme ve geri yükleme, dizin gizliliği, hotlink koruması, **sızma (leech) koruması, dizin listeleme, Apache işleyicileri**, hata sayfaları, MIME türleri, IP engelleyici, **Görseller, Site Yayıncısı**, Git sürüm kontrolü, **Ziyaretçi** istatistikleri.
+- **Veritabanları:** MariaDB + sihirbaz, phpMyAdmin tek oturum, uzak MySQL, PostgreSQL + **yerleşik PostgreSQL tarayıcısı**, işlem listesi.
+- **Alan adları ve DNS:** eklenti/alt/takma alan adları, yönlendirmeler, PowerDNS bölge düzenleyici, DNSSEC, bölge içe/dışa aktarma ve geçmiş, Dinamik DNS, DNS kümesi, **Cloudflare eşitleme**.
+- **Yazılım:** MultiPHP + INI düzenleyici, Uygulama Yükleyici (WordPress, Joomla, Drupal, Nextcloud), WordPress Araç Seti, Node.js/Python/**Ruby** uygulama yöneticisi, cron, tarayıcıda terminal, DNS izleme.
+- **WHM:** hesaplar, paketler, yetkili bayiler, hesap düzenleme, servisler, güncelleme tercihleri, SQL ayarları, bant genişliği, Taşıma Aracı (cPanel `cpmove`), yedek yapılandırması, eklentiler, API anahtarları, OpenAPI, **Posta Kuyruğu Yöneticisi, Posta Sorun Giderici, IP İşlemleri, Sunucu Adı Değiştirme, İnce Ayarlar, PHP eklentileri (EasyApache karşılığı), faturalama olayları + WHMCS modülü**.
+- **cPanel'in ötesinde:** BPanel Shield (ClamAV/YARA/sezgisel, karantina), geri almalı nftables güvenlik duvarı, fail2ban/CrowdSec, ModSecurity + OWASP CRS, hesap başına cgroup v2 izolasyonu ve bwrap kafesi, mTLS ile çoklu sunucu, Prometheus metrikli izleme/uyarı/dosya bütünlüğü, RBAC, güvenlik olayları ve webhook'lar, şifreli gizli anahtarlar.
+
 ### Mimari ve güvenlik
 
 `bpanel-api`, yetkisiz `bpanel` kullanıcısıyla çalışır. Root yetkisi gereken her iş
@@ -457,7 +483,7 @@ eylemleri** çalıştırır: parametreler katı biçimde çözülür ve doğrula
 
 ### Diller
 
-Varsayılan dil İngilizcedir, Türkçe çevirisi tamdır. Her sayfada dil seçici vardır.
+Varsayılan dil İngilizcedir, Türkçe çevirisi tamdır (v1.1.0'da her dilde 3016 anahtar). Her sayfada dil seçici vardır.
 Her kullanıcının seçimi kendi hesabında saklanır. Sunucu varsayılanını yönetici
 **Ayarlar** sayfasından belirler.
 
@@ -471,16 +497,19 @@ geliştirme sunucusu için `make dev` kullanın (yönetici `bpadmin` / `Demo-Pas
 
 ### Bilinen sınırlamalar
 
-- **Henüz gerçek sunucuda denenmedi (v1.0.0 için de geçerli).** v0.3, systemd'nin PID 1 olmadığı ve nf_tables
-  bulunmayan bir Debian 13 arm64 konteynerinde doğrulandı. Ubuntu 24.04 ve AlmaLinux 9
-  sanal makinelerinde tam bir çalıştırma (systemd, SELinux, `ssh.socket`, systemd-resolved,
-  nftables, Let's Encrypt staging ile AutoSSL, ajan sandbox'ında `php.install`) hâlâ gerekli.
-- **v1.0.0 arşivleri imzasız; sürüm anahtarı üretilene kadar `curl | bash` kurulumu kapalı.** `BPANEL_RELEASE_PUBKEY`
+- **Henüz gerçek bir VPS'te ve AlmaLinux 9'da çalıştırılmadı.** v1.1.0, systemd'nin PID 1 olduğu ve
+  gerçek servislerin (Postfix, Dovecot, Rspamd, PowerDNS, MariaDB, PostgreSQL, nginx + Apache,
+  ModSecurity + CRS, ClamAV, YARA, nftables, fail2ban, …) çalıştığı bir Ubuntu 24.04 konteynerinde
+  uçtan uca doğrulandı. Kalanlar: gerçek VPS (genel DNS, Let's Encrypt üretim ortamı, gerçek 25. port),
+  SELinux zorunlu kipte AlmaLinux 9, SFTP/S3 yedek hedefleri, gerçek Cloudflare API'si (yerel sahte
+  sunucuyla test edildi) ve iki sunuculu çoklu sunucu kurulumu.
+- **v1.1.0 arşivleri imzasız; sürüm anahtarı üretilene kadar `curl | bash` kurulumu kapalı.** `BPANEL_RELEASE_PUBKEY`
   `UNSET` iken `install.sh` kurulumu reddeder. Bakımcının `make release-keygen` (çevrimdışı)
   çalıştırıp imzalı sürümleri `make release` ile yayınlaması gerekir.
-- **Özellik kapsamı (v1.0.0 = v0.4 özellik seti):** cPanel/WHM özellik listesinin yaklaşık %82'si
-  uygulanmış, yaklaşık %34'ü bir konteynerde uçtan uca doğrulanmış; çoğu v0.4 aracı
-  "gerçek sunucuda doğrulanmamış" durumda (`docs/feature-matrix.md`). "Yakında" olarak işaretli araç kalmadı.
+- **Özellik kapsamı (v1.1.0):** 97 / 97 cPanel/WHM satırı uygulanmış ve konteynerde doğrulanmıştır
+  (`docs/feature-matrix.md`). Bazı satırlar aynı ürün değil, ücretsiz karşılığıdır (SpamAssassin yerine
+  Rspamd, Mailman yerine mlmmj, phpPgAdmin yerine yerleşik PostgreSQL tarayıcısı, Imunify360 yerine
+  BPanel Shield, CloudLinux yerine cgroup v2 + bubblewrap); notlar sütununda belirtilir.
 - **`/home` kurulumda `root:root 0711` yapılır**; böylece hesaplar birbirlerinin dizinlerini
   listeleyemez (SFTP chroot `ChrootDirectory /home`). Kaldırma işlemi bunu geri almaz.
 - **Ajan sahiplik kaydı sınırı:** root ajan her vhost, DNS bölgesi ve e-posta alan adının hangi
@@ -488,8 +517,7 @@ geliştirme sunucusu için `make dev` kullanın (yönetici `bpadmin` / `Demo-Pas
   geçirilmiş bir API, kurbanın alan adı için doğru sahibi yine de bildirebilir (kimliği API belirler).
 - **Ertelenen kod maddeleri:** CODE-21 (sunucu IP'si, ad sunucuları veya varsayılan PHP
   değişince mevcut bölgeler/vhost'lar yeniden üretilmez; yöneticiye uyarı gösterilir), CODE-23
-  (kullanıcı tarafı listelerde sayfalama yok), CODE-25 (bant genişliği 0 gösterilir, inode
-  sınırı kullanılmıyor, "SSH Erişimi" FTP'ye gidiyor), CODE-26 (`users.owner_id` için
+  (kullanıcı tarafı listelerde sayfalama yok), CODE-25 (inode sınırı kullanılmıyor), CODE-26 (`users.owner_id` için
   `ON DELETE` kuralı yok; tek SQLite bağlantısı).
 - PHP-FPM havuzları ortak bir `bpanel-php.slice` içinde çalışır; hesap başına gerçek cgroup
   için hesap başına ayrı FPM ana süreci gerekir. Cron işleri `pam_systemd` ile

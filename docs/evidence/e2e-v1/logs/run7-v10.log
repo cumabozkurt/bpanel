@@ -1,0 +1,254 @@
+== setup
+PASS T001 [setup] admin login
+PASS T002 [setup] create account wv11h
+PASS T003 [setup] user login
+PASS T004 [setup] mailbox box@wv11h.e2e.test
+== mail
+PASS T005 [mail] autoresponder set (Sieve vacation)
+PASS T006 [mail] sieve active link + compiled
+PASS T007 [mail] vacation reply delivered to the sender's mailbox (info@uv11h.e2e.test)
+PASS T008 [mail] autoresponder removed
+PASS T009 [mail] filter: subject contains INVOICE -> Invoices
+PASS T010 [mail] filtered mail stored in the Invoices folder
+PASS T011 [mail] filter folder traversal refused
+PASS T012 [mail] filter deleted
+PASS T013 [mail] spam settings
+PASS T014 [mail] spam settings set (Rspamd)
+PASS T015 [mail] rspamd settings file written + rspamadm configtest
+FAIL T016 [mail] deny-listed sender rejected/not in INBOX ::  
+== lists
+PASS T017 [lists] create mlmmj list news@wv11h.e2e.test
+PASS T018 [lists] subscribe info@uv11h.e2e.test
+PASS T019 [lists] mlmmj subscriber file
+PASS T020 [lists] post to the list reaches the subscriber's mailbox
+PASS T021 [lists] unsubscribe
+PASS T022 [lists] delete list
+== track
+PASS T023 [track] track delivery
+PASS T024 [track] postfix log entries for box@wv11h.e2e.test found
+PASS T025 [track] every entry involves the account's own domain
+== webx
+PASS T026 [webx] hotlink protection on
+PASS T027 [webx] foreign referer blocked (403)
+PASS T028 [webx] own referer allowed (200)
+PASS T029 [webx] IP blocker deny 127.0.0.7
+PASS T030 [webx] blocked IP gets 403, others 200
+PASS T031 [webx] invalid CIDR refused
+PASS T032 [webx] custom 404 page
+PASS T033 [webx] custom 404 served
+PASS T034 [webx] MIME type .bpe2e
+PASS T035 [webx] served with the custom MIME type
+PASS T036 [webx] directory privacy /img
+PASS T037 [webx] privacy: 401 without, 200 with credentials
+PASS T038 [webx] password hashes never returned
+== git
+PASS T039 [git] create empty repository
+PASS T040 [git] push into the repository as the account
+PASS T041 [git] deploy HEAD into public_html/deployed
+PASS T042 [git] deployed page served
+PASS T043 [git] clone from loopback refused
+PASS T044 [git] clone a public https repository (network)
+== dbx
+PASS T045 [dbx] MariaDB database wv11h_app
+PASS T046 [dbx] MariaDB user wv11h_app
+PASS T047 [dbx] grant ALL
+PASS T048 [dbx] grant visible in MariaDB
+PASS T049 [dbx] admin enables remote MySQL
+PASS T050 [dbx] remote MySQL host 192.0.2.0/24
+PASS T051 [dbx] MariaDB account wv11h_app@192.0.2.% created
+PASS T052 [dbx] wildcard % refused
+PASS T053 [dbx] process list shows own SLEEP query
+PASS T054 [dbx] kill own query
+PASS T055 [dbx] query gone from processlist
+PASS T056 [dbx] killing a foreign/system thread refused
+PASS T057 [dbx] remove remote host
+PASS T058 [dbx] remote MariaDB account dropped
+== dnsx
+PASS T059 [dnsx] zone consistency check
+PASS T060 [dnsx] enable DNSSEC (pdnsutil secure-zone)
+PASS T061 [dnsx] DS records returned
+PASS T062 [dnsx] RRSIG served by PowerDNS (dig +dnssec)
+PASS T063 [dnsx] export BIND zone
+PASS T064 [dnsx] import preview
+PASS T065 [dnsx] import apply (merge)
+PASS T066 [dnsx] imported TXT answered by PowerDNS
+PASS T067 [dnsx] history recorded
+PASS T068 [dnsx] revert the import
+PASS T069 [dnsx] TXT gone after revert
+PASS T070 [dnsx] disable DNSSEC
+== ddns
+PASS T071 [ddns] subdomain home.wv11h.e2e.test
+PASS T072 [ddns] enable DDNS (token shown once)
+PASS T073 [ddns] loopback client address refused (badip)
+PASS T074 [ddns] update endpoint answers good/nochg
+PASS T075 [ddns] A record follows the reported IP
+PASS T076 [ddns] bad token -> badauth
+== bandwidth
+PASS T077 [bw] collect domain logs now
+PASS T078 [bw] user bandwidth > 0 bytes for wv11h.e2e.test
+PASS T079 [bw] admin bandwidth lists wv11h
+== tokens
+PASS T080 [tokens] create API token (hosting.read)
+PASS T081 [tokens] token reads domains
+PASS T082 [tokens] token cannot write (403)
+PASS T083 [tokens] token cannot use another permission area (403)
+PASS T084 [tokens] revoke
+PASS T085 [tokens] revoked token -> 401
+== waf
+PASS T086 [waf] WAF provider status
+PASS T087 [waf] user sets WAF block mode
+PASS T088 [waf] SQLi probe blocked by ModSecurity + CRS (403)
+PASS T089 [waf] normal request still 200
+PASS T090 [waf] audit log entry for the domain
+PASS T091 [waf] audit (DetectionOnly) mode
+PASS T092 [waf] audit mode lets the probe through (200)
+PASS T093 [waf] admin locks block mode
+PASS T094 [waf] user cannot override a locked mode
+== shield
+PASS T095 [shield] Shield engines status
+PASS T096 [shield] ClamAV engine detected
+PASS T097 [shield] scan EICAR file
+PASS T098 [shield] EICAR detected
+PASS T099 [shield] detection recorded
+PASS T100 [shield] user sees own detection
+PASS T101 [shield] file quarantined (moved out of the docroot) or reported per policy
+PASS T102 [shield] clean file scans clean
+== phpini
+PASS T103 [phpini] get PHP 8.3 settings
+PASS T104 [phpini] set memory_limit=192M
+PASS T105 [phpini] PHP-FPM pool applies it (live request)
+PASS T106 [phpini] non-allowlisted directive refused
+== apps
+PASS T107 [apps] runtimes detected
+PASS T108 [apps] create Node.js app
+PASS T109 [apps] start (systemd bpanel-app@ unit)
+PASS T110 [apps] unit active
+PASS T111 [apps] app reachable through the domain (/node)
+PASS T112 [apps] journal logs
+PASS T113 [apps] app runs as the account user
+PASS T114 [apps] stop
+PASS T115 [apps] delete
+== installer
+PASS T116 [inst] catalogue
+PASS T117 [inst] install WP-CLI (sha512 verified)
+PASS T118 [inst] install WordPress into /wp
+PASS T119 [inst] wp-config.php written, files owned by wv11h
+PASS T120 [inst] Shield real-time scan flags no WordPress core file
+PASS T121 [inst] WordPress answers over HTTP
+PASS T122 [inst] WordPress Toolkit details
+PASS T123 [inst] maintenance on
+PASS T124 [inst] .maintenance file present
+PASS T125 [inst] maintenance off
+== trackdns
+PASS T126 [tdns] dns lookup own domain
+SKIP [tdns] dns lookup NS of the own zone environment: the container's upstream resolver answers no NS queries
+PASS T128 [tdns] traceroute to loopback refused
+PASS T129 [tdns] traceroute to a public IP runs
+== contact
+PASS T130 [contact] change contact email
+PASS T131 [contact] persisted
+PASS T132 [umgr] User Manager lists mailbox box@wv11h.e2e.test
+== usage
+PASS T133 [usage] cgroup v2 support
+PASS T134 [usage] user resource usage
+PASS T135 [usage] top consumers
+== terminal
+PASS T136 [term] enable shell access
+PASS T137 [term] terminal status
+PASS T138 [term] WebSocket shell session runs as the account (id -un, arithmetic echo)
+PASS T139 [term] session audited (terminal.open)
+== admin_modify
+PASS T140 [modify] get modify form
+PASS T141 [modify] change contact + subdomain override
+PASS T142 [modify] persisted
+PASS T143 [modify] stale version -> conflict
+== resellers
+PASS T144 [resl] create reseller
+PASS T145 [resl] reseller login
+PASS T146 [resl] reseller creates own package
+PASS T147 [resl] Edit Reseller limits/ACL
+PASS T148 [resl] package not in allowed_packages refused
+PASS T149 [resl] reseller creates 1st customer
+PASS T150 [resl] max_accounts=1 enforced
+PASS T151 [resl] ACL without suspend: cannot suspend (and not own)
+== updates
+PASS T152 [upd] pending updates probe (apt)
+PASS T153 [upd] set policy=security
+PASS T154 [upd] policy=security persisted
+PASS T155 [upd] security-only apply runs unattended-upgrade
+PASS T156 [upd] invalid policy refused
+== monitoring
+PASS T157 [mon] OS health (time sync, SMART, failed units…)
+PASS T158 [mon] health reports real data (time sync section present)
+PASS T159 [mon] /metrics exposes Prometheus text
+PASS T160 [mon] FIM baseline
+PASS T161 [mon] FIM check detects a new file in /etc/nginx
+== alerts
+PASS T162 [alerts] email channel
+PASS T163 [alerts] test notification sent
+PASS T164 [alerts] test notification delivered to box@wv11h.e2e.test
+PASS T165 [alerts] rule override (disk_full threshold 1%)
+PASS T166 [alerts] evaluate now
+PASS T167 [alerts] incident opened
+PASS T168 [alerts] acknowledge incident
+== brute
+PASS T169 [brute] fail2ban jails listed
+PASS T170 [brute] repeated panel login failures from 192.0.2.66 banned by the bpanel jail
+PASS T171 [brute] ban enforced in nftables
+PASS T172 [brute] allowlist IP
+PASS T173 [brute] pushed to fail2ban ignoreip (runtime)
+== firewall
+PASS T174 [fw] firewall status (nftables)
+PASS T175 [fw] add deny rule 203.0.113.0/24:8443
+PASS T176 [fw] apply with confirm window
+PASS T177 [fw] rule live in nft table inet bpanel
+PASS T178 [fw] confirm
+PASS T179 [fw] temporary block 203.0.113.77
+PASS T180 [fw] temporary block in nftables set
+PASS T181 [fw] lockout guard refuses dropping the admin port for everyone
+PASS T182 [fw] unconfirmed apply rolled back automatically (rule restored)
+PASS T183 [fw] rule removed after confirmed apply
+== limits
+PASS T184 [limits] create limit profile
+PASS T185 [limits] assign to wv11h
+PASS T186 [limits] systemd slice carries CPUQuota/MemoryMax/TasksMax
+PASS T187 [limits] cgroup files enforce it (memory.max, pids.max)
+PASS T188 [limits] mem_high > mem_max refused
+== dbsettings
+PASS T189 [dbset] DB engine settings (PostgreSQL ok)
+PASS T190 [dbset] MAX_USER_CONNECTIONS=7
+PASS T191 [dbset] MariaDB user limit applied
+== cluster
+PASS T192 [cluster] add secondary 192.0.2.53
+PASS T193 [cluster] PowerDNS allow-axfr-ips/also-notify updated
+PASS T194 [cluster] AXFR refused from a non-secondary IP
+PASS T195 [cluster] status per zone/secondary
+PASS T196 [cluster] remove secondary
+== xfer
+PASS T197 [xfer] archive listed
+PASS T198 [xfer] analyse cpmove (format cpanel)
+PASS T199 [xfer] import as a new account (job)
+PASS T200 [xfer] imported site served
+PASS T201 [xfer] imported DNS record served
+PASS T202 [xfer] imported database has the row
+PASS T203 [xfer] imported mailbox keeps its password (IMAP login)
+== plugins
+PASS T204 [plug] trust signing key
+PASS T205 [plug] inspect signed plugin
+PASS T206 [plug] install (disabled)
+PASS T207 [plug] enable
+PASS T208 [plug] plugin UI served sandboxed (CSP sandbox)
+PASS T209 [plug] unsigned/untrusted archive refused
+PASS T210 [plug] remove
+== integrations
+PASS T211 [integ] inventory
+PASS T212 [integ] installed providers reported with versions (fail2ban, rspamd)
+PASS T213 [integ] ClamAV + YARA engines detected by Shield
+== events
+PASS T214 [events] security events feed
+PASS T215 [events] audit trail has v1.1 actions
+== secrets
+PASS T216 [secrets] master key file 0600 owned by bpanel (outside /etc for ProtectSystem)
+PASS T217 [secrets] no secret value in plain text in the DB (webhook secret)
+PASS T218 [secrets] rotate master key
+PASS T219 [secrets] sealed secrets still usable after rotation (signed webhook.test delivered)

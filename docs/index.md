@@ -1,6 +1,6 @@
-# BPANEL documentation (v1.0.0)
+# BPANEL documentation (v1.1.0)
 
-Project website: <https://cumabozkurt.github.io/bpanel/> · Release notes: [v1.0.0](release-notes/v1.0.0.md)
+Project website: <https://cumabozkurt.github.io/bpanel/> · Release notes: [v1.1.0](release-notes/v1.1.0.md) · [v1.0.0](release-notes/v1.0.0.md)
 
 Start with the repository [README](../README.md) and the [CHANGELOG](../CHANGELOG.md).
 
@@ -41,9 +41,10 @@ Start with the repository [README](../README.md) and the [CHANGELOG](../CHANGELO
 - [OpenAPI 3.1 specification](openapi.json) (also served at `/openapi.json`)
 
 ## Screenshots
-- [screenshots/](screenshots/): UI captures (`v1-*.png` from the v1.0.0 build in dev mode; numbered files are the v0.3 set)
+- [screenshots/](screenshots/): UI captures (`v11/*.jpg` from the v1.1.0 E2E server in EN and TR, `v1-*.png` from the v1.0.0 build in dev mode; numbered files are the v0.3 set)
 
 ## Project
-- [Release notes v1.0.0](release-notes/v1.0.0.md)
+- [Release notes v1.1.0](release-notes/v1.1.0.md) · [v1.0.0](release-notes/v1.0.0.md)
+- [Feature matrix](feature-matrix.md) · [E2E evidence](evidence/e2e-v1/SUMMARY.md) · [E2E suites](../test/e2e/)
 - [Contributing](../CONTRIBUTING.md) · [Security policy](../SECURITY.md)
-- The project website is the static `index.html` in this directory (GitHub Pages, `/docs` on `main`).
+- The project website is the static `index.html` in this directory (GitHub Pages, `/docs` on `main`); it is bilingual (EN/TR), follows the browser language and remembers the choice made with the EN | TR switch (`localStorage` key `bpanel-lang`, or `?lang=tr` / `?lang=en`).

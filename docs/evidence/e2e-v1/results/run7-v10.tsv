@@ -1,0 +1,220 @@
+id	status	area	check	detail
+T001	PASS	setup	admin login	 
+T002	PASS	setup	create account wv11h	 
+T003	PASS	setup	user login	 
+T004	PASS	setup	mailbox box@wv11h.e2e.test	 
+T005	PASS	mail	autoresponder set (Sieve vacation)	 
+T006	PASS	mail	sieve active link + compiled	sieve/bpanel.sieve 
+T007	PASS	mail	vacation reply delivered to the sender's mailbox (info@uv11h.e2e.test)	 
+T008	PASS	mail	autoresponder removed	 
+T009	PASS	mail	filter: subject contains INVOICE -> Invoices	 
+T010	PASS	mail	filtered mail stored in the Invoices folder	/home/wv11h/mail/wv11h.e2e.test/box/.Invoices/dovecot.index.cache /home/wv11h/mail/wv11h.e2e.test/box/.Invoices/new/1791671244.M771741P268912.panel.e2e.test,S=665,W=685 
+T011	PASS	mail	filter folder traversal refused	 
+T012	PASS	mail	filter deleted	 
+T013	PASS	mail	spam settings	 
+T014	PASS	mail	spam settings set (Rspamd)	 
+T015	PASS	mail	rspamd settings file written + rspamadm configtest	configured task_timeout 8.00 is less than maximum symbols cache timeout 9.00; some symbols can be terminated before checks list of top 12 symbols by execution time: ARC_CHECK(5.00); ARC_SIGNED(5.00); FUZZY_CALLBACK(4.00); DMARC_CHECK(4.00); PHISHING(4.00); SPF_CHECK(4.00); WHITELIST_DMARC(4.00); WHI
+T016	FAIL	mail	deny-listed sender rejected/not in INBOX	 
+T017	PASS	lists	create mlmmj list news@wv11h.e2e.test	 
+T018	PASS	lists	subscribe info@uv11h.e2e.test	 
+T019	PASS	lists	mlmmj subscriber file	 
+T020	PASS	lists	post to the list reaches the subscriber's mailbox	 
+T021	PASS	lists	unsubscribe	 
+T022	PASS	lists	delete list	 
+T023	PASS	track	track delivery	 
+T024	PASS	track	postfix log entries for box@wv11h.e2e.test found	true 
+T025	PASS	track	every entry involves the account's own domain	true 
+T026	PASS	webx	hotlink protection on	 
+T027	PASS	webx	foreign referer blocked (403)	 
+T028	PASS	webx	own referer allowed (200)	 
+T029	PASS	webx	IP blocker deny 127.0.0.7	 
+T030	PASS	webx	blocked IP gets 403, others 200	 
+T031	PASS	webx	invalid CIDR refused	 
+T032	PASS	webx	custom 404 page	 
+T033	PASS	webx	custom 404 served	 
+T034	PASS	webx	MIME type .bpe2e	 
+T035	PASS	webx	served with the custom MIME type	 
+T036	PASS	webx	directory privacy /img	 
+T037	PASS	webx	privacy: 401 without, 200 with credentials	 
+T038	PASS	webx	password hashes never returned	 
+T039	PASS	git	create empty repository	 
+T040	PASS	git	push into the repository as the account	 
+T041	PASS	git	deploy HEAD into public_html/deployed	 
+T042	PASS	git	deployed page served	 
+T043	PASS	git	clone from loopback refused	 
+T044	PASS	git	clone a public https repository (network)	 
+T045	PASS	dbx	MariaDB database wv11h_app	 
+T046	PASS	dbx	MariaDB user wv11h_app	 
+T047	PASS	dbx	grant ALL	 
+T048	PASS	dbx	grant visible in MariaDB	 
+T049	PASS	dbx	admin enables remote MySQL	 
+T050	PASS	dbx	remote MySQL host 192.0.2.0/24	 
+T051	PASS	dbx	MariaDB account wv11h_app@192.0.2.% created	wv11h_app@127.0.0.1 wv11h_app@192.0.2.0/255.255.255.0 wv11h_app@::1 wv11h_app@localhost 
+T052	PASS	dbx	wildcard % refused	 
+T053	PASS	dbx	process list shows own SLEEP query	 
+T054	PASS	dbx	kill own query	 
+T055	PASS	dbx	query gone from processlist	 
+T056	PASS	dbx	killing a foreign/system thread refused	 
+T057	PASS	dbx	remove remote host	 
+T058	PASS	dbx	remote MariaDB account dropped	 
+T059	PASS	dnsx	zone consistency check	 
+T060	PASS	dnsx	enable DNSSEC (pdnsutil secure-zone)	 
+T061	PASS	dnsx	DS records returned	 
+T062	PASS	dnsx	RRSIG served by PowerDNS (dig +dnssec)	 
+T063	PASS	dnsx	export BIND zone	 
+T064	PASS	dnsx	import preview	 
+T065	PASS	dnsx	import apply (merge)	 
+T066	PASS	dnsx	imported TXT answered by PowerDNS	 
+T067	PASS	dnsx	history recorded	 
+T068	PASS	dnsx	revert the import	 
+T069	PASS	dnsx	TXT gone after revert	 
+T070	PASS	dnsx	disable DNSSEC	 
+T071	PASS	ddns	subdomain home.wv11h.e2e.test	 
+T072	PASS	ddns	enable DDNS (token shown once)	 
+T073	PASS	ddns	loopback client address refused (badip)	 
+T074	PASS	ddns	update endpoint answers good/nochg	 
+T075	PASS	ddns	A record follows the reported IP	 
+T076	PASS	ddns	bad token -> badauth	 
+T077	PASS	bw	collect domain logs now	 
+T078	PASS	bw	user bandwidth > 0 bytes for wv11h.e2e.test	true 
+T079	PASS	bw	admin bandwidth lists wv11h	 
+T080	PASS	tokens	create API token (hosting.read)	 
+T081	PASS	tokens	token reads domains	 
+T082	PASS	tokens	token cannot write (403)	 
+T083	PASS	tokens	token cannot use another permission area (403)	 
+T084	PASS	tokens	revoke	 
+T085	PASS	tokens	revoked token -> 401	 
+T086	PASS	waf	WAF provider status	 
+T087	PASS	waf	user sets WAF block mode	 
+T088	PASS	waf	SQLi probe blocked by ModSecurity + CRS (403)	 
+T089	PASS	waf	normal request still 200	 
+T090	PASS	waf	audit log entry for the domain	 
+T091	PASS	waf	audit (DetectionOnly) mode	 
+T092	PASS	waf	audit mode lets the probe through (200)	 
+T093	PASS	waf	admin locks block mode	 
+T094	PASS	waf	user cannot override a locked mode	 
+T095	PASS	shield	Shield engines status	 
+T096	PASS	shield	ClamAV engine detected	true 
+T097	PASS	shield	scan EICAR file	 
+T098	PASS	shield	EICAR detected	true 
+T099	PASS	shield	detection recorded	 
+T100	PASS	shield	user sees own detection	 
+T101	PASS	shield	file quarantined (moved out of the docroot) or reported per policy	 
+T102	PASS	shield	clean file scans clean	 
+T103	PASS	phpini	get PHP 8.3 settings	 
+T104	PASS	phpini	set memory_limit=192M	 
+T105	PASS	phpini	PHP-FPM pool applies it (live request)	 
+T106	PASS	phpini	non-allowlisted directive refused	 
+T107	PASS	apps	runtimes detected	 
+T108	PASS	apps	create Node.js app	 
+T109	PASS	apps	start (systemd bpanel-app@ unit)	 
+T110	PASS	apps	unit active	 
+T111	PASS	apps	app reachable through the domain (/node)	 
+T112	PASS	apps	journal logs	 
+T113	PASS	apps	app runs as the account user	 
+T114	PASS	apps	stop	 
+T115	PASS	apps	delete	 
+T116	PASS	inst	catalogue	 
+T117	PASS	inst	install WP-CLI (sha512 verified)	 
+T118	PASS	inst	install WordPress into /wp	 
+T119	PASS	inst	wp-config.php written, files owned by wv11h	 
+T120	PASS	inst	Shield real-time scan flags no WordPress core file	 
+T121	PASS	inst	WordPress answers over HTTP	 
+T122	PASS	inst	WordPress Toolkit details	 
+T123	PASS	inst	maintenance on	 
+T124	PASS	inst	.maintenance file present	 
+T125	PASS	inst	maintenance off	 
+T126	PASS	tdns	dns lookup own domain	 
+T127	SKIP	tdns	dns lookup NS of the own zone	environment: the container's upstream resolver answers no NS queries
+T128	PASS	tdns	traceroute to loopback refused	 
+T129	PASS	tdns	traceroute to a public IP runs	 
+T130	PASS	contact	change contact email	 
+T131	PASS	contact	persisted	 
+T132	PASS	umgr	User Manager lists mailbox box@wv11h.e2e.test	 
+T133	PASS	usage	cgroup v2 support	 
+T134	PASS	usage	user resource usage	 
+T135	PASS	usage	top consumers	 
+T136	PASS	term	enable shell access	 
+T137	PASS	term	terminal status	 
+T138	PASS	term	WebSocket shell session runs as the account (id -un, arithmetic echo)	id -un; echo BPWS-$((6*7)); pwd [?2004h]0;wv11h@panel: ~[01;32mwv11h@panel[00m:[01;34m~[00m$ id -un; echo BPWS-$((6*7)); pwd [?2004lwv11h BPWS-42 /home/wv11h [?2004h]0;wv11h@panel: ~[01;32mwv11h@panel[00m:[01;34m~[00m$  
+T139	PASS	term	session audited (terminal.open)	 
+T140	PASS	modify	get modify form	 
+T141	PASS	modify	change contact + subdomain override	 
+T142	PASS	modify	persisted	 
+T143	PASS	modify	stale version -> conflict	 
+T144	PASS	resl	create reseller	 
+T145	PASS	resl	reseller login	 
+T146	PASS	resl	reseller creates own package	 
+T147	PASS	resl	Edit Reseller limits/ACL	 
+T148	PASS	resl	package not in allowed_packages refused	 
+T149	PASS	resl	reseller creates 1st customer	 
+T150	PASS	resl	max_accounts=1 enforced	 
+T151	PASS	resl	ACL without suspend: cannot suspend (and not own)	 
+T152	PASS	upd	pending updates probe (apt)	 
+T153	PASS	upd	set policy=security	 
+T154	PASS	upd	policy=security persisted	true 
+T155	PASS	upd	security-only apply runs unattended-upgrade	 
+T156	PASS	upd	invalid policy refused	 
+T157	PASS	mon	OS health (time sync, SMART, failed units…)	 
+T158	PASS	mon	health reports real data (time sync section present)	true 
+T159	PASS	mon	/metrics exposes Prometheus text	 
+T160	PASS	mon	FIM baseline	 
+T161	PASS	mon	FIM check detects a new file in /etc/nginx	 
+T162	PASS	alerts	email channel	 
+T163	PASS	alerts	test notification sent	 
+T164	PASS	alerts	test notification delivered to box@wv11h.e2e.test	 
+T165	PASS	alerts	rule override (disk_full threshold 1%)	 
+T166	PASS	alerts	evaluate now	 
+T167	PASS	alerts	incident opened	true 
+T168	PASS	alerts	acknowledge incident	 
+T169	PASS	brute	fail2ban jails listed	 
+T170	PASS	brute	repeated panel login failures from 192.0.2.66 banned by the bpanel jail	 
+T171	PASS	brute	ban enforced in nftables	 
+T172	PASS	brute	allowlist IP	 
+T173	PASS	brute	pushed to fail2ban ignoreip (runtime)	 
+T174	PASS	fw	firewall status (nftables)	 
+T175	PASS	fw	add deny rule 203.0.113.0/24:8443	 
+T176	PASS	fw	apply with confirm window	 
+T177	PASS	fw	rule live in nft table inet bpanel	 
+T178	PASS	fw	confirm	 
+T179	PASS	fw	temporary block 203.0.113.77	 
+T180	PASS	fw	temporary block in nftables set	 
+T181	PASS	fw	lockout guard refuses dropping the admin port for everyone	 
+T182	PASS	fw	unconfirmed apply rolled back automatically (rule restored)	 
+T183	PASS	fw	rule removed after confirmed apply	 
+T184	PASS	limits	create limit profile	 
+T185	PASS	limits	assign to wv11h	 
+T186	PASS	limits	systemd slice carries CPUQuota/MemoryMax/TasksMax	CPUQuotaPerSecUSec=500ms MemoryMax=268435456 TasksMax=64 
+T187	PASS	limits	cgroup files enforce it (memory.max, pids.max)	 
+T188	PASS	limits	mem_high > mem_max refused	 
+T189	PASS	dbset	DB engine settings (PostgreSQL ok)	 
+T190	PASS	dbset	MAX_USER_CONNECTIONS=7	 
+T191	PASS	dbset	MariaDB user limit applied	 
+T192	PASS	cluster	add secondary 192.0.2.53	 
+T193	PASS	cluster	PowerDNS allow-axfr-ips/also-notify updated	 
+T194	PASS	cluster	AXFR refused from a non-secondary IP	 
+T195	PASS	cluster	status per zone/secondary	 
+T196	PASS	cluster	remove secondary	 
+T197	PASS	xfer	archive listed	 
+T198	PASS	xfer	analyse cpmove (format cpanel)	 
+T199	PASS	xfer	import as a new account (job)	 
+T200	PASS	xfer	imported site served	 
+T201	PASS	xfer	imported DNS record served	 
+T202	PASS	xfer	imported database has the row	 
+T203	PASS	xfer	imported mailbox keeps its password (IMAP login)	 
+T204	PASS	plug	trust signing key	 
+T205	PASS	plug	inspect signed plugin	 
+T206	PASS	plug	install (disabled)	 
+T207	PASS	plug	enable	 
+T208	PASS	plug	plugin UI served sandboxed (CSP sandbox)	 
+T209	PASS	plug	unsigned/untrusted archive refused	 
+T210	PASS	plug	remove	 
+T211	PASS	integ	inventory	 
+T212	PASS	integ	installed providers reported with versions (fail2ban, rspamd)	true 
+T213	PASS	integ	ClamAV + YARA engines detected by Shield	true 
+T214	PASS	events	security events feed	true 
+T215	PASS	events	audit trail has v1.1 actions	 
+T216	PASS	secrets	master key file 0600 owned by bpanel (outside /etc for ProtectSystem)	 
+T217	PASS	secrets	no secret value in plain text in the DB (webhook secret)	 
+T218	PASS	secrets	rotate master key	 
+T219	PASS	secrets	sealed secrets still usable after rotation (signed webhook.test delivered)	 

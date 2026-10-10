@@ -1,0 +1,18 @@
+== setup
+PASS T001 [setup] admin login
+PASS T002 [setup] create account wv11n
+PASS T003 [setup] user login
+PASS T004 [setup] mailbox box@wv11n.e2e.test
+== mail
+PASS T005 [mail] autoresponder set (Sieve vacation)
+PASS T006 [mail] sieve active link + compiled
+PASS T007 [mail] vacation reply delivered to the sender's mailbox (info@uv11n.e2e.test)
+PASS T008 [mail] autoresponder removed
+PASS T009 [mail] filter: subject contains INVOICE -> Invoices
+PASS T010 [mail] filtered mail stored in the Invoices folder
+PASS T011 [mail] filter folder traversal refused
+PASS T012 [mail] filter deleted
+PASS T013 [mail] spam settings
+PASS T014 [mail] spam settings set (Rspamd)
+PASS T015 [mail] rspamd settings file written + rspamadm configtest
+PASS T016 [mail] deny-listed sender rejected/not in INBOX

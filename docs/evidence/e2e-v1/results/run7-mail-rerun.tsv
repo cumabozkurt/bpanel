@@ -1,0 +1,25 @@
+id	status	area	check	detail
+T001	PASS	setup	admin login	 
+T002	PASS	setup	admin step-up reauth	 
+T003	PASS	setup	webhook settings allow_private (local receiver)	 
+T004	PASS	setup	billing webhook created (account.*)	 
+T005	PASS	setup	create hosting account uv11n	 
+T006	PASS	setup	user login	 
+T007	PASS	setup	mailbox info@uv11n.e2e.test	 
+T008	PASS	setup	ids resolved (domain 38, mailbox 20)	 
+T001	PASS	setup	admin login	 
+T002	PASS	setup	create account wv11n	 
+T003	PASS	setup	user login	 
+T004	PASS	setup	mailbox box@wv11n.e2e.test	 
+T005	PASS	mail	autoresponder set (Sieve vacation)	 
+T006	PASS	mail	sieve active link + compiled	sieve/bpanel.sieve 
+T007	PASS	mail	vacation reply delivered to the sender's mailbox (info@uv11n.e2e.test)	 
+T008	PASS	mail	autoresponder removed	 
+T009	PASS	mail	filter: subject contains INVOICE -> Invoices	 
+T010	PASS	mail	filtered mail stored in the Invoices folder	/home/wv11n/mail/wv11n.e2e.test/box/.Invoices/dovecot.index.cache /home/wv11n/mail/wv11n.e2e.test/box/.Invoices/new/1791672005.M59428P307790.panel.e2e.test,S=665,W=685 
+T011	PASS	mail	filter folder traversal refused	 
+T012	PASS	mail	filter deleted	 
+T013	PASS	mail	spam settings	 
+T014	PASS	mail	spam settings set (Rspamd)	 
+T015	PASS	mail	rspamd settings file written + rspamadm configtest	configured task_timeout 8.00 is less than maximum symbols cache timeout 9.00; some symbols can be terminated before checks list of top 12 symbols by execution time: ARC_CHECK(5.00); ARC_SIGNED(5.00); FUZZY_CALLBACK(4.00); DMARC_CHECK(4.00); PHISHING(4.00); SPF_CHECK(4.00); WHITELIST_SPF(4.00); WHITE
+T016	PASS	mail	deny-listed sender rejected/not in INBOX	 

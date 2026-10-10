@@ -1,0 +1,18 @@
+== setup
+PASS T001 [x-setup] admin login
+PASS T002 [x-setup] create account xv11m
+PASS T003 [x-setup] user login
+== ruby
+PASS T004 [ruby] Ruby runtime detected
+PASS T005 [ruby] create Ruby app (runtime ruby 3.2.3)
+PASS T006 [ruby] start (systemd bpanel-app@ unit)
+PASS T007 [ruby] unit carries GEM_HOME/RACK_ENV (Ruby environment)
+PASS T008 [ruby] app reachable through the domain (/ruby)
+PASS T009 [ruby] app runs as the account user
+PASS T010 [ruby] stop
+PASS T011 [ruby] process gone after stop
+PASS T012 [ruby] delete
+== nsdns
+PASS T013 [tdns] dns lookup NS of the own zone (resolver = own PowerDNS)
+== cleanup
+PASS T014 [x-setup] terminate xv11m

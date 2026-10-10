@@ -1,0 +1,130 @@
+id	status	area	check	detail
+T001	PASS	c-setup	admin login	 
+T002	PASS	packages	create package core-v11p	 
+T003	PASS	packages	edit package (disk 3000 MB)	 
+T004	PASS	accounts	create account cv11p (system user, vhost, zone, PHP-FPM pool)	 
+T005	PASS	accounts	system user + home exist	uid=1029(cv11p) gid=1029(cv11p) groups=1029(cv11p),993(bpanel-users),992(bpanel-sftp) 
+T006	PASS	accounts	site served by nginx	 
+T007	PASS	accounts	zone served by PowerDNS	 
+T008	PASS	c-setup	user login	 
+T009	PASS	domains	addon domain addv11p.e2e.test	 
+T010	PASS	domains	addon domain served from its docroot	 
+T011	PASS	domains	addon zone created	 
+T012	PASS	domains	subdomain blog.cv11p.e2e.test	 
+T013	PASS	domains	subdomain A record	 
+T014	PASS	domains	subdomain vhost answers	 
+T015	PASS	domains	alias (parked) domain	 
+T016	PASS	domains	alias serves the main site	 
+T017	PASS	redirects	redirect addon -> https://example.org/landing	 
+T018	PASS	redirects	301 with Location	 
+T019	PASS	redirects	redirect removed	 
+T020	PASS	redirects	addon served again	 
+T021	PASS	domains	invalid domain name refused	 
+T022	PASS	files	mkdir	 
+T023	PASS	files	write file	 
+T024	PASS	files	file on disk, owned by the account	 
+T025	PASS	files	read file	 
+T026	PASS	files	copy	 
+T027	PASS	files	rename	 
+T028	PASS	files	chmod 0600	 
+T029	PASS	files	zip	 
+T030	PASS	files	list	 
+T031	PASS	files	upload (multipart)	 
+T032	PASS	files	download	 
+T033	PASS	files	path traversal refused	 
+T034	PASS	files	symlink escape refused	 
+T035	PASS	files	delete	 
+T036	PASS	disk	disk usage (dirs, databases, mail)	 
+T037	PASS	zone	get zone	 
+T038	PASS	zone	add TXT record	 
+T039	PASS	zone	record served (dig)	 
+T040	PASS	zone	add A record	 
+T041	PASS	zone	A record served	 
+T042	PASS	zone	delete record	 
+T043	PASS	zone	record gone	 
+T044	PASS	zone	foreign zone refused	 
+T045	PASS	email	create mailbox user1@cv11p.e2e.test	 
+T046	PASS	email	IMAP login (Dovecot, TLS)	 
+T047	PASS	email	wrong password refused	 
+T048	PASS	email	authenticated submission (587 STARTTLS) delivers	 
+T049	PASS	email	unauthenticated relay from outside refused (554 Relay access denied)	 
+T050	PASS	email	DKIM signature on outgoing mail	 
+T051	PASS	forwarders	forwarder sales@ -> user2@	 
+T052	PASS	forwarders	forwarded mail delivered	 
+T053	PASS	catchall	default address (catch-all) -> user1@	 
+T054	PASS	catchall	unknown recipient caught	 
+T055	PASS	deliverability	SPF/DKIM/DMARC status	 
+T056	PASS	deliverability	SPF, DKIM, DMARC records published	 
+T057	PASS	email-disk	mailbox usage reported	 
+T058	PASS	webmail	webmail URL	 
+T059	PASS	webmail	Roundcube answers	 
+T060	PASS	ftp	create FTP account	 
+T061	PASS	ftp	upload over FTPS (Pure-FTPd, explicit TLS)	 
+T062	PASS	ftp	uploaded file owned by the account	 
+T063	PASS	ftp	FTP chroot: / is the account dir	 
+T064	PASS	ftp	wrong password refused	 
+T065	PASS	mysql	database wizard (db + user + grant)	 
+T066	PASS	mysql	database exists in MariaDB with the grant	 
+T067	PASS	phpmyadmin	single-sign-on URL	 
+T068	PASS	phpmyadmin	phpMyAdmin opens logged in (SSO, proxied on 2083)	 
+T069	PASS	backups	run backup now (restic)	 
+T070	PASS	backups	snapshot listed	 
+T071	PASS	restore	restore one file	 
+T072	PASS	restore	file restored with its content	 
+T073	PASS	ssl	SSL/TLS status per domain	 
+T074	PASS	ssl	AutoSSL issues a certificate (ACME HTTP-01 against Pebble)	 
+T075	PASS	ssl	HTTPS vhost serves the issued certificate	 
+T076	PASS	ssl	site answers over HTTPS	 
+T077	PASS	ssl	legacy TLS 1.1 refused	 
+T078	PASS	ssl	status shows the certificate and its expiry	 
+T079	PASS	logs	raw access log contains the request	 
+T080	PASS	logs	error log readable	 
+T081	PASS	logs	foreign domain refused	 
+T082	PASS	php	installed PHP versions	 
+T083	PASS	php	PHP runs through the account's FPM pool	 
+T084	PASS	php	FPM worker runs as the account user	 
+T085	PASS	php	set domain PHP version	 
+T086	PASS	php	unknown PHP version refused	 
+T087	PASS	cron	add cron job	 
+T088	PASS	cron	installed in the account's crontab	 
+T089	PASS	cron	invalid schedule refused	 
+T090	PASS	cron	delete cron job	 
+T091	PASS	cron	removed from crontab	 
+T092	PASS	password	change own password	 
+T093	PASS	password	login with the new password	 
+T094	PASS	2fa	TOTP setup (secret + otpauth URL)	 
+T095	PASS	2fa	enable TOTP	 
+T096	PASS	2fa	login without a code is refused	 
+T097	PASS	2fa	login with the TOTP code	 
+T098	PASS	2fa	disable TOTP	 
+T099	PASS	sessions	list own sessions	 
+T100	PASS	prefs	set language TR + dark theme	 
+T101	PASS	prefs	persisted (auth/me)	 
+T102	PASS	prefs	unknown language refused	 
+T103	PASS	server-info	server information	 
+T104	PASS	basic-setup	server settings	 
+T105	PASS	basic-setup	update settings (contact e-mail, nameservers)	 
+T106	PASS	basic-setup	settings persisted	 
+T107	PASS	audit	audit trail records the account's actions	 
+T108	PASS	accounts	list/search accounts	 
+T109	PASS	services	service status	 
+T110	PASS	services	restart a service (pure-ftpd)	 
+T111	PASS	services	service active again	active 
+T112	PASS	services	critical unit cannot be stopped	 
+T113	PASS	suspend	mail login works before suspend (control)	 
+T114	PASS	suspend	suspend account	 
+T115	PASS	suspend	site shows the suspended page	 
+T116	PASS	suspend	suspended user cannot log in	 
+T117	PASS	suspend	mail login (IMAP) refused while suspended	 
+T118	PASS	suspend	SMTP AUTH refused while suspended	 
+T119	PASS	suspend	unsuspend	 
+T120	PASS	suspend	site back	 
+T121	PASS	suspend	mail login works again after unsuspend	 
+T122	PASS	accounts	admin sets the account password	 
+T123	PASS	accounts	user logs in with it	 
+T124	PASS	accounts	change package	 
+T125	PASS	accounts	admin login-as (one-time link)	 
+T126	PASS	terminate	terminate account	 
+T127	PASS	terminate	system user, home, vhost, zone, mailboxes and databases removed	 
+T128	PASS	packages	delete unused package	 
+T129	PASS	api-docs	OpenAPI document served (v1.1.0)	 

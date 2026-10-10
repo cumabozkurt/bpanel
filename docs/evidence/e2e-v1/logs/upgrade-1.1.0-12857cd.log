@@ -1,0 +1,55 @@
+[1;33mWARNING:[0m running UNSIGNED binaries from /tmp/up/bpanel-1.1.0-linux-amd64 (BPANEL_ALLOW_UNSIGNED=1)
+BOZKURT PANEL 1.1.0 is already installed and up to date; re-applying the configuration (idempotent)
+[1/7] Upgrade (packages, hardening, panel, migrations): preflight …
+  ✔ Upgrade (packages, hardening, panel, migrations): preflight (0s)
+[2/7] Upgrade (packages, hardening, panel, migrations): backup …
+  backup: /var/backups/bpanel/upgrade-1.1.0-to-1.1.0-20261010T222427Z
+  ✔ Upgrade (packages, hardening, panel, migrations): backup (0s)
+[3/7] Upgrade (packages, hardening, panel, migrations): packages …
+  ✔ Upgrade (packages, hardening, panel, migrations): packages (15s)
+[4/7] Upgrade (packages, hardening, panel, migrations): restic …
+  ✔ Upgrade (packages, hardening, panel, migrations): restic (0s)
+[5/7] Upgrade (packages, hardening, panel, migrations): system …
+  ! quota: filesystem fuse.fuse-overlayfs on / is not supported; disk limits are reported but not enforced
+  ✔ Upgrade (packages, hardening, panel, migrations): system (0s)
+[6/7] Upgrade (packages, hardening, panel, migrations): configs …
+  ✔ Upgrade (packages, hardening, panel, migrations): configs (43s)
+[7/7] Upgrade (packages, hardening, panel, migrations): panel …
+  ✔ Upgrade (packages, hardening, panel, migrations): panel (3s)
+[7/7] Self-test …
+    ✔ agent socket
+    ✔ service apache2
+    ✔ service bpanel-api
+    ✔ service dovecot
+    ✔ service mariadb
+    ✔ service nginx
+    ✔ service pdns
+    ✔ service php8.3-fpm
+    ✔ service postfix
+    ✔ service pure-ftpd
+    ✔ service redis-server
+    ✔ service rspamd
+    ✔ service ssh
+    ✔ panel database
+    ✔ user panel https :2083
+    ✔ admin panel https :2087
+    ✔ redirect :2082 -> :2083
+    ✔ redirect :2086 -> :2087
+    ✔ e2e: create account
+    ✔ e2e: PHP-FPM pool
+    ✔ e2e: nginx/apache vhost (config tested)
+    ✔ e2e: site answers over HTTP
+    ✔ e2e: terminate account
+✔ BOZKURT PANEL upgraded to 1.1.0
+
+✔ BOZKURT PANEL 1.1.0 is installed
+  Admin panel  : https://panel.e2e.test:2087/   (HTTP 2086 redirects)
+  User panel   : https://panel.e2e.test:2083/   (HTTP 2082 redirects)
+  Webmail      : https://panel.e2e.test:2096/   (HTTP 2095 redirects)
+  One-time login link (15 min): https://panel.e2e.test:2087/login/once/<REDACTED>
+  Log: /var/log/bpanel/install.log
+Warnings:
+  - systemd-resolved listens on 127.0.0.53:53; its stub listener will be turned off so PowerDNS can answer on port 53
+  - quota: filesystem fuse.fuse-overlayfs on / is not supported; disk limits are reported but not enforced
+  - Let's Encrypt for the hostname failed: acme_register: acme: error: 400 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-acct :: urn:ietf:params:acme:error:invalidContact :: Error validating contact(s) :: contact email has invalid domain: Domain name does not end with a valid public suffix (TLD)
+Next steps: point your nameservers/A records here, set the contact email, check that port 25 and reverse DNS (PTR) are allowed by your provider.
