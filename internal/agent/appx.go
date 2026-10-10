@@ -46,7 +46,8 @@ var (
 	appxPHPCLI     = []string{"/usr/bin/php", "/usr/local/bin/php"}
 	appxSystemd    = func(a *Agent) bool { return !a.Cfg.NoSystemd && systemdPID1() }
 	appxRuntimeBin = []string{"/usr/bin/node", "/usr/local/bin/node", "/usr/bin/nodejs", "/opt/bpanel/runtimes/node-*/bin/node",
-		"/usr/bin/python3", "/usr/bin/python3.*", "/usr/local/bin/python3", "/opt/bpanel/runtimes/python-*/bin/python3"}
+		"/usr/bin/python3", "/usr/bin/python3.*", "/usr/local/bin/python3", "/opt/bpanel/runtimes/python-*/bin/python3",
+		"/usr/bin/ruby", "/usr/bin/ruby3.*", "/usr/local/bin/ruby", "/opt/bpanel/runtimes/ruby-*/bin/ruby"}
 	// appxFetch downloads url into w (replaced in tests).
 	appxFetch = func(ctx context.Context, url string, w io.Writer, max int64) error {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -135,6 +136,8 @@ func detectRuntimes(ctx context.Context) []rpc.AppxRuntime {
 			rt := appx.RuntimePython
 			if strings.Contains(filepath.Base(p), "node") {
 				rt = appx.RuntimeNode
+			} else if strings.Contains(filepath.Base(p), "ruby") {
+				rt = appx.RuntimeRuby
 			}
 			out = append(out, rpc.AppxRuntime{Runtime: rt, Version: v, Path: p})
 		}
@@ -492,6 +495,16 @@ func (a *Agent) appxAppDeps(ctx context.Context, p rpc.AppxAppRef) (rpc.AppxOutp
 			return rpc.AppxOutput{}, errf("appx_runtime_missing", "npm is not installed next to %s", st.Bin)
 		}
 		steps = [][]string{{npm, "install", "--omit=dev", "--no-audit", "--no-fund"}}
+	} else if st.App.Runtime == appx.RuntimeRuby {
+		// Ruby gems: Gemfile -> bundler into <app>/vendor/bundle (never system-wide).
+		if _, err := root.Stat(filepath.Join(st.App.Root, "Gemfile")); err != nil {
+			return rpc.AppxOutput{}, errf("appx_no_manifest", "Gemfile not found in %s", st.App.Root)
+		}
+		bundle := appxFirstExec([]string{filepath.Join(filepath.Dir(st.Bin), "bundle"), "/usr/bin/bundle", "/usr/local/bin/bundle"})
+		if bundle == "" {
+			return rpc.AppxOutput{}, errf("appx_runtime_missing", "bundler is not installed next to %s", st.Bin)
+		}
+		steps = [][]string{{bundle, "config", "set", "--local", "path", "vendor/bundle"}, {bundle, "install", "--jobs", "2"}}
 	} else {
 		if _, err := root.Stat(filepath.Join(st.App.Root, "requirements.txt")); err != nil {
 			return rpc.AppxOutput{}, errf("appx_no_manifest", "requirements.txt not found in %s", st.App.Root)

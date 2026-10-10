@@ -133,11 +133,16 @@ func (s *Server) boxRules(ctx context.Context, boxID int64) ([]mailx.Rule, error
 // applySieve pushes the desired script state of a mailbox to the agent and
 // records the result. It is called before the DB change is committed.
 func (s *Server) applySieve(r *http.Request, m store.Mailbox, vac *mailx.Vacation, rules []mailx.Rule) (rpc.MailxStatus, error) {
-	if _, err := mailx.Generate(m.Email, vac, rules); err != nil {
+	return s.applySieveBT(r, m, vac, rules, s.boxTrapperOf(r.Context(), m.ID)) // v1.1: BoxTrapper rides along
+}
+
+// applySieveBT is applySieve with an explicit BoxTrapper state (nil = none).
+func (s *Server) applySieveBT(r *http.Request, m store.Mailbox, vac *mailx.Vacation, rules []mailx.Rule, bt *mailx.BoxTrapper) (rpc.MailxStatus, error) {
+	if _, err := mailx.GenerateFull(m.Email, vac, rules, bt); err != nil {
 		return rpc.MailxStatus{}, mailxBad(err)
 	}
 	var st rpc.MailxStatus
-	if err := s.agentCall(r, rpc.MMailSieveApply, rpc.MailSieveReq{User: userOf(r).Username, Email: m.Email, Vacation: vac, Rules: rules}, &st); err != nil {
+	if err := s.agentCall(r, rpc.MMailSieveApply, rpc.MailSieveReq{User: userOf(r).Username, Email: m.Email, Vacation: vac, Rules: rules, BoxTrapper: bt}, &st); err != nil {
 		return st, err
 	}
 	_, err := s.Store.DB.ExecContext(r.Context(), `INSERT INTO mail_sieve_status(mailbox_id,status,reason,updated_at) VALUES(?,?,?,?)

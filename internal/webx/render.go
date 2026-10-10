@@ -27,7 +27,7 @@ type RenderCtx struct {
 func Htpasswd(d PrivacyDir) []byte {
 	var b strings.Builder
 	for _, u := range d.Users {
-		if ValidUser(u) == nil {
+		if ValidUser(u) == nil && !u.Disabled {
 			b.WriteString(u.Name + ":" + u.Hash + "\n")
 		}
 	}
@@ -87,6 +87,17 @@ func (r RenderCtx) check(c *Config) error {
 	for _, ip := range c.Deny {
 		if v, err := ParseDeny(ip); err != nil || v != ip {
 			return fmt.Errorf("webx: unsafe address refused")
+		}
+	}
+	for _, x := range c.Indexes {
+		if p, err := CleanIndexPath(x.Path); err != nil || p != x.Path || (x.Mode != "on" && x.Mode != "off") {
+			return fmt.Errorf("webx: unsafe index directory refused")
+		}
+	}
+	for _, h := range c.Handlers {
+		hh := h
+		if err := ValidHandler(&hh); err != nil || hh != h {
+			return fmt.Errorf("webx: unsafe handler refused")
 		}
 	}
 	for _, k := range c.SortedErrorCodes() {
@@ -170,35 +181,96 @@ func RenderNginx(c *Config, r RenderCtx) ([]byte, error) {
 		w("    %s", r.staticTail())
 		w("}")
 	}
+	idx := map[string]string{}
+	for _, x := range c.Indexes {
+		idx[x.Path] = x.Mode
+	}
+	if m, ok := idx["/"]; ok {
+		w("# directory indexes (site root)")
+		w("autoindex %s;", m)
+	}
+	if len(c.Handlers) > 0 {
+		w("# Apache handlers (nginx equivalents)")
+		for _, h := range c.Handlers {
+			w(`location ~* \.%s$ {`, h.Ext)
+			switch h.Handler {
+			case "server-parsed":
+				w("    ssi on;")
+				w("    ssi_types *;")
+			case "text-plain":
+				w("    types { }")
+				w("    default_type text/plain;")
+			default:
+				w("    types { }")
+				w("    default_type application/octet-stream;")
+			}
+			w("    %s", r.staticTail())
+			w("}")
+		}
+	}
+	priv := map[string]bool{}
+	for _, d := range c.Privacy {
+		priv[d.Path] = true
+	}
+	for _, x := range c.Indexes {
+		if x.Path == "/" || priv[x.Path] {
+			continue
+		}
+		w("# directory indexes")
+		w(`location ^~ "%s" {`, x.Path)
+		w("    autoindex %s;", x.Mode)
+		w(`    location ~ /\.(ht|git|svn|env) { deny all; }`)
+		if r.Mode == "nginx" {
+			w("    try_files $uri $uri/ =404;")
+			r.phpBlock(w)
+		} else {
+			r.proxyApache(w)
+		}
+		w("}")
+	}
 	for i, d := range c.Privacy {
 		w("# directory privacy")
 		w(`location ^~ "%s" {`, d.Path)
 		w(`    auth_basic "%s";`, d.Realm)
 		w(`    auth_basic_user_file "%s";`, r.HtpasswdPaths[i])
+		if m, ok := idx[d.Path]; ok {
+			w("    autoindex %s;", m)
+		}
 		w(`    location ~ /\.(ht|git|svn|env) { deny all; }`)
 		if r.Mode == "nginx" {
 			w("    try_files $uri $uri/ =404;")
-			w(`    location ~ \.php$ {`)
-			w("        try_files $uri =404;")
-			w(`        fastcgi_split_path_info ^(.+\.php)(/.+)$;`)
-			w(`        fastcgi_pass "unix:%s";`, r.PHPSocket)
-			w("        fastcgi_index index.php;")
-			w("        include fastcgi_params;")
-			w("        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;")
-			w("        fastcgi_param HTTPS $https if_not_empty;")
-			w("        fastcgi_read_timeout 300;")
-			w("    }")
+			r.phpBlock(w)
 		} else {
-			w("    proxy_pass http://127.0.0.1:8080;")
-			w("    proxy_set_header Host $host;")
-			w("    proxy_set_header X-Real-IP $remote_addr;")
-			w("    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;")
-			w("    proxy_set_header X-Forwarded-Proto $scheme;")
-			w("    proxy_read_timeout 300;")
+			r.proxyApache(w)
 		}
 		w("}")
 	}
 	return []byte(b.String()), nil
+}
+
+// phpBlock is the nested PHP location of a ^~ prefix location (nginx mode),
+// so PHP inside a protected or listed directory still runs instead of being
+// served as source.
+func (r RenderCtx) phpBlock(w func(string, ...any)) {
+	w(`    location ~ \.php$ {`)
+	w("        try_files $uri =404;")
+	w(`        fastcgi_split_path_info ^(.+\.php)(/.+)$;`)
+	w(`        fastcgi_pass "unix:%s";`, r.PHPSocket)
+	w("        fastcgi_index index.php;")
+	w("        include fastcgi_params;")
+	w("        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;")
+	w("        fastcgi_param HTTPS $https if_not_empty;")
+	w("        fastcgi_read_timeout 300;")
+	w("    }")
+}
+
+func (r RenderCtx) proxyApache(w func(string, ...any)) {
+	w("    proxy_pass http://127.0.0.1:8080;")
+	w("    proxy_set_header Host $host;")
+	w("    proxy_set_header X-Real-IP $remote_addr;")
+	w("    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;")
+	w("    proxy_set_header X-Forwarded-Proto $scheme;")
+	w("    proxy_read_timeout 300;")
 }
 
 // RenderApache returns the Apache include (VirtualHost context) or nil.
@@ -225,6 +297,38 @@ func RenderApache(c *Config, r RenderCtx) ([]byte, error) {
 	}
 	for _, m := range c.MIME {
 		w("AddType %s .%s", m.Type, m.Ext)
+	}
+	ssi := false
+	for _, h := range c.Handlers {
+		switch h.Handler {
+		case "server-parsed":
+			ssi = true
+			w("AddType text/html .%s", h.Ext)
+			w("AddOutputFilter INCLUDES .%s", h.Ext)
+		case "text-plain":
+			w(`<FilesMatch "\.%s$">`, h.Ext)
+			w("    ForceType text/plain")
+			w("    SetHandler default-handler")
+			w("</FilesMatch>")
+		default:
+			w(`<FilesMatch "\.%s$">`, h.Ext)
+			w("    SetHandler default-handler")
+			w("</FilesMatch>")
+		}
+	}
+	if ssi {
+		w(`<Directory "%s">`, r.DocRoot)
+		w("    Options +IncludesNOEXEC")
+		w("</Directory>")
+	}
+	for _, x := range c.Indexes {
+		sign := "-"
+		if x.Mode == "on" {
+			sign = "+"
+		}
+		w(`<Directory "%s%s">`, r.DocRoot, strings.TrimSuffix(x.Path, "/"))
+		w("    Options %sIndexes", sign)
+		w("</Directory>")
 	}
 	if len(c.Deny) > 0 {
 		// effective only when Apache sees the client address (mod_remoteip);

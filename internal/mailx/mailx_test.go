@@ -214,3 +214,26 @@ func TestParseLogOwnership(t *testing.T) {
 		t.Errorf("no domains must give nothing: %+v", n)
 	}
 }
+
+func TestBoxTrapperSieve(t *testing.T) {
+	bt := &BoxTrapper{Enabled: true, Whitelist: []string{"Friend@Example.org", "@partner.test", "friend@example.org"}, Blacklist: []string{"spam@bad.test"}}
+	s, err := GenerateFull("me@site.test", nil, nil, bt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`require ["fileinto", "mailbox"];`, `if anyof(address :is :all "from" ["spam@bad.test"]) {`,
+		`address :is :domain "from" ["partner.test", "site.test"]`, `address :is :all "from" ["friend@example.org"]`, `fileinto :create "BoxTrapper";`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("missing %q in:\n%s", want, s)
+		}
+	}
+	if s, _ := GenerateFull("me@site.test", nil, nil, &BoxTrapper{Enabled: false}); s != "" {
+		t.Fatalf("disabled: %q", s)
+	}
+	for _, b := range []BoxTrapper{{Enabled: true, Whitelist: []string{"not an address"}}, {Enabled: true, Folder: "../x"},
+		{Enabled: true, Blacklist: []string{"@\"; discard"}}} {
+		if _, err := GenerateFull("me@site.test", nil, nil, &b); err == nil {
+			t.Errorf("accepted %+v", b)
+		}
+	}
+}

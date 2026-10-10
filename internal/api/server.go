@@ -61,7 +61,8 @@ type Config struct {
 	PlainHTTP      bool          `json:"plain_http"` // development only
 	Hostname       string        `json:"hostname"`
 	ServerIP       string        `json:"server_ip"`
-	PMAUpstream    string        `json:"pma_upstream"` // internal nginx serving phpMyAdmin
+	PMAUpstream    string        `json:"pma_upstream"`           // internal nginx serving phpMyAdmin
+	DavUpstream    string        `json:"dav_upstream,omitempty"` // v1.1 Radicale (default http://127.0.0.1:5232)
 	Dev            bool          `json:"dev"`
 	TrustedProxies []string      `json:"trusted_proxies"`
 	SecretKeyFile  string        `json:"secret_key_file"` // v0.4 secret store master key ("" = /etc/bpanel/secret.key)
@@ -608,6 +609,18 @@ func (s *Server) Handler(realm string) http.Handler {
 	}
 	r.Get("/openapi.json", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, s.OpenAPI()) })
 	r.Handle("/*", s.spa())
+	if realm == RealmUser {
+		// v1.1: CalDAV/CardDAV clients authenticate with HTTP Basic against
+		// Radicale; they bypass the panel's session/bearer middleware.
+		dav := s.davProxy()
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if req.URL.Path == "/dav" || strings.HasPrefix(req.URL.Path, "/dav/") {
+				dav.ServeHTTP(w, req)
+				return
+			}
+			r.ServeHTTP(w, req)
+		})
+	}
 	return r
 }
 
@@ -734,6 +747,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go s.runShieldPoller(ctx)
 	go s.netsecLoop(ctx) // v0.4 netsec.go: block expiry
 	go s.usagexLoop(ctx) // v0.4 usagex.go: bandwidth collector
+	go s.leechLoop(ctx)  // v1.1 webx.go: leech protection sweep
 	select {
 	case <-ctx.Done():
 	case err := <-errc:

@@ -82,6 +82,9 @@ func (a *fakeAgent) Call(ctx context.Context, method string, params any, result 
 		}
 		out = o
 	}
+	if o, ok := fakeV11(method, b); ok { // v11_test.go
+		out = o
+	}
 	if o, ok := fakeDbx(method, b); ok { // dbx_test.go
 		out = o
 	}

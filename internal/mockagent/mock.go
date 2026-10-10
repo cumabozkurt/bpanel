@@ -404,10 +404,27 @@ func (m *Mock) Call(ctx context.Context, method string, params any, result any) 
 		}
 		out = r
 	default:
+		if slicesContains(V11Methods, method) { // v1.1 parity (v11.go)
+			r, err := m.mockV11(method, params)
+			if err != nil {
+				return err
+			}
+			out = r
+			break
+		}
 		return &rpc.Error{Code: "unknown_method", Message: method}
 	}
 	if result != nil {
 		return conv(out, result)
 	}
 	return nil
+}
+
+func slicesContains(s []string, v string) bool {
+	for _, x := range s {
+		if x == v {
+			return true
+		}
+	}
+	return false
 }

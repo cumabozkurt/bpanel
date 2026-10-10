@@ -84,7 +84,7 @@ func (a *Agent) mailSieveApply(ctx context.Context, p rpc.MailSieveReq) (rpc.Mai
 		return res, err
 	}
 	addr := local + "@" + domain
-	script, err := mailx.Generate(addr, p.Vacation, p.Rules)
+	script, err := mailx.GenerateFull(addr, p.Vacation, p.Rules, p.BoxTrapper)
 	if err != nil {
 		return res, mailxErr(err)
 	}

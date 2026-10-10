@@ -95,9 +95,13 @@ func TestValidateAndUnit(t *testing.T) {
 		}
 	}
 	b := a
-	b.Runtime = "ruby"
+	b.Runtime = "perl"
 	if err := b.Validate(); code(err) != "appx_invalid_runtime" {
 		t.Fatal(err)
+	}
+	b.Runtime = RuntimeRuby // v1.1: Ruby (Rack/Rails) apps
+	if err := b.Validate(); err != nil {
+		t.Fatalf("ruby refused: %v", err)
 	}
 }
 

@@ -11,6 +11,7 @@ package mailx
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -192,9 +193,81 @@ func comment(s string) string {
 	}, s)
 }
 
+// BoxTrapper (cPanel's challenge/response filter, free variant): mail from
+// a sender that is neither whitelisted nor of the mailbox's own domain is
+// filed into Folder (quarantine) instead of the inbox; blacklisted senders
+// are discarded. No challenge mail is sent (it would create backscatter);
+// the owner releases messages from the folder and whitelists the sender.
+type BoxTrapper struct {
+	Enabled   bool     `json:"enabled"`
+	Whitelist []string `json:"whitelist"` // addresses or "@domain"
+	Blacklist []string `json:"blacklist"`
+	Folder    string   `json:"folder"`
+}
+
+const MaxBoxTrapperEntries = 500
+
+// Normalize validates the lists (lower-case, de-duplicated, sorted).
+func (bt BoxTrapper) Normalize() (BoxTrapper, error) {
+	if bt.Folder == "" {
+		bt.Folder = "BoxTrapper"
+	}
+	if len(bt.Folder) > MaxFolderLen || !reFolder.MatchString(bt.Folder) || hasCtl(bt.Folder) || strings.Contains(bt.Folder, "..") {
+		return bt, bad("invalid_folder", "folder")
+	}
+	clean := func(in []string, field string) ([]string, error) {
+		if len(in) > MaxBoxTrapperEntries {
+			return nil, bad("too_many_entries", field)
+		}
+		seen := map[string]bool{}
+		out := []string{}
+		for _, x := range in {
+			x = strings.ToLower(strings.TrimSpace(x))
+			if x == "" {
+				continue
+			}
+			ok := IsEmail(x) || strings.HasPrefix(x, "@") && IsDomain(x[1:])
+			if !ok {
+				return nil, bad("invalid_sender", field)
+			}
+			if !seen[x] {
+				seen[x] = true
+				out = append(out, x)
+			}
+		}
+		sort.Strings(out)
+		return out, nil
+	}
+	var err error
+	if bt.Whitelist, err = clean(bt.Whitelist, "whitelist"); err != nil {
+		return bt, err
+	}
+	if bt.Blacklist, err = clean(bt.Blacklist, "blacklist"); err != nil {
+		return bt, err
+	}
+	return bt, nil
+}
+
+func splitSenders(list []string) (addrs, domains []string) {
+	for _, x := range list {
+		if strings.HasPrefix(x, "@") {
+			domains = append(domains, Quote(x[1:]))
+		} else {
+			addrs = append(addrs, Quote(x))
+		}
+	}
+	return
+}
+
 // Generate builds the managed Sieve script of one mailbox. vac may be nil;
 // rules may be empty. It returns "" when there is nothing to do.
 func Generate(mailbox string, vac *Vacation, rules []Rule) (string, error) {
+	return GenerateFull(mailbox, vac, rules, nil)
+}
+
+// GenerateFull is Generate plus an optional BoxTrapper section, which runs
+// first (a quarantined message gets no autoresponse and no filter action).
+func GenerateFull(mailbox string, vac *Vacation, rules []Rule, bt *BoxTrapper) (string, error) {
 	if !IsEmail(mailbox) {
 		return "", bad("invalid_email", "email")
 	}
@@ -217,11 +290,41 @@ func Generate(mailbox string, vac *Vacation, rules []Rule) (string, error) {
 		}
 		nr = append(nr, x)
 	}
-	if nv == nil && len(nr) == 0 {
+	var nbt *BoxTrapper
+	if bt != nil && bt.Enabled {
+		x, err := bt.Normalize()
+		if err != nil {
+			return "", err
+		}
+		nbt = &x
+	}
+	if nv == nil && len(nr) == 0 && nbt == nil {
 		return "", nil
 	}
 	req := map[string]bool{}
 	var body strings.Builder
+	if nbt != nil {
+		own := mailbox[strings.LastIndex(mailbox, "@")+1:]
+		body.WriteString("# BoxTrapper\n")
+		if a, d := splitSenders(nbt.Blacklist); len(a)+len(d) > 0 {
+			var t []string
+			if len(a) > 0 {
+				t = append(t, "address :is :all \"from\" ["+strings.Join(a, ", ")+"]")
+			}
+			if len(d) > 0 {
+				t = append(t, "address :is :domain \"from\" ["+strings.Join(d, ", ")+"]")
+			}
+			fmt.Fprintf(&body, "if anyof(%s) {\n  discard;\n  stop;\n}\n", strings.Join(t, ", "))
+		}
+		a, d := splitSenders(nbt.Whitelist)
+		d = append(d, Quote(own))
+		t := []string{"address :is :domain \"from\" [" + strings.Join(d, ", ") + "]"}
+		if len(a) > 0 {
+			t = append(t, "address :is :all \"from\" ["+strings.Join(a, ", ")+"]")
+		}
+		req["fileinto"], req["mailbox"] = true, true
+		fmt.Fprintf(&body, "if not anyof(%s) {\n  fileinto :create %s;\n  stop;\n}\n", strings.Join(t, ", "), Quote(strings.ReplaceAll(nbt.Folder, "/", ".")))
+	}
 	if nv != nil {
 		req["vacation"] = true
 		conds := []string{`not header :contains ["X-Spam", "X-Spam-Flag"] ["Yes", "YES", "yes"]`}

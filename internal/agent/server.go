@@ -170,6 +170,8 @@ func New(cfg Config, l *distro.Layout, log *slog.Logger) *Agent {
 	mergeRoutes(a.routes, a.mailxRoutes())     // v0.4 mailx (mailx.go)
 	mergeRoutes(a.routes, a.updatesRoutes())   // v0.4 adminx update preferences
 	mergeRoutes(a.routes, a.usagexRoutes())    // v0.4 usagex (bandwidth, fail2ban)
+	mergeRoutes(a.routes, a.v11UserRoutes())   // v1.1 parity: stats, leech, routing, DAV, GnuPG, SSH keys
+	mergeRoutes(a.routes, a.v11ServerRoutes()) // v1.1 parity: mail queue, troubleshooter, hostname, IPs, PHP extensions
 	mergeRoutes(a.routes, a.devxRoutes())      // v0.4 devx (git, terminal, traceroute)
 	mergeRoutes(a.routes, a.webxRoutes())      // v0.4 webx (web extras include)
 	mergeRoutes(a.routes, a.appxRoutes())      // v0.4 appx (applications, installer, WordPress)

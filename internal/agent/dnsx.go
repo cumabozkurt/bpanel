@@ -180,7 +180,7 @@ func (a *Agent) writeTransport(ctx context.Context) error {
 		return errf("mlist_failed", "transport dir")
 	}
 	tmp := path + ".bpanel-tmp"
-	if err := os.WriteFile(tmp, []byte(dnsx.TransportMap(scanLists())), 0o644); err != nil {
+	if err := os.WriteFile(tmp, []byte(dnsx.TransportMap(scanLists())+a.routingLines()), 0o644); err != nil {
 		return errf("mlist_failed", "write transport")
 	}
 	if err := os.Rename(tmp, path); err != nil {

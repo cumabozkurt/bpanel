@@ -73,7 +73,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 	s.op(r, "POST", "/admin/accounts/{id}/login", "accounts", "One-time link to the user panel as this account", nil, s.h(s.loginAs))
 	s.op(r, "DELETE", "/admin/accounts/{id}", "accounts", "Terminate an account (removes all data)", nil, s.h(s.terminateAccount))
 	s.mountIsolation(r)
-	s.mountShield(r) // v0.4 shield.go
+	s.mountShield(r)   // v0.4 shield.go
+	s.mountV11Admin(r) // v1.1 parity: mail queue, IPs, hostname, tweak settings, PHP extensions, billing
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireRole("admin"))
 		s.op(r, "GET", "/admin/services", "server", "Service status", nil, s.h(s.listServices))
@@ -501,6 +502,7 @@ func (s *Server) createAccount(w http.ResponseWriter, r *http.Request) (any, err
 		return nil, err
 	}
 	s.audit(r, "account.create", u.Username, u.PrimaryDomain, true)
+	s.billingEvent(r, "account.created", u.ID, u.Username, map[string]any{"domain": u.PrimaryDomain})
 	if warnings == nil {
 		warnings = []Warning{}
 	}
@@ -531,6 +533,7 @@ func (s *Server) suspendAccount(w http.ResponseWriter, r *http.Request) (any, er
 		return nil, err
 	}
 	s.audit(r, "account.suspend", u.Username, in.Reason, true)
+	s.billingEvent(r, "account.suspended", u.ID, u.Username, map[string]any{"reason": in.Reason})
 	return nil, nil
 }
 
@@ -546,6 +549,7 @@ func (s *Server) unsuspendAccount(w http.ResponseWriter, r *http.Request) (any, 
 		return nil, err
 	}
 	s.audit(r, "account.unsuspend", u.Username, "", true)
+	s.billingEvent(r, "account.unsuspended", u.ID, u.Username, map[string]any{})
 	return nil, nil
 }
 
@@ -602,6 +606,7 @@ func (s *Server) changeAccountPackage(w http.ResponseWriter, r *http.Request) (a
 		}
 	}
 	s.audit(r, "account.package", u.Username, p.Name, true)
+	s.billingEvent(r, "account.package_changed", u.ID, u.Username, map[string]any{"package": p.Name})
 	return nil, nil
 }
 
@@ -633,6 +638,7 @@ func (s *Server) setAccountPassword(w http.ResponseWriter, r *http.Request) (any
 		return nil, err
 	}
 	s.audit(r, "account.password", u.Username, "", true)
+	s.billingEvent(r, "account.password_changed", u.ID, u.Username, map[string]any{})
 	return nil, nil
 }
 
@@ -681,6 +687,7 @@ func (s *Server) terminateAccount(w http.ResponseWriter, r *http.Request) (any, 
 		}
 	}
 	s.audit(r, "account.terminate", u.Username, u.PrimaryDomain, true)
+	s.billingEvent(r, "account.terminated", u.ID, u.Username, map[string]any{"domain": u.PrimaryDomain})
 	return nil, nil
 }
 

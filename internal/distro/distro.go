@@ -222,3 +222,28 @@ func (l *Layout) UnitsNotInProfile(profile string) []string {
 
 // KnownPHP is the set of versions the panel offers to manage.
 var KnownPHP = []string{"8.1", "8.2", "8.3", "8.4", "8.5"}
+
+// PHPExtensions is the allowlist of the EasyApache-style extension manager
+// (free distro / Sury / Remi packages only).
+var PHPExtensions = []string{"apcu", "bcmath", "bz2", "curl", "gd", "gmp", "igbinary", "imagick", "imap", "intl", "ldap",
+	"mbstring", "memcached", "mysql", "opcache", "pgsql", "redis", "soap", "sqlite3", "tidy", "xdebug", "xml", "xsl", "zip"}
+
+// rhelExt maps an extension to its RHEL/Remi package suffix.
+var rhelExt = map[string]string{"mysql": "mysqlnd", "zip": "pecl-zip", "imagick": "pecl-imagick", "redis": "pecl-redis5",
+	"apcu": "pecl-apcu", "memcached": "pecl-memcached", "xdebug": "pecl-xdebug3", "igbinary": "pecl-igbinary", "sqlite3": "pdo",
+	"curl": "common", "bz2": "common"}
+
+// PHPExtPackage returns the package that provides ext for PHP version v.
+func (l *Layout) PHPExtPackage(v, ext string) string {
+	if l.Family == Debian {
+		return "php" + v + "-" + ext
+	}
+	suf := ext
+	if s, ok := rhelExt[ext]; ok {
+		suf = s
+	}
+	if v == l.DefaultPHP {
+		return "php-" + suf
+	}
+	return "php" + nodot(v) + "-php-" + suf
+}

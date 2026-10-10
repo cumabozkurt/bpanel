@@ -85,12 +85,12 @@
 		<form class="card pad" onsubmit={save}>
 			<label class="field"><span>{$t('appx.name')}</span><input bind:value={form.name} disabled={!!editing.id} maxlength="32" pattern="[a-z][a-z0-9-]*" required /></label>
 			<label class="field"><span>{$t('appx.runtime')}</span>
-				<select bind:value={form.runtime} onchange={() => (form.version = versions(form.runtime)[0] || '')}><option value="node">Node.js</option><option value="python">Python</option></select></label>
+				<select bind:value={form.runtime} onchange={() => (form.version = versions(form.runtime)[0] || '')}><option value="node">Node.js</option><option value="python">Python</option><option value="ruby">Ruby</option></select></label>
 			<label class="field"><span>{$t('appx.version')}</span>
 				<select bind:value={form.version}>{#each versions(form.runtime) as v}<option value={v}>{v}</option>{/each}</select></label>
 			<label class="field"><span>{$t('appx.root')}</span><input bind:value={form.root} placeholder="apps/myapp" required spellcheck="false" />
 				<small class="muted">{$t('appx.root_help')}</small></label>
-			<label class="field"><span>{$t('appx.startup')}</span><input bind:value={form.startup} placeholder={form.runtime === 'node' ? 'app.js' : 'app.py'} required spellcheck="false" />
+			<label class="field"><span>{$t('appx.startup')}</span><input bind:value={form.startup} placeholder={form.runtime === 'node' ? 'app.js' : form.runtime === 'ruby' ? 'app.rb' : 'app.py'} required spellcheck="false" />
 				<small class="muted">{$t('appx.startup_help')}</small></label>
 			<label class="field"><span>{$t('appx.domain')}</span>
 				<select bind:value={form.domain_id}><option value={0}>{$t('appx.no_domain')}</option>{#each domains as d}<option value={d.id}>{d.name}</option>{/each}</select></label>
@@ -119,7 +119,7 @@
 							<button class="btn sm" disabled={busy || !data.systemd} onclick={() => ctl(a, 'stop')}>{$t('appx.stop')}</button>
 							<button class="btn sm" disabled={busy || !data.systemd} onclick={() => ctl(a, 'restart')}>{$t('appx.restart')}</button>
 							<button class="btn sm" disabled={!data.systemd} onclick={() => logs(a)}>{$t('appx.logs')}</button>
-							<button class="btn sm" disabled={busy} onclick={() => deps(a)}>{a.runtime === 'node' ? 'npm install' : 'pip install'}</button>
+							<button class="btn sm" disabled={busy} onclick={() => deps(a)}>{a.runtime === 'node' ? 'npm install' : a.runtime === 'ruby' ? 'bundle install' : 'pip install'}</button>
 							<button class="btn sm" onclick={() => edit(a)}>{$t('common.edit')}</button>
 							<button class="btn sm danger" onclick={() => del(a)}>{$t('common.delete')}</button>
 						</td>

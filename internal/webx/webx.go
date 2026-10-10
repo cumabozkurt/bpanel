@@ -33,6 +33,11 @@ const (
 	MaxMIME         = 100
 	MaxDeny         = 500
 	MaxErrorPage    = 64 << 10
+	MaxIndexes      = 50
+	MaxHandlers     = 50
+	MaxLeech        = 1000
+	// LeechWindow is the Leech Protection look-back (seconds), as in cPanel.
+	LeechWindow = 2 * 3600
 )
 
 // ErrorCodes are the HTTP statuses a custom page can be set for.
@@ -42,6 +47,9 @@ var ErrorCodes = []int{400, 401, 403, 404, 500, 502, 503}
 type PrivacyUser struct {
 	Name string `json:"name"`
 	Hash string `json:"hash"`
+	// Disabled is set by Leech Protection (or the owner); a disabled login
+	// is left out of the password file until it is re-enabled.
+	Disabled bool `json:"disabled,omitempty"`
 }
 
 // PrivacyDir protects Path (URL path below the docroot, "/dir/") with basic auth.
@@ -49,7 +57,28 @@ type PrivacyDir struct {
 	Path  string        `json:"path"`
 	Realm string        `json:"realm"`
 	Users []PrivacyUser `json:"users"`
+	// LeechMax (Leech Protection): a login used from more than LeechMax
+	// distinct client IPs within LeechWindow is disabled. 0 = off.
+	LeechMax int `json:"leech_max,omitempty"`
 }
+
+// IndexDir sets directory listing (Options Indexes / autoindex) for Path
+// ("/" = the whole site). Mode "on" lists files, "off" forbids listings.
+type IndexDir struct {
+	Path string `json:"path"`
+	Mode string `json:"mode"`
+}
+
+// Handler maps a file extension to one of the allowlisted Apache handlers
+// (Apache Handlers): default-handler (serve as a static file), text-plain
+// (force text/plain) or server-parsed (Server Side Includes, no exec).
+type Handler struct {
+	Ext     string `json:"ext"`
+	Handler string `json:"handler"`
+}
+
+// Handlers are the allowlisted handler names (free, no CGI execution).
+var Handlers = []string{"default-handler", "text-plain", "server-parsed"}
 
 // Hotlink denies requests for Exts whose Referer is neither the domain
 // itself, one of Allowed (subdomains included) nor (AllowEmpty) absent.
@@ -74,6 +103,8 @@ type Config struct {
 	ErrorPages map[string]string `json:"error_pages"`
 	MIME       []MIMEType        `json:"mime"`
 	Deny       []string          `json:"deny"`
+	Indexes    []IndexDir        `json:"indexes,omitempty"`
+	Handlers   []Handler         `json:"handlers,omitempty"`
 }
 
 // Error is a validation failure; Code is an API error code.
@@ -91,6 +122,7 @@ var (
 	reExt      = regexp.MustCompile(`^[a-z0-9]{1,16}$`)
 	reMIMESub  = regexp.MustCompile(`^[a-z0-9][a-z0-9.+_-]{0,99}$`)
 	mimeTops   = map[string]bool{"application": true, "audio": true, "font": true, "image": true, "model": true, "text": true, "video": true}
+	phpExts    = map[string]bool{"php": true, "php3": true, "php4": true, "php5": true, "php7": true, "php8": true, "phtml": true, "phar": true, "pht": true, "phps": true}
 	execExts   = map[string]bool{"php": true, "php3": true, "php4": true, "php5": true, "php7": true, "php8": true, "phtml": true, "phar": true, "pht": true, "phps": true, "cgi": true, "pl": true, "py": true, "sh": true, "shtml": true, "htaccess": true, "htpasswd": true, "fcgi": true, "asp": true, "aspx": true, "jsp": true}
 	ErrInvalid = errors.New("webx_invalid")
 )
@@ -120,6 +152,36 @@ func CleanPath(p string) (string, error) {
 		return "", bad("webx_invalid_path", "the site root cannot be protected; choose a directory")
 	}
 	return "/" + strings.Join(segs, "/") + "/", nil
+}
+
+// CleanIndexPath is CleanPath that also accepts the site root "/".
+func CleanIndexPath(p string) (string, error) {
+	if strings.Trim(strings.TrimSpace(p), "/") == "" && strings.TrimSpace(p) != "" {
+		return "/", nil
+	}
+	return CleanPath(p)
+}
+
+// ValidHandler validates one extension -> handler mapping.
+func ValidHandler(h *Handler) error {
+	h.Ext = strings.ToLower(strings.TrimPrefix(strings.TrimSpace(h.Ext), "."))
+	h.Handler = strings.ToLower(strings.TrimSpace(h.Handler))
+	if !reExt.MatchString(h.Ext) {
+		return bad("webx_invalid_handler", "invalid extension")
+	}
+	switch h.Handler {
+	case "server-parsed":
+		if phpExts[h.Ext] {
+			return bad("webx_invalid_handler", "extension %s is reserved for PHP", h.Ext)
+		}
+	case "default-handler", "text-plain":
+		if execExts[h.Ext] {
+			return bad("webx_invalid_handler", "extension %s is reserved for scripts", h.Ext)
+		}
+	default:
+		return bad("webx_invalid_handler", "unsupported handler")
+	}
+	return nil
 }
 
 // ParseDeny validates one IP or CIDR and returns its canonical form.
@@ -214,6 +276,9 @@ func (c *Config) Normalize() error {
 		if len(d.Users) > MaxPrivacyUsers {
 			return bad("webx_invalid", "too many users")
 		}
+		if d.LeechMax < 0 || d.LeechMax > MaxLeech {
+			return bad("webx_invalid_leech", "leech limit must be 0 to %d", MaxLeech)
+		}
 		seenU := map[string]bool{}
 		for _, u := range d.Users {
 			if err := ValidUser(u); err != nil {
@@ -301,12 +366,51 @@ func (c *Config) Normalize() error {
 		}
 	}
 	c.Deny = dn
+	if len(c.Indexes) > MaxIndexes {
+		return bad("webx_invalid_path", "too many directories")
+	}
+	seen = map[string]bool{}
+	for i := range c.Indexes {
+		x := &c.Indexes[i]
+		p, err := CleanIndexPath(x.Path)
+		if err != nil {
+			return err
+		}
+		if x.Mode != "on" && x.Mode != "off" {
+			return bad("webx_invalid", "index mode must be on or off")
+		}
+		if seen[p] {
+			return bad("webx_invalid_path", "directory listed twice")
+		}
+		seen[p], x.Path = true, p
+	}
+	sort.Slice(c.Indexes, func(i, j int) bool { return c.Indexes[i].Path < c.Indexes[j].Path })
+	if len(c.Handlers) > MaxHandlers {
+		return bad("webx_invalid_handler", "too many handlers")
+	}
+	seen = map[string]bool{}
+	mimeExt := map[string]bool{}
+	for _, m := range c.MIME {
+		mimeExt[m.Ext] = true
+	}
+	for i := range c.Handlers {
+		if err := ValidHandler(&c.Handlers[i]); err != nil {
+			return err
+		}
+		e := c.Handlers[i].Ext
+		if seen[e] || mimeExt[e] {
+			return bad("webx_invalid_handler", "extension %s already has a handler or MIME type", e)
+		}
+		seen[e] = true
+	}
+	sort.Slice(c.Handlers, func(i, j int) bool { return c.Handlers[i].Ext < c.Handlers[j].Ext })
 	return nil
 }
 
 // Empty reports whether nothing would be rendered.
 func (c *Config) Empty() bool {
-	return len(c.Privacy) == 0 && !c.Hotlink.Enabled && len(c.ErrorPages) == 0 && len(c.MIME) == 0 && len(c.Deny) == 0
+	return len(c.Privacy) == 0 && !c.Hotlink.Enabled && len(c.ErrorPages) == 0 && len(c.MIME) == 0 && len(c.Deny) == 0 &&
+		len(c.Indexes) == 0 && len(c.Handlers) == 0
 }
 
 // SortedErrorCodes returns the codes that have a page, ascending.

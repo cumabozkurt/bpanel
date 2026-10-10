@@ -18,6 +18,8 @@ type MailSieveReq struct {
 	Email    string          `json:"email"`
 	Vacation *mailx.Vacation `json:"vacation,omitempty"`
 	Rules    []mailx.Rule    `json:"rules"`
+	// BoxTrapper (v1.1): optional quarantine section, nil/disabled = none.
+	BoxTrapper *mailx.BoxTrapper `json:"boxtrapper,omitempty"`
 }
 
 // MailxStatus: active | inactive (nothing configured) | not_installed.

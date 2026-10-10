@@ -69,15 +69,21 @@ const (
 	ShieldWrite       = "shield.write"
 	IsolationRead     = "isolation.read"
 	IsolationWrite    = "isolation.write"
-	HostingRead       = "hosting.read"   // user realm: own hosting account
-	HostingWrite      = "hosting.write"  // user realm: own hosting account
-	TokensSelf        = "tokens.self"    // manage own API tokens
-	BackupsRead       = "backups.read"   // v0.4 backup: verification results
-	BackupsVerify     = "backups.verify" // run a restore verification now
-	BackupsDelete     = "backups.delete" // forget/prune a snapshot (admin only)
-	XferRead          = "xfer.read"      // v0.4 xfer: Transfer Tool archives, analysis, history
-	XferWrite         = "xfer.write"     // v0.4 xfer: remote pull, import, export
-	SecretsRotate     = "secrets.rotate" // v0.4: rotate the secret-store master key (super_admin only: in no role set)
+	HostingRead       = "hosting.read"    // user realm: own hosting account
+	HostingWrite      = "hosting.write"   // user realm: own hosting account
+	TokensSelf        = "tokens.self"     // manage own API tokens
+	BackupsRead       = "backups.read"    // v0.4 backup: verification results
+	BackupsVerify     = "backups.verify"  // run a restore verification now
+	BackupsDelete     = "backups.delete"  // forget/prune a snapshot (admin only)
+	XferRead          = "xfer.read"       // v0.4 xfer: Transfer Tool archives, analysis, history
+	XferWrite         = "xfer.write"      // v0.4 xfer: remote pull, import, export
+	SecretsRotate     = "secrets.rotate"  // v0.4: rotate the secret-store master key (super_admin only: in no role set)
+	MailQueueRead     = "mailqueue.read"  // v1.1: Mail Queue Manager, Mail Troubleshooter
+	MailQueueWrite    = "mailqueue.write" // v1.1: delete/hold/release/requeue/flush queued mail
+	NetworkRead       = "network.read"    // v1.1: IP Functions
+	NetworkWrite      = "network.write"   // v1.1: add/remove IPs, dedicated IPs, change hostname
+	SoftwareRead      = "software.read"   // v1.1: PHP extensions
+	SoftwareWrite     = "software.write"  // v1.1: install/remove PHP extensions
 )
 
 // Catalogue is every permission with a short English description.
@@ -122,6 +128,12 @@ var Catalogue = map[string]string{
 	XferRead:          "View Transfer Tool archives and reports",
 	XferWrite:         "Import, export and pull accounts (Transfer Tool)",
 	SecretsRotate:     "Rotate the secret store master key",
+	MailQueueRead:     "View the mail queue and run the mail troubleshooter",
+	MailQueueWrite:    "Delete, hold, release and requeue queued mail",
+	NetworkRead:       "View server IP addresses",
+	NetworkWrite:      "Add/remove IP addresses, assign dedicated IPs, change the hostname",
+	SoftwareRead:      "View PHP extensions",
+	SoftwareWrite:     "Install and remove PHP extensions",
 }
 
 // AccountScoped are permissions that can be granted to a technical user per
@@ -150,10 +162,12 @@ var rolePerms = map[string]map[string]bool{
 	ServerAdmin: set(AdminRead, AccountsRead, AccountsCreate, AccountsWrite, AccountsPassword, AccountsLoginAs, AccountsTerminate,
 		PackagesRead, PackagesWrite, ServerRead, ServerWrite, AuditRead, RolesRead, SecurityRead, SessionsRevoke, WebhooksRead,
 		JobsRead, EventsRead, SecretsRead, FirewallRead, WAFRead, ShieldRead, IsolationRead, IsolationWrite, TokensSelf,
-		BackupsRead, BackupsVerify, BackupsDelete, XferRead, XferWrite),
+		BackupsRead, BackupsVerify, BackupsDelete, XferRead, XferWrite,
+		MailQueueRead, MailQueueWrite, NetworkRead, NetworkWrite, SoftwareRead, SoftwareWrite),
 	SecurityAdmin: set(AdminRead, AccountsRead, PackagesRead, ServerRead, AuditRead, RolesRead, SecurityRead, SecurityWrite,
 		SessionsRevoke, WebhooksRead, WebhooksWrite, JobsRead, EventsRead, SecretsRead, SecretsWrite, FirewallRead, FirewallWrite,
-		WAFRead, WAFWrite, ShieldRead, ShieldWrite, IsolationRead, TokensSelf, BackupsRead, BackupsVerify),
+		WAFRead, WAFWrite, ShieldRead, ShieldWrite, IsolationRead, TokensSelf, BackupsRead, BackupsVerify,
+		MailQueueRead, NetworkRead, SoftwareRead),
 	Auditor: set(append(reads(), TokensSelf)...),
 	Reseller: set(AdminRead, AccountsRead, AccountsCreate, AccountsWrite, AccountsPassword, AccountsLoginAs, AccountsTerminate,
 		PackagesRead, PackagesWrite, SessionsRevoke, JobsRead, EventsRead, HostingRead, HostingWrite, IsolationRead, IsolationWrite, TokensSelf,

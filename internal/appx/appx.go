@@ -29,6 +29,7 @@ func errf(code, format string, a ...any) error {
 const (
 	RuntimeNode   = "node"
 	RuntimePython = "python"
+	RuntimeRuby   = "ruby"
 	// DefaultPortLo/Hi: the per-server port range used when the admin has
 	// not stored one (appx_settings port_lo / port_hi).
 	DefaultPortLo = 30000
@@ -117,8 +118,8 @@ func (a *App) Validate() error {
 	if !ValidName(a.Name) {
 		return errf("appx_invalid_name", "name: lowercase letters, digits and '-', 1-32 chars")
 	}
-	if a.Runtime != RuntimeNode && a.Runtime != RuntimePython {
-		return errf("appx_invalid_runtime", "runtime must be node or python")
+	if a.Runtime != RuntimeNode && a.Runtime != RuntimePython && a.Runtime != RuntimeRuby {
+		return errf("appx_invalid_runtime", "runtime must be node, python or ruby")
 	}
 	if !versionRe.MatchString(a.Version) {
 		return errf("appx_invalid_runtime", "invalid runtime version %q", a.Version)
@@ -141,7 +142,7 @@ func (a *App) Validate() error {
 		return errf("appx_invalid_env", "at most %d environment variables", MaxEnv)
 	}
 	for k, v := range a.Env {
-		if !envKeyRe.MatchString(k) || k == "PORT" || strings.HasPrefix(k, "LD_") || k == "NODE_OPTIONS" || k == "PYTHONPATH" {
+		if !envKeyRe.MatchString(k) || k == "PORT" || strings.HasPrefix(k, "LD_") || k == "NODE_OPTIONS" || k == "PYTHONPATH" || k == "RUBYOPT" || k == "RUBYLIB" {
 			return errf("appx_invalid_env", "invalid or reserved variable %q", k)
 		}
 		if len(v) > 4096 || strings.ContainsAny(v, "\x00\r\n") {
@@ -230,9 +231,12 @@ func RenderDropIn(a App, home, slice, bin, envFile string) (string, error) {
 	fmt.Fprintf(&b, "User=%s\nGroup=%s\nSlice=%s\n", a.User, a.User, slice)
 	fmt.Fprintf(&b, "BindPaths=%s\nReadWritePaths=%s\nWorkingDirectory=%s\n", home, root, root)
 	fmt.Fprintf(&b, "Environment=PORT=%d HOST=127.0.0.1\n", a.Port)
-	if a.Runtime == RuntimeNode {
+	switch a.Runtime {
+	case RuntimeNode:
 		b.WriteString("Environment=NODE_ENV=production\n")
-	} else {
+	case RuntimeRuby:
+		fmt.Fprintf(&b, "Environment=RACK_ENV=production RAILS_ENV=production GEM_HOME=%s/.gem BUNDLE_PATH=vendor/bundle\n", root)
+	default:
 		b.WriteString("Environment=PYTHONUNBUFFERED=1\n")
 	}
 	fmt.Fprintf(&b, "EnvironmentFile=-%s\nExecStart=%s %s\n", envFile, bin, start)

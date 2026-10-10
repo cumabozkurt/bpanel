@@ -152,6 +152,8 @@ func (s *Server) userRoutes(r chi.Router) {
 		s.mountUsagexUser(r) // v0.4 usagex.go
 		s.mountAdminxUser(r) // v0.4 adminx.go
 		s.mountDbx(r)        // v0.4 dbx.go (remote MySQL, PostgreSQL, process list)
+		s.mountV11User(r)    // v1.1 parity (v11_user.go, v11_tools.go)
+		s.mountV11Tools(r)
 		s.op(r, "GET", "/user/summary", "user", "General information and statistics sidebar", nil, s.h(s.userSummary))
 		s.op(r, "GET", "/user/domains", "domains", "List domains, subdomains and aliases", nil, s.h(s.listDomains))
 		s.op(r, "POST", "/user/domains", "domains", "Create an addon domain, subdomain or alias", DomainReq{}, s.idempotent(s.h(s.createDomain)))

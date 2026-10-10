@@ -53,7 +53,7 @@ func TestV04AllMigrationsFresh(t *testing.T) {
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Fatalf("applied %v want %v", got, want)
 	}
-	if len(want) < 21 || want[len(want)-1] < "0021" {
+	if len(want) < 21 || want[len(want)-1] < "0021" { // v1.1 adds 0022+
 		t.Fatalf("expected migrations through 0021, have %v", want)
 	}
 	s2, err := Open(p)
