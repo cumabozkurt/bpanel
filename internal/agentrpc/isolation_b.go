@@ -20,6 +20,10 @@ type HidepidStatus struct {
 type IsolationSSHApply struct {
 	Users []string `json:"users"` // all jailed accounts (full set; the file is replaced)
 	Mode  string   `json:"mode"`  // "cage" | "sftp"
+	// Shell lists the accounts WITH shell access (v1.1): their login shell is
+	// set to a real shell, jailed accounts get nologin back. Without this the
+	// "shell access" switch changed only sshd and the terminal still refused.
+	Shell []string `json:"shell,omitempty"`
 }
 
 type IsolationSSHResult struct {

@@ -1,0 +1,1 @@
+import"./BiNM6hyl.js";import{b as r,r as p}from"./DReLEgsB.js";import{V as a}from"./BspFtTZU.js";var n=new Set(["$$slots","$$events","$$legacy"]);function m(s,e){let t=p(e,n);const o={name:"plus",size:24,node:[["path",{d:"M5 12h14"}],["path",{d:"M12 5v14"}]]};a(s,r(()=>t,{get icon(){return o}}))}export{m as P};

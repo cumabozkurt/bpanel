@@ -3,6 +3,7 @@
 package agent
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,8 +29,21 @@ func fakeSSHD(t *testing.T, conf string, fail bool) {
 	t.Cleanup(func() { sshdBin = old })
 }
 
+// stubLoginShell records usermod --shell calls instead of running them.
+func stubLoginShell(t *testing.T) *[]string {
+	var calls []string
+	old := setLoginShell
+	setLoginShell = func(_ context.Context, user, shell string) error {
+		calls = append(calls, user+"="+shell)
+		return nil
+	}
+	t.Cleanup(func() { setLoginShell = old })
+	return &calls
+}
+
 func TestIsolationSSHApplyValidateRollback(t *testing.T) {
 	e, _, _ := isoEnv(t)
+	stubLoginShell(t)
 	conf := filepath.Join(t.TempDir(), "60-bpanel-jail.conf")
 	old := sshJailConf
 	sshJailConf = conf
@@ -94,4 +108,50 @@ func TestIsolationHidepidStatus(t *testing.T) {
 	check("rw", line, "configured_reboot_pending")
 	check("rw", "proc /proc proc defaults 0 0\n", "not_configured")
 	check("rw,hidepid=invisible,gid=1", "", "not_configured")
+}
+
+// Granting shell access must give the account a real login shell (the
+// terminal and ssh refuse nologin); taking it away in sftp mode restores
+// nologin. Cage mode keeps a real shell for jailed accounts because sshd runs
+// the ForceCommand through it.
+func TestIsolationSSHApplyLoginShells(t *testing.T) {
+	e, _, _ := isoEnv(t)
+	calls := stubLoginShell(t)
+	conf := filepath.Join(t.TempDir(), "60-bpanel-jail.conf")
+	old := sshJailConf
+	sshJailConf = conf
+	t.Cleanup(func() { sshJailConf = old })
+	okSSHD := filepath.Join(t.TempDir(), "sshd")
+	if err := os.WriteFile(okSSHD, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	oldBin := sshdBin
+	sshdBin = okSSHD
+	t.Cleanup(func() { sshdBin = oldBin })
+	// tenant has /usr/sbin/nologin in the fake passwd
+	if _, err := callIso(t, e, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: []string{}, Mode: "sftp", Shell: []string{"tenant"}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(*calls) != 1 || (*calls)[0] != "tenant=/bin/bash" {
+		t.Fatalf("grant: %v", *calls)
+	}
+	*calls = nil
+	if _, err := callIso(t, e, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: []string{"tenant"}, Mode: "sftp"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(*calls) != 0 { // already nologin: nothing to change
+		t.Fatalf("sftp jail: %v", *calls)
+	}
+	if _, err := callIso(t, e, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: []string{"tenant"}, Mode: "cage"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(*calls) != 1 || (*calls)[0] != "tenant=/bin/bash" {
+		t.Fatalf("cage jail: %v", *calls)
+	}
+	if _, err := callIso(t, e, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: []string{"tenant"}, Mode: "sftp", Shell: []string{"tenant"}}); err == nil {
+		t.Fatal("jailed and shell at once accepted")
+	}
+	if _, err := callIso(t, e, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: []string{}, Mode: "sftp", Shell: []string{"root"}}); err == nil {
+		t.Fatal("root accepted")
+	}
 }

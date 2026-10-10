@@ -345,8 +345,19 @@ func (s *Server) applySSHJail(r *http.Request) string {
 	if mode != "cage" {
 		mode = "sftp"
 	}
+	shell := []string{}
+	if rows, err := s.Store.DB.QueryContext(r.Context(), `SELECT u.username FROM users u JOIN account_overrides o ON o.user_id=u.id
+		WHERE u.system_user=1 AND u.role IN ('user','reseller') AND u.status NOT IN ('provisioning','terminating') AND o.shell_access=1 ORDER BY u.username`); err == nil {
+		for rows.Next() {
+			var n string
+			if rows.Scan(&n) == nil {
+				shell = append(shell, n)
+			}
+		}
+		rows.Close()
+	}
 	var res rpc.IsolationSSHResult
-	if err := s.agentCall(r, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: users, Mode: mode}, &res); err != nil {
+	if err := s.agentCall(r, rpc.MIsolationSSHApply, rpc.IsolationSSHApply{Users: users, Mode: mode, Shell: shell}, &res); err != nil {
 		var re *rpc.Error
 		if errors.As(err, &re) {
 			s.audit(r, "isolation.ssh.apply", "", re.Code, false)

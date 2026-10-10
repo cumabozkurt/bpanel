@@ -1478,6 +1478,7 @@
 		"invalid_zone": "That DNS zone is not valid.",
 		"io_error": "A disk read or write failed.",
 		"limits_failed": "The resource limits could not be applied.",
+		"mail_lock_failed": "The mailbox logins could not be locked or unlocked.",
 		"marker_failed": "The account marker could not be written.",
 		"no_such_user": "That system user does not exist.",
 		"not_a_directory": "That is not a folder.",

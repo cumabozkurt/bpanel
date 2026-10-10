@@ -1478,6 +1478,7 @@
 		"invalid_zone": "Bu DNS bölgesi geçerli değil.",
 		"io_error": "Bir disk okuma ya da yazma işlemi başarısız oldu.",
 		"limits_failed": "Kaynak sınırları uygulanamadı.",
+		"mail_lock_failed": "E-posta hesabı girişleri kilitlenemedi veya kilidi açılamadı.",
 		"marker_failed": "Hesap işaretçisi yazılamadı.",
 		"no_such_user": "Böyle bir sistem kullanıcısı yok.",
 		"not_a_directory": "Bu bir klasör değil.",

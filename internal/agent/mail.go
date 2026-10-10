@@ -387,7 +387,11 @@ func (a *Agent) mailboxCreate(ctx context.Context, p rpc.Mailbox) (rpc.Empty, er
 		}
 	}
 	addr := local + "@" + domain
-	if err := editMap(a.dovecotPasswd(), ":", 0o640, upsert(addr, passwdLine(HashMailPassword(p.Password), e, box, p.QuotaMB, a.dovecotV24()))); err != nil {
+	hash := HashMailPassword(p.Password)
+	if a.mailLocked(e.uid) { // account is suspended
+		hash = mailLockPrefix + hash
+	}
+	if err := editMap(a.dovecotPasswd(), ":", 0o640, upsert(addr, passwdLine(hash, e, box, p.QuotaMB, a.dovecotV24()))); err != nil {
 		return rpc.Empty{}, err
 	}
 	a.fixDovecotPerms()
@@ -563,7 +567,14 @@ func (a *Agent) mailboxPassword(ctx context.Context, p rpc.Mailbox) (rpc.Empty, 
 	if stored == "" {
 		stored = HashMailPassword(p.Password)
 	}
-	err = a.updatePasswd(local+"@"+domain, func(f []string) []string { f[0] = stored; return f })
+	err = a.updatePasswd(local+"@"+domain, func(f []string) []string {
+		if strings.HasPrefix(f[0], mailLockPrefix) { // suspended: stay locked
+			f[0] = mailLockPrefix + stored
+		} else {
+			f[0] = stored
+		}
+		return f
+	})
 	a.fixDovecotPerms()
 	return rpc.Empty{}, err
 }

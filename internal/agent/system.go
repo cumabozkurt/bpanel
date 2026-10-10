@@ -251,7 +251,8 @@ func (a *Agent) accountQuota(ctx context.Context, p rpc.AccountQuota) (rpc.Empty
 func quotaUnsupported(out string) bool {
 	o := strings.ToLower(out)
 	for _, s := range []string{"no filesystem with quota", "cannot find mountpoint", "quota format not supported",
-		"not supported", "quotas are not enabled", "no such process", "cannot open quotafile", "mountpoint with quota"} {
+		"not supported", "quotas are not enabled", "no such process", "cannot open quotafile", "mountpoint with quota",
+		"has no quota enabled", "are using quota"} {
 		if strings.Contains(o, s) {
 			return true
 		}
@@ -334,7 +335,8 @@ func (a *Agent) applyLimitsNoReload(ctx context.Context, e passwdEntry, p rpc.Ac
 }
 
 func (a *Agent) accountSuspend(ctx context.Context, p rpc.AccountSuspend) (rpc.Empty, error) {
-	if _, err := a.managedHome(p.User); err != nil {
+	e, err := a.managedHome(p.User)
+	if err != nil {
 		return rpc.Empty{}, err
 	}
 	if p.Suspend {
@@ -350,6 +352,11 @@ func (a *Agent) accountSuspend(ctx context.Context, p rpc.AccountSuspend) (rpc.E
 		if _, err := run(ctx, nil, "usermod", "-U", "-e", "", p.User); err != nil {
 			return rpc.Empty{}, err
 		}
+	}
+	// Mailbox logins (IMAP/POP3/SMTP AUTH) authenticate against the Dovecot
+	// passwd-file, not the system account, so lock them there too.
+	if err := a.setMailLock(e.uid, p.Suspend); err != nil {
+		return rpc.Empty{}, errf("mail_lock_failed", "%v", err)
 	}
 	return rpc.Empty{}, nil
 }

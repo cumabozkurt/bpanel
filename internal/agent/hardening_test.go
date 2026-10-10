@@ -582,7 +582,9 @@ func TestAllRoutesRejectUnknownFields(t *testing.T) {
 }
 
 func TestQuotaUnsupportedClassification(t *testing.T) {
-	for _, s := range []string{"setquota: Cannot find mountpoint for device", "No filesystem with quota support found", "quotas are not enabled"} {
+	for _, s := range []string{"setquota: Cannot find mountpoint for device", "No filesystem with quota support found", "quotas are not enabled",
+		// setquota 4.09 on overlayfs/fuse (containers):
+		"setquota: Mountpoint (or device) / not found or has no quota enabled.\nsetquota: Not all specified mountpoints are using quota."} {
 		if !quotaUnsupported(s) {
 			t.Errorf("%q not classified", s)
 		}

@@ -18,6 +18,13 @@ var (
 	hidepidFstabPath = "/etc/fstab"
 	sshJailConf      = isolation.SSHJailConf
 	sshdBin          = "sshd"
+	// login shells set by isolationSSHApply (v1.1)
+	loginShell    = "/bin/bash"
+	noLoginShell  = "/usr/sbin/nologin"
+	setLoginShell = func(ctx context.Context, user, shell string) error {
+		_, err := run(ctx, nil, "usermod", "--shell", shell, "--", user)
+		return err
+	}
 )
 
 func init() {
@@ -82,9 +89,18 @@ func (a *Agent) isolationSSHApply(ctx context.Context, p rpc.IsolationSSHApply) 
 	if len(p.Users) > 5000 {
 		return res, errf("invalid_params", "too many users")
 	}
-	for _, u := range p.Users {
+	for _, u := range append(append([]string{}, p.Users...), p.Shell...) {
 		if err := isolationUser(a, u); err != nil {
 			return res, err
+		}
+	}
+	jailed := map[string]bool{}
+	for _, u := range p.Users {
+		jailed[u] = true
+	}
+	for _, u := range p.Shell {
+		if jailed[u] {
+			return res, errf("invalid_params", "%s is both jailed and granted a shell", u)
 		}
 	}
 	conf, err := isolation.RenderSSHJail(p.Users, p.Mode)
@@ -97,7 +113,7 @@ func (a *Agent) isolationSSHApply(ctx context.Context, p rpc.IsolationSSHApply) 
 	}
 	if !have(sshdBin) {
 		res.Status, res.Reason = "applied_unvalidated", "sshd is not installed; snippet written but not validated"
-		return res, nil
+		return res, a.syncLoginShells(ctx, p)
 	}
 	if _, err := run(ctx, nil, sshdBin, "-t"); err != nil {
 		if prevErr == nil {
@@ -108,5 +124,38 @@ func (a *Agent) isolationSSHApply(ctx context.Context, p rpc.IsolationSSHApply) 
 		return res, errf("isolation_failed", "sshd -t rejected the jail config; previous config restored")
 	}
 	res.Status = "applied"
+	if err := a.syncLoginShells(ctx, p); err != nil {
+		return res, err
+	}
 	return res, nil
+}
+
+// syncLoginShells gives accounts with shell access a real login shell and
+// puts nologin back for jailed ones (only when it differs). A jailed account
+// keeps working over SFTP: internal-sftp does not run the login shell.
+func (a *Agent) syncLoginShells(ctx context.Context, p rpc.IsolationSSHApply) error {
+	want := map[string]string{}
+	jailShell := noLoginShell
+	if p.Mode == isolation.SSHModeCage {
+		jailShell = loginShell // sshd runs the cage ForceCommand through the login shell
+	}
+	for _, u := range p.Users {
+		want[u] = jailShell
+	}
+	for _, u := range p.Shell {
+		want[u] = loginShell
+	}
+	for u, sh := range want {
+		e, err := a.managedHome(u)
+		if err != nil {
+			return err
+		}
+		if e.shell == sh || (sh == noLoginShell && !termShells[e.shell]) {
+			continue
+		}
+		if err := setLoginShell(ctx, u, sh); err != nil {
+			return errf("isolation_failed", "set login shell of %s: %v", u, err)
+		}
+	}
+	return nil
 }

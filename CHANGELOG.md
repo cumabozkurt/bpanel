@@ -29,7 +29,7 @@ Evidence: `docs/evidence/e2e-v1/SUMMARY.md`. Archives are still **unsigned** (no
 - Migration `0022_v11.sql` (mail routing, BoxTrapper, DAV logins, account IPs, Cloudflare links).
 - Installer (profile `full`): optional packages gnupg, radicale, python3-bcrypt, ruby, bundler,
   postgresql client (EL: gnupg2, ruby, rubygem-bundler, postgresql).
-- UI: 376 new strings, EN = TR (3 015 keys); every page reachable from `tools.js`.
+- UI: 377 new strings, EN = TR (3 016 keys); every page reachable from `tools.js`.
 
 ### Fixed (found by the container E2E)
 - **Secret store unusable since v0.4**: the API (read-only `/etc` under `ProtectSystem=strict`)
@@ -64,6 +64,17 @@ Evidence: `docs/evidence/e2e-v1/SUMMARY.md`. Archives are still **unsigned** (no
   `SecRequestBodyLimitAction ProcessPartial`. An existing `modsecurity.conf` is never touched.
 - **Brute-force allowlist** entries were lost whenever fail2ban restarted (runtime `ignoreip`
   only); the API re-pushes the allowlist to every jail every 5 minutes.
+- **Suspended accounts could still read and send mail**: suspension locked only the system
+  account, while IMAP/POP3 and SMTP AUTH authenticate against the Dovecot passwd-file. Suspend now
+  locks every mailbox of the account (`{CRYPT}!` prefix, original hash kept); unsuspend restores
+  it; mailboxes created or re-passworded while suspended stay locked.
+- **Shell access** granted in Isolation / SSH never gave the user a login shell (accounts are
+  created with `nologin`), so the Terminal and SSH were unusable; applying the SSH policy now
+  sets `/bin/bash` for shell users and `nologin` for SFTP-jailed users, and rejects a user that is
+  both jailed and given a shell.
+- **Package change** failed on filesystems without quota support (`setquota: ... has no quota
+  enabled`, overlay/containers); the disk quota is skipped there like on other unsupported
+  filesystems, the other limits still apply.
 - **Directory privacy / error pages** returned 500: `/var/lib/bpanel/webx` was 0700, nginx could
   not read the htpasswd files (now 0711).
 - **BPanel Shield** quarantined 19 WordPress core files (`php_backtick_input` matched Markdown

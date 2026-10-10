@@ -260,6 +260,7 @@ var ErrorCodes = []string{
 	"limit_reached",
 	"limits_failed",
 	"mail_domain_disabled",
+	"mail_lock_failed",
 	"mariadb_unreachable",
 	"marker_failed",
 	"method_not_allowed",
