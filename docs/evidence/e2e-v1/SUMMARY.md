@@ -2,9 +2,10 @@
 
 **Result: every cPanel/WHM feature row of [`docs/feature-matrix.md`](../../feature-matrix.md) (97 / 97)
 was driven end to end and passed. 520 checks passed, 0 failed, 1 skipped (environment; the same
-lookup passed in the supplementary suite).** Build under test: `bpanel 1.1.0 12857cd` (the
-`linux-amd64` archive attached to the v1.1.0 release, installed as an upgrade over the earlier
-1.1.0 test builds).
+lookup passed in the supplementary suite).** Build under test: `bpanel 1.1.0 12857cd`, the same
+binaries as in the `linux-amd64` archive of the v1.1.0 release (`bpanel-api` SHA-256
+`a5e6d0795331ac12f8be9884c5fa03ff55cfd1358f46c6a4a78e97c00d601e53`), installed as an upgrade over
+the earlier 1.1.0 test builds.
 
 ## Environment
 
