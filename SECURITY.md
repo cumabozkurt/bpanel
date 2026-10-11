@@ -27,5 +27,8 @@ actions without a shell, tenant ownership checks, RBAC, encrypted secrets, firew
 described in [`docs/security.md`](docs/security.md), [`docs/isolation.md`](docs/isolation.md) and
 [`docs/architecture.md`](docs/architecture.md). Known limitations are listed in the README.
 
-Release archives are designed to be minisign-signed and `install.sh` refuses unsigned network
-installs. **v1.0.0 archives are not signed yet**; verify their SHA-256 against the release page.
+Release archives are minisign-signed **since v1.2.1** and `install.sh` refuses unsigned network
+installs. Release public key (key ID `11E6AA5090A83658`): `RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx`
+(also [`docs/release-key.pub`](docs/release-key.pub) and `BPANEL_RELEASE_PUBKEY` in `installer/install.sh`).
+v1.0.0–v1.2.0 archives are not signed; verify their SHA-256 against the release page. If the key is
+ever rotated, the new public key is announced in a release signed with the old one.

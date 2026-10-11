@@ -1,5 +1,16 @@
 # Upgrading
 
+## v1.2.0 → v1.2.1
+
+v1.2.1 changes no code path on the server: same binaries as v1.2.0 apart from the version string, no
+migration, no new package. It is the first **signed** release, so the upgrade can use the one-liner:
+
+```sh
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- upgrade
+# or, from the unpacked, signed v1.2.1 archive:
+sudo ./install.sh upgrade
+```
+
 ## v1.0.0 → v1.1.0
 
 v1.1.0 adds one database migration (`0022_v11.sql`: mail routing, BoxTrapper, DAV logins, account
@@ -76,7 +87,7 @@ the v0.4.0 binaries back into `/usr/local/lib/bpanel` and start the services aga
 ## v0.3 → v0.4
 
 ```sh
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- upgrade
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- upgrade
 # or, with the new installer binary on the server:
 sudo bpanel-installer upgrade
 ```

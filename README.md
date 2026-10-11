@@ -2,7 +2,7 @@
   <img src="docs/assets/logo.svg" width="88" alt="BOZKURT PANEL logo">
 </p>
 
-<h1 align="center">BOZKURT PANEL (BPANEL) v1.2.0</h1>
+<h1 align="center">BOZKURT PANEL (BPANEL) v1.2.1</h1>
 
 <p align="center">
   <b>Free, open-source web hosting control panel with a cPanel/WHM-style layout and the same ports,<br>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.2.0"><img alt="Release" src="https://img.shields.io/github/v/release/cumabozkurt/bpanel?label=release&color=14b8a6"></a>
+  <a href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.2.1"><img alt="Release" src="https://img.shields.io/github/v/release/cumabozkurt/bpanel?label=release&color=14b8a6"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <a href="https://github.com/cumabozkurt/bpanel/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cumabozkurt/bpanel/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Go 1.27" src="https://img.shields.io/badge/Go-1.27-00ADD8">
@@ -24,12 +24,14 @@
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/feature-matrix.md">Feature matrix</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="docs/release-notes/v1.2.0.md">Release notes</a> ·
+  <a href="docs/release-notes/v1.2.1.md">Release notes</a> ·
   <a href="docs/evidence/e2e-v1/SUMMARY.md">E2E evidence</a> ·
   <a href="#türkçe">Türkçe</a>
 </p>
 
-> **Status: v1.2.0 — the full cPanel/WHM feature list, 16 one-click apps, no "coming soon" left.**
+> **Status: v1.2.1 — signed releases and one-command install; the full cPanel/WHM feature list, 16 one-click apps, no "coming soon" left.**
+> v1.2.1 is the first **minisign-signed** release: `install.sh` carries the release public key, so the
+> `curl | bash` install now works and verifies every download. Code is the same as v1.2.0.
 > v1.2.0 grows the App Installer from 4 to **16 free applications** (checksum-pinned, every one installed
 > and served in the E2E container), adds **Change Primary Domain**, removes every "coming soon"
 > surface and polishes the UI. Re-run on the final 1.2.0 build: core suite **129 / 129 passed**, apps suite
@@ -40,8 +42,8 @@
 > end-to-end run** in an Ubuntu 24.04 container with systemd as PID 1 and the real services:
 > **520 checks passed, 0 failed, 1 skipped** in the full v1.1.0 run ([E2E evidence](docs/evidence/e2e-v1/SUMMARY.md)).
 > **100 % free software**: no paid component, licence or API (`docs/architecture.md` §3). Unit, race,
-> fuzz and security regression tests pass. **Not yet done:** a run on a real VPS and on AlmaLinux 9,
-> and signed archives (v1.2.0 is unsigned; verify the SHA-256). Try it on a disposable server first.
+> fuzz and security regression tests pass. **Not yet done:** a run on a real VPS and on AlmaLinux 9.
+> Release archives are signed (minisign key `11E6AA5090A83658`, see [Release signing key](#release-signing-key)). Try it on a disposable server first.
 > See [Known limitations](#known-limitations).
 
 ![User dashboard](docs/screenshots/v12/user-dashboard-en.jpg)
@@ -68,9 +70,9 @@ All three sit at the root path (`https://server:2087/`). There is no `/yonetim` 
 On a **fresh** Ubuntu 24.04 or AlmaLinux 9 server, as root:
 
 ```bash
-curl -fsSL https://get.bozkurtpanel.com | sudo bash
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash
 # non-interactive:
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- \
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- \
   --hostname panel.example.com --email admin@example.com --profile full --lang en --yes
 ```
 
@@ -78,8 +80,8 @@ curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- \
 `bpanel-<version>-linux-<arch>.tar.gz` and its detached **minisign signature**,
 verifies the signature against the release public key embedded in the script,
 checks the binaries' SHA-256 sums and runs `bpanel-installer install`. The script
-is served from `get.bozkurtpanel.com` (and the git repository) while the archives
-come from GitHub Releases, so a compromised download host cannot slip in a
+is published as a release asset and in the git repository (`get.bozkurtpanel.com` once
+online) while the archives are separate release files, so a compromised download host cannot slip in a
 modified or older release: the signature's trusted comment names the file and the
 version. `minisign` is used when installed, otherwise OpenSSL 3 (present on both
 supported systems). A script without a release key refuses to install.
@@ -94,28 +96,41 @@ package installation, run it again and it continues where it left off (an
 interrupted dpkg run is completed first). On a fresh VM it waits for cloud-init
 and unattended-upgrades to release the apt lock instead of failing.
 
-> **v1.2.0 is not signed yet.** `get.bozkurtpanel.com` is not online and the release signing
-> key has not been generated (`make release-keygen`), so the `curl | bash` one-liner above
-> **fails closed** on purpose. Until signed releases exist you have two options:
+> **Signed since v1.2.1.** Every release archive and its `SHA256SUMS` carry a detached minisign
+> signature (`.minisig`); the release key is embedded in `install.sh`. The script is published as a
+> release asset (`https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh`, always the latest release) and in the repository
+> (`installer/install.sh`); `https://get.bozkurtpanel.com` will serve the same file once that host is online.
 >
-> 1. **Use the v1.2.0 archive from GitHub Releases** (unsigned, SHA-256 checksums published):
+> Manual, verified install from the archive:
 >
->    ```bash
->    V=1.2.0; A=amd64   # or arm64
->    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
->    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
->    sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
->    tar -xzf bpanel-$V-linux-$A.tar.gz && cd bpanel-$V-linux-$A
->    sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh --hostname panel.example.com --email admin@example.com --profile full --yes
->    ```
->
-> 2. **Build and sign it yourself**: `make release-keygen && make release` creates
->    `dist/bpanel-1.2.0-linux-amd64.tar.gz` signed with *your* key; copy it to the server,
->    unpack it and run `sudo ./install.sh`.
+> ```bash
+> V=1.2.1; A=amd64   # or arm64
+> B=https://github.com/cumabozkurt/bpanel/releases/download/v$V
+> curl -fLO $B/bpanel-$V-linux-$A.tar.gz -fLO $B/bpanel-$V-linux-$A.tar.gz.minisig -fLO $B/bpanel-$V-linux-$A.tar.gz.sha256
+> sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+> minisign -Vm bpanel-$V-linux-$A.tar.gz -P RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx   # optional; install.sh checks it too
+> tar -xzf bpanel-$V-linux-$A.tar.gz && cd bpanel-$V-linux-$A
+> sudo ./install.sh --hostname panel.example.com --email admin@example.com --profile full --yes
+> ```
 >
 > `BPANEL_BASE_URL` points the script at another download location and `BPANEL_PUBKEY` at your
-> own signing key. `BPANEL_ALLOW_UNSIGNED=1` only affects an unpacked local archive; the
-> network install path always requires a valid signature.
+> own signing key (own builds: `make release-keygen && make release`). `BPANEL_ALLOW_UNSIGNED=1`
+> only affects an unpacked local archive you built yourself; the network install path always
+> requires a valid signature.
+
+### Release signing key
+
+| | |
+|---|---|
+| Algorithm | minisign (Ed25519) |
+| Key ID | `11E6AA5090A83658` |
+| Public key | `RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx` |
+| Published in | [`docs/release-key.pub`](docs/release-key.pub), `BPANEL_RELEASE_PUBKEY` in [`installer/install.sh`](installer/install.sh), the website |
+
+Every archive `bpanel-<version>-linux-<arch>.tar.gz` has `….tar.gz.minisig` (trusted comment
+`bpanel-release file:<archive> version:<version>`) and `….tar.gz.sha256`; inside the archive,
+`SHA256SUMS` is signed as `SHA256SUMS.minisig`. Releases up to v1.2.0 are unsigned. The private
+key never enters the repository.
 
 Profiles: `minimal` (Nginx + PHP-FPM + MariaDB; every site is nginx-only, no Apache), `web` (+ Apache for `.htaccess`, PowerDNS, Pure-FTPd), `full` (+ Postfix/Dovecot mail, Rspamd, Roundcube webmail).
 Flags: `--hostname --email --profile --lang en|tr --admin --php 8.2,8.4 --yes --force --allow-unsupported --skip-repos`.
@@ -147,7 +162,7 @@ At the end the installer prints the panel URLs and a one-time admin login link (
 ## Upgrade
 
 ```bash
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- upgrade   # or, on the server:
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- upgrade   # or, on the server:
 sudo bpanel-installer upgrade
 ```
 
@@ -323,7 +338,8 @@ go test ./internal/xfer -run '^$' -fuzz FuzzCleanName -fuzztime 30s   # any of t
 End-to-end suites (run inside a disposable server as root): [`test/e2e/`](test/e2e/). Results:
 [`docs/evidence/e2e-v1/SUMMARY.md`](docs/evidence/e2e-v1/SUMMARY.md) (v1.1.0: 521 checks, 520 passed,
 0 failed; v1.2.0 re-run: core 129 / 129 passed, apps 81 / 81 passed, UI 176 / 176). Release notes:
-[`docs/release-notes/v1.2.0.md`](docs/release-notes/v1.2.0.md). CI runs vet,
+[`docs/release-notes/v1.2.1.md`](docs/release-notes/v1.2.1.md) (signing) and
+[`docs/release-notes/v1.2.0.md`](docs/release-notes/v1.2.0.md) (features). CI runs vet,
 tests, the i18n check, the web build and the install.sh signature tests on every push.
 
 ## Known limitations
@@ -334,9 +350,9 @@ tests, the i18n check, the web build and the install.sh signature tests on every
   a real VPS (public DNS, Let's Encrypt production, real port 25), AlmaLinux 9 with SELinux
   enforcing, SFTP/S3 backup targets, the real Cloudflare API (tested against a local mock) and
   multi-server across two hosts.
-- **v1.2.0 archives are unsigned; `curl | bash` install is blocked until a release key exists.** `install.sh` fails closed
-  while `BPANEL_RELEASE_PUBKEY` is `UNSET`. The maintainer must run `make release-keygen`
-  (offline) and publish signed releases with `make release`.
+- **Signing:** releases from v1.2.1 on are minisign-signed; v1.0.0–v1.2.0 archives remain unsigned
+  (verify their SHA-256). `get.bozkurtpanel.com` is not online yet; use the release-asset URL of
+  `install.sh`. The release key is a single maintainer key (no hardware token / threshold signing).
 - **Feature parity (v1.2.0):** 97 / 97 cPanel/WHM rows implemented and verified in the container
   (`docs/feature-matrix.md`). Some rows are free replacements rather than the same product (Rspamd for
   SpamAssassin, mlmmj for Mailman, the built-in PostgreSQL browser for phpPgAdmin, BPanel Shield for
@@ -383,8 +399,8 @@ licences are listed in [`docs/third-party-licenses.md`](docs/third-party-license
 > geçmiştir**: **520 denetim geçti, 0 başarısız, 1 atlandı** ([E2E kanıtı](docs/evidence/e2e-v1/SUMMARY.md)).
 > Proje sitesi: <https://cumabozkurt.github.io/bpanel/>. **Tamamen ücretsiz yazılım**: ücretli bileşen,
 > lisans veya API yok. Birim, race, fuzz ve güvenlik regresyon testleri geçiyor. **Henüz yapılmayanlar:**
-> gerçek bir VPS ve AlmaLinux 9 üzerinde çalıştırma ile imzalı arşivler (v1.2.0 imzasızdır; SHA-256
-> değerini doğrulayın). Önce silinebilir bir sunucuda deneyin. Bkz. [Bilinen sınırlamalar](#bilinen-sınırlamalar).
+> gerçek bir VPS ve AlmaLinux 9 üzerinde çalıştırma. v1.2.1'den itibaren sürüm arşivleri
+> minisign ile **imzalıdır** (anahtar `11E6AA5090A83658`, bkz. [Sürüm imzalama anahtarı](#sürüm-imzalama-anahtarı)). Önce silinebilir bir sunucuda deneyin. Bkz. [Bilinen sınırlamalar](#bilinen-sınırlamalar).
 
 ![Kullanıcı paneli](docs/screenshots/v12/user-dashboard-tr.jpg)
 
@@ -405,39 +421,44 @@ licences are listed in [`docs/third-party-licenses.md`](docs/third-party-license
 **Temiz** bir Ubuntu 24.04 veya AlmaLinux 9 sunucuda, root olarak:
 
 ```bash
-curl -fsSL https://get.bozkurtpanel.com | sudo bash
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash
 # etkileşimsiz:
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- \
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- \
   --hostname panel.ornek.com.tr --email admin@ornek.com.tr --profile full --lang tr --yes
 ```
 
 `install.sh` işletim sistemini ve mimariyi denetler, sürüm arşivini ve ayrık
 **minisign imzasını** indirir, imzayı betiğin içine gömülü sürüm açık anahtarıyla
 doğrular, ikili dosyaların SHA-256 sağlamalarını denetler ve `bpanel-installer install`
-komutunu çalıştırır. Betik `get.bozkurtpanel.com` adresinden, arşivler GitHub
-Releases'tan gelir: indirme sunucusu ele geçirilse bile değiştirilmiş ya da eski bir
+komutunu çalıştırır. Betik sürüm varlığı olarak (ve depoda), arşivler GitHub
+Releases'tan gelir; `get.bozkurtpanel.com` yayına girince aynı betiği sunacak. İmza, dosya adını ve sürümü
+içerdiğinden indirme sunucusu ele geçirilse bile değiştirilmiş ya da eski bir
 sürüm kabul edilmez. Anahtarı olmayan bir betik kurulum yapmaz. Kurulum aşamalıdır;
 yarıda kalırsa (paket kurulumunun ortası dahil) komutu yeniden çalıştırın, kaldığı yerden
 devam eder. Yeni bir sunucuda apt kilidinin açılmasını bekler.
 
-> **v1.2.0 henüz imzalı değil.** `get.bozkurtpanel.com` yayında değil ve sürüm imzalama
-> anahtarı üretilmedi (`make release-keygen`); bu yüzden yukarıdaki `curl | bash` komutu
-> bilerek kurulumu reddeder. İmzalı sürümler çıkana kadar:
+> **v1.2.1'den itibaren imzalı.** Her sürüm arşivi ve `SHA256SUMS` dosyası ayrık bir minisign
+> imzası (`.minisig`) taşır; sürüm anahtarı `install.sh` içine gömülüdür. Betik sürüm varlığı olarak
+> yayındadır: `https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh` (her zaman son sürüm).
 >
-> 1. **GitHub Releases'taki v1.2.0 arşivini kullanın** (imzasız, SHA-256 sağlamaları yayında):
+> Arşivden elle, doğrulayarak kurulum:
 >
->    ```bash
->    V=1.2.0; A=amd64   # ya da arm64
->    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
->    curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
->    sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
->    tar -xzf bpanel-$V-linux-$A.tar.gz && cd bpanel-$V-linux-$A
->    sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh --hostname panel.ornek.com.tr --email admin@ornek.com.tr --profile full --lang tr --yes
->    ```
->
-> 2. **Kendiniz derleyip imzalayın:** `make release-keygen && make release`, kendi anahtarınızla
->    imzalı `dist/bpanel-1.2.0-linux-amd64.tar.gz` üretir; sunucuya kopyalayıp açın ve
->    `sudo ./install.sh` çalıştırın.
+> ```bash
+> V=1.2.1; A=amd64   # ya da arm64
+> B=https://github.com/cumabozkurt/bpanel/releases/download/v$V
+> curl -fLO $B/bpanel-$V-linux-$A.tar.gz -fLO $B/bpanel-$V-linux-$A.tar.gz.minisig -fLO $B/bpanel-$V-linux-$A.tar.gz.sha256
+> sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+> minisign -Vm bpanel-$V-linux-$A.tar.gz -P RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx   # isteğe bağlı; install.sh de denetler
+> tar -xzf bpanel-$V-linux-$A.tar.gz && cd bpanel-$V-linux-$A
+> sudo ./install.sh --hostname panel.ornek.com.tr --email admin@ornek.com.tr --profile full --lang tr --yes
+> ```
+
+#### Sürüm imzalama anahtarı
+
+Algoritma minisign (Ed25519), anahtar kimliği `11E6AA5090A83658`, açık anahtar:
+`RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx`. Yayınlandığı yerler: [`docs/release-key.pub`](docs/release-key.pub),
+[`installer/install.sh`](installer/install.sh) içindeki `BPANEL_RELEASE_PUBKEY` ve proje sitesi. v1.2.0
+ve öncesi imzasızdır. Gizli anahtar hiçbir zaman depoya girmez.
 
 Profiller: `minimal` (Nginx + PHP-FPM + MariaDB; Apache yok, siteler yalnızca Nginx ile), `web` (+ `.htaccess` için Apache, PowerDNS, Pure-FTPd), `full` (+ Postfix/Dovecot e-posta, Rspamd, Roundcube web posta).
 
@@ -449,7 +470,7 @@ postasını `--email` adresine yönlendirir ve günlük döndürmeyi (logrotate)
 ### Yükseltme
 
 ```bash
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- upgrade   # ya da sunucuda:
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- upgrade   # ya da sunucuda:
 sudo bpanel-installer upgrade
 ```
 
@@ -520,9 +541,9 @@ geliştirme sunucusu için `make dev` kullanın (yönetici `bpadmin` / `Demo-Pas
   uçtan uca doğrulandı. Kalanlar: gerçek VPS (genel DNS, Let's Encrypt üretim ortamı, gerçek 25. port),
   SELinux zorunlu kipte AlmaLinux 9, SFTP/S3 yedek hedefleri, gerçek Cloudflare API'si (yerel sahte
   sunucuyla test edildi) ve iki sunuculu çoklu sunucu kurulumu.
-- **v1.2.0 arşivleri imzasız; sürüm anahtarı üretilene kadar `curl | bash` kurulumu kapalı.** `BPANEL_RELEASE_PUBKEY`
-  `UNSET` iken `install.sh` kurulumu reddeder. Bakımcının `make release-keygen` (çevrimdışı)
-  çalıştırıp imzalı sürümleri `make release` ile yayınlaması gerekir.
+- **İmza:** v1.2.1 ve sonrası minisign ile imzalıdır; v1.0.0–v1.2.0 arşivleri imzasız kalır (SHA-256
+  değerini doğrulayın). `get.bozkurtpanel.com` henüz yayında değil; `install.sh` için sürüm varlığı
+  adresini kullanın. Sürüm anahtarı tek bir bakımcı anahtarıdır (donanım anahtarı / eşik imza yok).
 - **Özellik kapsamı (v1.2.0):** 97 / 97 cPanel/WHM satırı uygulanmış ve konteynerde doğrulanmıştır
   (`docs/feature-matrix.md`). Bazı satırlar aynı ürün değil, ücretsiz karşılığıdır (SpamAssassin yerine
   Rspamd, Mailman yerine mlmmj, phpPgAdmin yerine yerleşik PostgreSQL tarayıcısı, Imunify360 yerine

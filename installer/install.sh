@@ -2,10 +2,12 @@
 # BOZKURT PANEL (BPANEL) bootstrap installer.
 # SPDX-License-Identifier: Apache-2.0
 #
-#   curl -fsSL https://get.bozkurtpanel.com | sudo bash
-#   curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- \
+#   curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash
+#   curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- \
 #        --hostname panel.example.com --email admin@example.com --profile full --lang en --yes
-#   curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- upgrade     # existing server
+#   curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- upgrade     # existing server
+#
+# (https://get.bozkurtpanel.com will serve the same script once that host is online.)
 #
 # Running the installer on a server with an older BOZKURT PANEL upgrades it
 # (binaries, hardening, configuration, database migrations); `upgrade` does
@@ -39,11 +41,11 @@
 #   BPANEL_ALLOW_UNSIGNED=1  run an UNSIGNED local build (development only)
 set -euo pipefail
 
-BPANEL_DEFAULT_VERSION="1.2.0"
+BPANEL_DEFAULT_VERSION="1.2.1"
 # Release signing public key (minisign). Set by `make release-keygen`; the
 # private key never enters the repository. "UNSET" makes this script refuse
 # to install anything (fail closed).
-BPANEL_RELEASE_PUBKEY="UNSET"
+BPANEL_RELEASE_PUBKEY="RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx"
 
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mWARNING:\033[0m %s\n' "$*" >&2; }
@@ -170,7 +172,7 @@ main() {
     exec /usr/local/lib/bpanel/bpanel-installer "$SUB" --bin-dir /usr/local/lib/bpanel "$@"
   fi
 
-  KEY="$(pubkey)" || die "this install.sh carries no release public key (BPANEL_RELEASE_PUBKEY is UNSET); download the official script from https://get.bozkurtpanel.com"
+  KEY="$(pubkey)" || die "this install.sh carries no release public key (BPANEL_RELEASE_PUBKEY is UNSET); download the official script from https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh"
 
   # --- prerequisites --------------------------------------------------------
   if ! command -v curl >/dev/null 2>&1 || ! command -v sha256sum >/dev/null 2>&1 || ! command -v tar >/dev/null 2>&1 \

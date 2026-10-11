@@ -1,9 +1,10 @@
-# Installation (v1.1.0)
+# Installation (v1.2.1)
 
-> v1.1.0 archives on GitHub Releases are **not signed yet** (no release key). The one-command
-> install below fails closed until signed releases exist; install from the unpacked archive with
-> `BPANEL_ALLOW_UNSIGNED=1` after checking the published SHA-256, or build and sign your own
-> release. Both paths are described in the [README](../README.md#install).
+> Since **v1.2.1** every release archive is **minisign-signed** and `install.sh` carries the release
+> public key (`RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx`, key ID `11E6AA5090A83658`, also in
+> [`release-key.pub`](release-key.pub)), so the one-command install below downloads and verifies the
+> release. Archives up to v1.2.0 are unsigned. `https://get.bozkurtpanel.com` is not online yet; the
+> script is published as a release asset. See the [README](../README.md#install) for a manual, verified install.
 
 BOZKURT PANEL is free software end to end: every package the installer adds comes from the distribution repositories
 (Ubuntu 24.04 main/universe, AlmaLinux 9 BaseOS/AppStream/EPEL) or from free official upstream repositories
@@ -22,7 +23,7 @@ BOZKURT PANEL is free software end to end: every package the installer adds come
 ## One-command install
 
 ```sh
-curl -fsSL https://get.bozkurtpanel.com | sudo bash -s -- \
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash -s -- \
   --hostname panel.example.com --email admin@example.com --profile full --lang en --yes
 ```
 

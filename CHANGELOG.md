@@ -2,6 +2,31 @@
 
 All notable changes to BOZKURT PANEL (BPANEL). Dates are Europe/Istanbul.
 
+## v1.2.1 — 2026-10-11 (signed releases, one-command install)
+
+v1.2.1 is the first **signed** release. The panel code is the same as v1.2.0; only the version
+string, the installer's release key and the documentation change.
+
+### Added
+- **Release signing key** (minisign / Ed25519, key ID `11E6AA5090A83658`), generated with
+  `make release-keygen`. Public key `RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx` is embedded in
+  `installer/install.sh` (`BPANEL_RELEASE_PUBKEY`) and published as `docs/release-key.pub`, in the
+  README, `SECURITY.md` and on the website. The private key is kept offline, outside the repository.
+- Every archive ships with `bpanel-<v>-linux-<arch>.tar.gz.minisig` (trusted comment names the
+  file and version), `….tar.gz.sha256`, and an in-archive `SHA256SUMS` + `SHA256SUMS.minisig`.
+- `install.sh` is attached to each release, so `curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | sudo bash`
+  works today (until `get.bozkurtpanel.com` is online) and verifies every download.
+
+### Changed
+- README (EN/TR), `docs/installation.md`, `docs/upgrade.md`, `SECURITY.md` and the website (EN/TR):
+  the "unsigned / `BPANEL_ALLOW_UNSIGNED=1`" instructions are replaced by the signed one-command
+  install and a manual verification recipe. v1.0.0–v1.2.0 stay unsigned.
+
+### Verified
+- `make release VERSION=1.2.1` + `make verify-release` (install.sh's own verifier, OpenSSL path) for
+  amd64 and arm64; `minisign -V` against `docs/release-key.pub`; `installer/test/test-install-sh.sh`
+  and the installer Go tests pass with the real key; `go vet`, `go test ./...`.
+
 ## v1.2.0 — 2026-10-11 (App Installer catalogue, no unfinished surfaces, UI polish)
 
 v1.2.0 removes every "coming soon" surface from the panel, grows the App Installer from 4 to 16

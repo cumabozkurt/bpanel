@@ -13,7 +13,7 @@ document.documentElement.lang=l;})();
 </script>
 <title>BOZKURT PANEL (BPANEL) — free, open-source cPanel/WHM-style hosting control panel</title>
 <meta name="description" content="BOZKURT PANEL is a free, Apache-2.0 web hosting control panel with a cPanel/WHM-style layout and the same ports for Ubuntu 24.04 LTS and AlmaLinux 9. Ücretsiz, açık kaynaklı cPanel/WHM tarzı hosting kontrol paneli.">
-<meta property="og:title" content="BOZKURT PANEL v1.2.0 — open-source hosting control panel">
+<meta property="og:title" content="BOZKURT PANEL v1.2.1 — open-source hosting control panel">
 <meta property="og:description" content="cPanel/WHM-style layout and ports, 100% free software, for Ubuntu 24.04 and AlmaLinux 9. English & Türkçe.">
 <meta property="og:image" content="https://cumabozkurt.github.io/bpanel/screenshots/v12/admin-dashboard-en.jpg">
 <meta property="og:type" content="website">
@@ -44,7 +44,7 @@ document.documentElement.lang=l;})();
 
 <header class="hero"><div class="wrap grid">
   <div>
-    <span class="pill"><span data-l="en">v1.2.0 · 16 one-click apps · full cPanel/WHM feature list · Apache-2.0</span><span data-l="tr">v1.2.0 · 16 tek tıkla uygulama · cPanel/WHM özellik listesinin tamamı · Apache-2.0</span></span>
+    <span class="pill"><span data-l="en">v1.2.1 · signed releases · 16 one-click apps · full cPanel/WHM feature list · Apache-2.0</span><span data-l="tr">v1.2.1 · imzalı sürümler · 16 tek tıkla uygulama · cPanel/WHM özellik listesinin tamamı · Apache-2.0</span></span>
     <h1 data-l="en">The <em>free, open-source</em> hosting control panel with a cPanel/WHM feel.</h1>
     <h1 data-l="tr"><em>Ücretsiz ve açık kaynaklı</em>, cPanel/WHM hissiyle hosting kontrol paneli.</h1>
     <p class="lead" data-l="en">BOZKURT PANEL (BPANEL) gives your customers a familiar cPanel-style panel on port 2083 and you a WHM-style admin on 2087 — on <b>Ubuntu 24.04 LTS</b> and <b>AlmaLinux 9</b>, built only from free software.</p>
@@ -52,7 +52,7 @@ document.documentElement.lang=l;})();
     <div class="cta">
       <a class="btn primary" href="#install"><span data-l="en">Get started</span><span data-l="tr">Hemen başla</span></a>
       <a class="btn" href="https://github.com/cumabozkurt/bpanel">★ <span data-l="en">View on GitHub</span><span data-l="tr">GitHub'da incele</span></a>
-      <a class="btn" href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.2.0"><span data-l="en">Release v1.2.0</span><span data-l="tr">v1.2.0 sürümü</span></a>
+      <a class="btn" href="https://github.com/cumabozkurt/bpanel/releases/tag/v1.2.1"><span data-l="en">Release v1.2.1</span><span data-l="tr">v1.2.1 sürümü</span></a>
     </div>
     <div class="meta" data-l="en"><span>◆ Go + SvelteKit</span><span>◆ English &amp; Türkçe</span><span>◆ amd64 &amp; arm64</span><span>◆ No licence fees, ever</span></div>
     <div class="meta" data-l="tr"><span>◆ Go + SvelteKit</span><span>◆ Türkçe &amp; English</span><span>◆ amd64 &amp; arm64</span><span>◆ Hiçbir zaman lisans ücreti yok</span></div>
@@ -204,30 +204,34 @@ document.documentElement.lang=l;})();
     <h2 data-l="en">Install</h2><h2 data-l="tr">Kurulum</h2>
     <p class="sub" data-l="en">On a <b>fresh</b> Ubuntu 24.04 LTS or AlmaLinux 9 server (x86_64 or aarch64, 2 GB RAM, 20 GB disk), as root.</p>
     <p class="sub" data-l="tr"><b>Temiz</b> bir Ubuntu 24.04 LTS veya AlmaLinux 9 sunucuda (x86_64 ya da aarch64, 2 GB RAM, 20 GB disk), root olarak.</p>
-    <div class="note" data-l="en"><b>v1.2.0 archives are not signed</b> (no release key yet) — verify the SHA-256. v1.2.0 was tested end to end in an Ubuntu 24.04 container with systemd, but not yet on a real VPS or on AlmaLinux 9. Try it on a disposable server first.</div>
-    <div class="note" data-l="tr"><b>v1.2.0 arşivleri imzasızdır</b> (henüz sürüm anahtarı yok) — SHA-256 değerini doğrulayın. v1.2.0, systemd'li bir Ubuntu 24.04 konteynerinde uçtan uca test edildi; ancak henüz gerçek bir VPS'te veya AlmaLinux 9'da denenmedi. Önce silinebilir bir sunucuda deneyin.</div>
-<pre data-l="en"><span class="c"># 1. download v1.2.0 and check it (A=arm64 on ARM servers)</span>
-V=1.2.0; A=amd64
-curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
-curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
-sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+    <div class="note" data-l="en"><b>Signed since v1.2.1.</b> <code>install.sh</code> downloads the archive and its minisign signature and refuses anything not signed by the release key <code>11E6AA5090A83658</code>. Tested end to end in an Ubuntu 24.04 container with systemd, not yet on a real VPS or on AlmaLinux 9 — try it on a disposable server first.</div>
+    <div class="note" data-l="tr"><b>v1.2.1'den itibaren imzalı.</b> <code>install.sh</code> arşivi ve minisign imzasını indirir; <code>11E6AA5090A83658</code> sürüm anahtarıyla imzalanmamış hiçbir şeyi kurmaz. Systemd'li bir Ubuntu 24.04 konteynerinde uçtan uca test edildi; henüz gerçek bir VPS'te veya AlmaLinux 9'da denenmedi — önce silinebilir bir sunucuda deneyin.</div>
+<pre data-l="en"><span class="c"># one command (verifies the signature)</span>
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh \
+  | sudo bash -s -- --hostname panel.example.com \
+    --email admin@example.com --profile full --lang en --yes
 
-<span class="c"># 2. unpack and install</span>
+<span class="c"># or by hand (A=arm64 on ARM servers)</span>
+V=1.2.1; A=amd64
+B=https://github.com/cumabozkurt/bpanel/releases/download/v$V
+curl -fLO $B/bpanel-$V-linux-$A.tar.gz -fLO $B/bpanel-$V-linux-$A.tar.gz.minisig
+minisign -Vm bpanel-$V-linux-$A.tar.gz -P RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx
 tar -xzf bpanel-$V-linux-$A.tar.gz &amp;&amp; cd bpanel-$V-linux-$A
-sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh \
-  --hostname panel.example.com --email admin@example.com \
-  --profile full --lang en --yes</pre>
-<pre data-l="tr"><span class="c"># 1. v1.2.0'ı indirin ve doğrulayın (ARM sunucularda A=arm64)</span>
-V=1.2.0; A=amd64
-curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz
-curl -fLO https://github.com/cumabozkurt/bpanel/releases/download/v$V/bpanel-$V-linux-$A.tar.gz.sha256
-sha256sum -c bpanel-$V-linux-$A.tar.gz.sha256
+sudo ./install.sh --hostname panel.example.com --email admin@example.com --profile full --yes</pre>
+<pre data-l="tr"><span class="c"># tek komut (imzayı doğrular)</span>
+curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh \
+  | sudo bash -s -- --hostname panel.ornek.com.tr \
+    --email admin@ornek.com.tr --profile full --lang tr --yes
 
-<span class="c"># 2. açın ve kurun</span>
+<span class="c"># ya da elle (ARM sunucularda A=arm64)</span>
+V=1.2.1; A=amd64
+B=https://github.com/cumabozkurt/bpanel/releases/download/v$V
+curl -fLO $B/bpanel-$V-linux-$A.tar.gz -fLO $B/bpanel-$V-linux-$A.tar.gz.minisig
+minisign -Vm bpanel-$V-linux-$A.tar.gz -P RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx
 tar -xzf bpanel-$V-linux-$A.tar.gz &amp;&amp; cd bpanel-$V-linux-$A
-sudo BPANEL_ALLOW_UNSIGNED=1 ./install.sh \
-  --hostname panel.ornek.com.tr --email admin@ornek.com.tr \
-  --profile full --lang tr --yes</pre>
+sudo ./install.sh --hostname panel.ornek.com.tr --email admin@ornek.com.tr --profile full --lang tr --yes</pre>
+    <p class="sub" style="margin:0 0 10px" data-l="en">Release public key (minisign, key ID <code>11E6AA5090A83658</code>): <code style="word-break:break-all">RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx</code> — also in <a href="release-key.pub">release-key.pub</a> and <code>BPANEL_RELEASE_PUBKEY</code> in <code>installer/install.sh</code>. Releases up to v1.2.0 are unsigned.</p>
+    <p class="sub" style="margin:0 0 10px" data-l="tr">Sürüm açık anahtarı (minisign, anahtar kimliği <code>11E6AA5090A83658</code>): <code style="word-break:break-all">RWRYNqiQUKrmEa/dZKHRQ5gTv0kDzO3ftQbvQS4RyllwlLS0C/vbPMWx</code> — ayrıca <a href="release-key.pub">release-key.pub</a> dosyasında ve <code>installer/install.sh</code> içindeki <code>BPANEL_RELEASE_PUBKEY</code> değerinde. v1.2.0 ve öncesi imzasızdır.</p>
     <p class="sub" style="margin:0" data-l="en">The installer is staged and resumable, waits for cloud-init and apt locks, and prints the panel URLs plus a one-time admin login link at the end.</p>
     <p class="sub" style="margin:0" data-l="tr">Kurulum aşamalıdır ve kaldığı yerden devam eder, cloud-init ve apt kilitlerini bekler; sonunda panel adreslerini ve tek kullanımlık yönetici giriş bağlantısını yazar.</p>
   </div>
@@ -243,10 +247,10 @@ make build          <span class="c"># bin/</span>
 make dev            <span class="c"># mock agent :2083 / :2087, no root</span>
 make release        <span class="c"># signed tarballs (your key)</span></pre>
     <h3 style="margin:22px 0 8px"><span data-l="en">Upgrade &amp; uninstall</span><span data-l="tr">Yükseltme ve kaldırma</span></h3>
-<pre data-l="en">sudo bpanel-installer upgrade            <span class="c"># v1.x → v1.2.0 in place</span>
+<pre data-l="en">sudo bpanel-installer upgrade            <span class="c"># v1.x → v1.2.1 in place</span>
 sudo bpanel-installer uninstall          <span class="c"># sites keep running</span>
 sudo bpanel-installer uninstall --purge  <span class="c"># also panel DB + secrets</span></pre>
-<pre data-l="tr">sudo bpanel-installer upgrade            <span class="c"># v1.x → v1.2.0 yerinde</span>
+<pre data-l="tr">sudo bpanel-installer upgrade            <span class="c"># v1.x → v1.2.1 yerinde</span>
 sudo bpanel-installer uninstall          <span class="c"># siteler çalışmaya devam eder</span>
 sudo bpanel-installer uninstall --purge  <span class="c"># panel DB + gizli anahtarlar da silinir</span></pre>
   </div>
@@ -283,6 +287,7 @@ sudo bpanel-installer uninstall --purge  <span class="c"># panel DB + gizli anah
         <li>Every feature row driven over HTTPS as admin, reseller and user in an Ubuntu 24.04 container with systemd as PID 1 and the real services, checking the system effect</li>
         <li>v1.2.0: core suite 129/129 and the new apps suite 81/81 on the final build; all 16 real app archives verified and extracted</li>
         <li>Upgrade path v1.0.0 → v1.1.0 → v1.2.0 in place</li>
+        <li>v1.2.1: every archive minisign-signed; <code>make verify-release</code> passes with install.sh's own verifier (minisign and OpenSSL paths)</li>
         <li><code>go vet</code>, <code>go test ./...</code>, race tests, 16 fuzz targets</li>
         <li><code>govulncheck</code>: 0 reachable vulnerabilities; EN = TR (3 068 UI strings)</li>
       </ul>
@@ -290,19 +295,18 @@ sudo bpanel-installer uninstall --purge  <span class="c"># panel DB + gizli anah
         <li>Her özellik satırı, systemd'nin PID 1 olduğu ve gerçek servislerin çalıştığı bir Ubuntu 24.04 konteynerinde yönetici, bayi ve kullanıcı olarak HTTPS üzerinden çalıştırıldı ve sistemdeki etkisi denetlendi</li>
         <li>v1.2.0: son derlemede çekirdek paket 129/129 ve yeni uygulama paketi 81/81; 16 gerçek uygulama arşivi doğrulandı ve açıldı</li>
         <li>v1.0.0 → v1.1.0 → v1.2.0 yerinde yükseltme</li>
+        <li>v1.2.1: tüm arşivler minisign ile imzalı; <code>make verify-release</code>, install.sh'nin kendi doğrulayıcısıyla (minisign ve OpenSSL yolları) geçiyor</li>
         <li><code>go vet</code>, <code>go test ./...</code>, race testleri, 16 fuzz hedefi</li>
         <li><code>govulncheck</code>: erişilebilir açık 0; EN = TR (3 068 arayüz metni)</li>
       </ul></div>
     <div class="card"><h3><span data-l="en">Not yet</span><span data-l="tr">Henüz değil</span></h3>
       <ul class="check todo" data-l="en">
         <li>A run on a real VPS (Ubuntu 24.04) and on AlmaLinux 9</li>
-        <li>Release signing key → signed archives and <code>curl | bash</code> install</li>
         <li>Real Let's Encrypt issuance and real Cloudflare account (tested against a local mock)</li>
         <li>See <a href="https://github.com/cumabozkurt/bpanel#known-limitations">known limitations</a></li>
       </ul>
       <ul class="check todo" data-l="tr">
         <li>Gerçek bir VPS (Ubuntu 24.04) ve AlmaLinux 9 üzerinde çalıştırma</li>
-        <li>Sürüm imzalama anahtarı → imzalı arşivler ve <code>curl | bash</code> kurulumu</li>
         <li>Gerçek Let's Encrypt sertifikası ve gerçek Cloudflare hesabı (yerel sahte sunucuyla test edildi)</li>
         <li>Bkz. <a href="https://github.com/cumabozkurt/bpanel#bilinen-sınırlamalar">bilinen sınırlamalar</a></li>
       </ul></div>
@@ -328,7 +332,7 @@ sudo bpanel-installer uninstall --purge  <span class="c"># panel DB + gizli anah
 </div></section>
 
 <footer><div class="wrap">
-  <span>© 2026 <span data-l="en">BOZKURT PANEL contributors</span><span data-l="tr">BOZKURT PANEL katkıcıları</span> · Apache-2.0 · v1.2.0</span>
+  <span>© 2026 <span data-l="en">BOZKURT PANEL contributors</span><span data-l="tr">BOZKURT PANEL katkıcıları</span> · Apache-2.0 · v1.2.1</span>
   <span><a href="https://github.com/cumabozkurt/bpanel">GitHub</a> · <a href="https://github.com/cumabozkurt/bpanel/releases"><span data-l="en">Releases</span><span data-l="tr">Sürümler</span></a> · <a href="https://github.com/cumabozkurt/bpanel/blob/main/docs/openapi.json">OpenAPI</a></span>
 </div></footer>
 
