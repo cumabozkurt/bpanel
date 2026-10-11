@@ -1,5 +1,15 @@
 # BPANEL E2E evidence
 
+## v1.2.1 — signed one-command upgrade (2026-10-11)
+
+On the Ubuntu 24.04 E2E server (systemd PID 1) running 1.2.0, the published one-liner
+`curl -fsSL https://github.com/cumabozkurt/bpanel/releases/latest/download/install.sh | bash -s -- upgrade --yes`
+downloaded `bpanel-1.2.1-linux-amd64.tar.gz` + `.minisig` from GitHub Releases, verified the signature
+with the embedded release key (`11E6AA5090A83658`), and upgraded 1.2.0 → 1.2.1 (all 7 steps, post-upgrade
+self-test and account create/serve/terminate check passed; `bpanel version` → `1.2.1 00b920f`,
+`bpanel selftest` → all checks passed). A tampered archive is rejected by the same verifier.
+`make verify-release VERSION=1.2.1` passes for amd64 and arm64.
+
 ## v1.2.0 — re-run on the final build (2026-10-11)
 
 Build under test: the 1.2.0 source tree that was tagged `v1.2.0` (`bpanel-api` SHA-256

@@ -26,6 +26,8 @@ string, the installer's release key and the documentation change.
 - `make release VERSION=1.2.1` + `make verify-release` (install.sh's own verifier, OpenSSL path) for
   amd64 and arm64; `minisign -V` against `docs/release-key.pub`; `installer/test/test-install-sh.sh`
   and the installer Go tests pass with the real key; `go vet`, `go test ./...`.
+- Signed `curl | bash` upgrade 1.2.0 → 1.2.1 from the published release on the Ubuntu 24.04 E2E
+  server: signature verified, all upgrade steps and the self-test passed.
 
 ## v1.2.0 — 2026-10-11 (App Installer catalogue, no unfinished surfaces, UI polish)
 
