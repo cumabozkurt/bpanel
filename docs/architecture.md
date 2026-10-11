@@ -118,7 +118,7 @@ payment. Commercial hosting add-ons are replaced as follows:
 | Imunify WAF / commercial ModSecurity vendors | ModSecurity (v2 / libmodsecurity v3) + OWASP CRS | `internal/netsec`, `/modsecurity`, `/firewall` |
 | CSF/LFD (free but unmaintained) / cPHulk | nftables `table inet bpanel` + fail2ban, optional CrowdSec (community, CAPI off by default) | `/firewall`, `/brute-force` |
 | LiteSpeed Enterprise | nginx front + Apache httpd backend, PHP-FPM | installer |
-| Softaculous | checksum-pinned App Installer (WordPress, Joomla, Drupal, Nextcloud) + WP-CLI toolkit | `internal/appx` |
+| Softaculous | checksum-pinned App Installer (16 apps: WordPress, Joomla, Drupal, Nextcloud, Matomo, phpBB, MediaWiki, DokuWiki, Grav, Backdrop, WonderCMS, MyBB, OpenCart, Mautic, Omeka S, FOSSBilling) + WP-CLI toolkit | `internal/appx` |
 | JetBackup / Acronis | restic (local, SFTP, S3-compatible) with restore verification | `internal/backup` |
 | KernelCare (live patching) | none bundled: distro security updates via Update Preferences (`/update-prefs`); Ubuntu Livepatch / kpatch are optional OS features outside BPANEL | adminx |
 | Paid DNS / registrar APIs | PowerDNS authoritative + DNS cluster (AXFR/NOTIFY), Dynamic DNS | `internal/dnsx`, `internal/clusterx` |

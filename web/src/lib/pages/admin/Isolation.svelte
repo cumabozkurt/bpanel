@@ -3,7 +3,7 @@
 	import { api } from '$lib/api.js';
 	import { t, fmt } from '$lib/i18n/index.js';
 	import { session } from '$lib/stores.js';
-	import { showErr, ok, ask } from '$lib/util.js';
+	import { showErr, ok, ask, asList } from '$lib/util.js';
 	import PageHead from '$lib/components/PageHead.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import UsagePanel from '$lib/components/UsagePanel.svelte';
@@ -28,7 +28,7 @@
 				api.get('/admin/limit-profiles').then((r) => r.items),
 				api.get('/admin/usage/top').then((r) => r.items)
 			]);
-			accounts = (await api.get('/admin/accounts?limit=500')).items ?? [];
+			accounts = asList(await api.get('/admin/accounts?limit=1000&role=user'));
 		} catch (e) { showErr(e); }
 	}
 	load();

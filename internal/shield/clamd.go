@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -114,8 +115,38 @@ func (c *Clamd) Ping(ctx context.Context) error {
 
 // Version returns clamd's VERSION line, e.g.
 // "ClamAV 1.0.7/27423/Wed Oct  8 08:31:12 2026" (engine/db-version/db-date).
+//
+// ClamAV 1.5 can disable the VERSION command ("COMMAND UNAVAILABLE"); the
+// reply was then shown as the engine version next to an "OK" status. Any
+// reply that is not a version line falls back to the local "clamscan
+// --version" (same engine and database on a single-host install).
 func (c *Clamd) Version(ctx context.Context) (string, error) {
-	return c.command(ctx, "VERSION")
+	v, err := c.command(ctx, "VERSION")
+	if err == nil && strings.HasPrefix(v, "ClamAV ") {
+		return v, nil
+	}
+	if lv, lerr := localClamVersion(ctx); lerr == nil {
+		return lv, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return "", fmt.Errorf("%w: clamd VERSION reply %q", ErrUnavailable, v)
+}
+
+// localClamVersion runs "clamscan --version" (variable for tests).
+var localClamVersion = func(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, "clamscan", "--version").Output()
+	if err != nil {
+		return "", err
+	}
+	v := strings.TrimSpace(string(out))
+	if !strings.HasPrefix(v, "ClamAV ") {
+		return "", fmt.Errorf("%w: unexpected clamscan --version output", ErrUnavailable)
+	}
+	return v, nil
 }
 
 // ParseClamVersion splits a VERSION line into engine, db version and db time.
@@ -184,7 +215,9 @@ func (c *Clamd) Status(ctx context.Context) ProviderStatus {
 	}
 	v, err := c.Version(ctx)
 	if err != nil {
-		st.Status, st.Reason = StatusUnavailable, err.Error()
+		// clamd answers PING, so scans work; only the engine/database
+		// version (and with it the signature age) is unknown.
+		st.Status, st.Reason = StatusDegraded, "clamd is running but its version is unknown: "+err.Error()
 		return st
 	}
 	eng, db, t := ParseClamVersion(v)

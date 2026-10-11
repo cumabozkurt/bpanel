@@ -47,7 +47,7 @@
 	let groups = $derived(visibleGroups('admin', $session?.user?.role, $session?.features));
 	let available = $derived(groups.flatMap((g) => g.tools.map((x) => ({ ...x, group: g.id }))).filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i));
 	let favs = $derived(favIds.map((id) => available.find((x) => x.id === id)).filter(Boolean));
-	let addable = $derived(available.filter((x) => !favIds.includes(x.id) && !x.soon));
+	let addable = $derived(available.filter((x) => !favIds.includes(x.id)));
 	function saveFavs(ids) { favIds = ids.slice(0, MAX_FAVS); persistFavs(favIds); }
 	function toggleFav(id) { saveFavs(favIds.includes(id) ? favIds.filter((x) => x !== id) : [...favIds, id]); }
 	function moveFav(id, d) { const i = favIds.indexOf(id), j = i + d; if (j < 0 || j >= favIds.length) return; const a = [...favIds]; [a[i], a[j]] = [a[j], a[i]]; saveFavs(a); }
@@ -151,11 +151,11 @@
 			</button>
 			{#if isOpen}
 				<div class="tools">
-					{#each [...g.tools.filter((x) => !x.soon), ...g.tools.filter((x) => x.soon)] as tool}
+					{#each g.tools as tool}
 						<div class="toolrow">
-							<button class="tool" class:soon={tool.soon} tabindex={tool.soon ? -1 : undefined} onclick={() => openTool(tool)}><ToolIcon icon={tool.icon} size={28} /><span>{$t('tools.' + tool.id)}{#if tool.soon} <em class="badge amber">{$t('common.soon')}</em>{/if}</span></button>
-							{#if !tool.soon}<button class="star" class:on={favIds.includes(tool.id)} aria-pressed={favIds.includes(tool.id)} onclick={() => toggleFav(tool.id)}
-								aria-label={favIds.includes(tool.id) ? $t('adash.remove_favorite', { name: $t('tools.' + tool.id) }) : $t('adash.add_favorite_named', { name: $t('tools.' + tool.id) })}><Star size={14} /></button>{/if}
+							<button class="tool" onclick={() => openTool(tool)}><ToolIcon icon={tool.icon} size={28} /><span>{$t('tools.' + tool.id)}</span></button>
+							<button class="star" class:on={favIds.includes(tool.id)} aria-pressed={favIds.includes(tool.id)} onclick={() => toggleFav(tool.id)}
+								aria-label={favIds.includes(tool.id) ? $t('adash.remove_favorite', { name: $t('tools.' + tool.id) }) : $t('adash.add_favorite_named', { name: $t('tools.' + tool.id) })}><Star size={14} /></button>
 						</div>
 					{/each}
 				</div>
@@ -202,8 +202,6 @@
 	.tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 12px; padding: 10px 14px; border-top: 1px solid var(--border); }
 	.tool { display: flex; align-items: center; gap: 10px; padding: 8px; background: none; border: 0; color: var(--link); font: inherit; text-align: left; cursor: pointer; border-radius: 6px; }
 	.tool:hover { background: var(--card-2); }
-	.tool em { font-style: normal; font-size: 10px; }
-	.tool.soon { color: var(--text-2); }
 	@media (max-width: 1100px) { .top { grid-template-columns: 1fr; } .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 	@media (max-width: 600px) { .tools { grid-template-columns: 1fr; } .sh { flex-wrap: wrap; } }
 </style>

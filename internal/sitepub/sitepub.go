@@ -36,7 +36,7 @@ var Templates = []Template{
 	{ID: "business", Name: "Business card", Kind: "business"},
 	{ID: "personal", Name: "Personal page", Kind: "personal"},
 	{ID: "maintenance", Name: "Under maintenance", Kind: "maintenance"},
-	{ID: "coming_soon", Name: "Coming soon", Kind: "coming_soon"},
+	{ID: "coming_soon", Name: "Launch page", Kind: "coming_soon"},
 }
 
 type Error struct{ Code, Field string }

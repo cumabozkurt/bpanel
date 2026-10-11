@@ -547,7 +547,7 @@ func (s *Server) phpExtSet(w http.ResponseWriter, r *http.Request) (any, error) 
 // BillingEvents are the account lifecycle events published for billing
 // systems (webhook subscriptions; docs/integrations/whmcs.md).
 var BillingEvents = []string{"account.created", "account.suspended", "account.unsuspended", "account.terminated",
-	"account.package_changed", "account.password_changed", "account.ip_changed"}
+	"account.package_changed", "account.password_changed", "account.ip_changed", "account.primary_domain_changed"}
 
 func (s *Server) billingInfo(w http.ResponseWriter, r *http.Request) (any, error) {
 	return map[string]any{

@@ -1,1 +1,2 @@
-bpanel 1.1.0 12857cd
+bpanel 1.2.0 (v1.2.0 re-run: core + apps + UI smoke)
+bpanel 1.1.0 12857cd (full 521-check run)

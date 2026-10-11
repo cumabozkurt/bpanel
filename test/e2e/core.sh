@@ -242,7 +242,8 @@ s_lifecycle() {
 }
 
 s_api() {
-  check api-docs "OpenAPI document served (v1.1.0)" bash -c "curl -sk -m 20 --noproxy '*' $ADMIN_URL/openapi.json | jq -e '.info.version == \"1.1.0\" and (.paths | length) > 250' >/dev/null || curl -sk -m 20 --noproxy '*' $ADMIN_URL/api/v1/openapi.json | jq -e '.info.version == \"1.1.0\"' >/dev/null"
+  local bv; bv=$(bpanel-api --version 2>/dev/null | awk '{print $2}')
+  check api-docs "OpenAPI document served (v$bv, the installed build)" bash -c "curl -sk -m 20 --noproxy '*' $ADMIN_URL/openapi.json | jq -e '.info.version == \"$bv\" and (.paths | length) > 250' >/dev/null || curl -sk -m 20 --noproxy '*' $ADMIN_URL/api/v1/openapi.json | jq -e '.info.version == \"$bv\"' >/dev/null"
 }
 
 for s in "${SECTIONS[@]}"; do echo "== $s"; "s_$s"; done

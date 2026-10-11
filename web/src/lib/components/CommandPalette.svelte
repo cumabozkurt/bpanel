@@ -40,7 +40,7 @@
 		const acts = quick.map((x) => ({ kind: 'action', to: x.to, label: $t('palette.' + x.id), sub: $t('palette.action'), icon: Zap, hay: norm($t('palette.' + x.id)) }));
 		const accs = accounts.map((a) => ({ kind: 'account', to: '/accounts?q=' + encodeURIComponent(a.username), label: a.username, sub: a.primary_domain, icon: User, hay: [a.username, a.primary_domain, a.email].join(' ') }));
 		const doms = domains.map((d) => ({ kind: 'domain', to: d.kind === 'sub' || $session?.features?.dns === false ? '/domains' : '/dns/' + d.name, label: d.name, sub: $t('domains.kind_' + d.kind), icon: Globe, hay: d.name }));
-		if (!query) return [...acts, ...tools.filter((x) => !x.tool.soon).slice(0, 9)];
+		if (!query) return [...acts, ...tools.slice(0, 9)];
 		return [...acts, ...tools, ...accs, ...doms]
 			.filter((x) => matches(x.hay + ' ' + x.label + ' ' + x.sub, query))
 			.sort((a, b) => score(a.label, query) - score(b.label, query))
@@ -80,7 +80,7 @@
 					<li id={'pal-' + i} role="option" aria-selected={i === sel}>
 						<button tabindex="-1" class:sel={i === sel} onmouseenter={() => (sel = i)} onclick={() => go(it)}>
 							<ToolIcon icon={it.icon} size={22} />
-							<span class="grow">{it.label} {#if it.tool?.soon}<span class="badge">{$t('common.soon')}</span>{/if}</span>
+							<span class="grow">{it.label}</span>
 							<span class="muted small sub">{it.sub}</span>
 							{#if i === sel}<CornerDownLeft size={14} aria-hidden="true" />{/if}
 						</button>

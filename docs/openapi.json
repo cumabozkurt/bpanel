@@ -230,6 +230,7 @@
               "invalid_package",
               "invalid_params",
               "invalid_parent",
+              "invalid_password_hash",
               "invalid_path",
               "invalid_perms",
               "invalid_phone",
@@ -281,6 +282,7 @@
               "limit_reached",
               "limits_failed",
               "mail_domain_disabled",
+              "mail_lock_failed",
               "mariadb_unreachable",
               "marker_failed",
               "method_not_allowed",
@@ -368,6 +370,7 @@
               "plugin_unsafe_path",
               "plugin_untrusted",
               "plugin_write_failed",
+              "primary_domain_not_addon",
               "private_dir",
               "profile_in_use",
               "public_suffix",
@@ -379,7 +382,6 @@
               "record_outside_zone",
               "refused",
               "remote_db_disabled",
-              "rename_unsupported",
               "reseller_cannot_create_reseller",
               "reseller_has_accounts",
               "reseller_unlimited_not_allowed",
@@ -603,7 +605,7 @@
       "name": "Apache-2.0"
     },
     "title": "BOZKURT PANEL API",
-    "version": "1.0.0"
+    "version": "1.2.0"
   },
   "openapi": "3.1.0",
   "paths": {

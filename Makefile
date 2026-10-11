@@ -1,6 +1,6 @@
 # BOZKURT PANEL — build helpers. Requires Go 1.27+, Node 20+ and pnpm.
 # SPDX-License-Identifier: Apache-2.0
-VERSION ?= 1.1.0
+VERSION ?= 1.2.0
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X github.com/cumabozkurt/bpanel/internal/version.Version=$(VERSION) -X github.com/cumabozkurt/bpanel/internal/version.Commit=$(COMMIT)
 GOOS    ?= linux
@@ -10,7 +10,7 @@ CMDS    := bpanel-api bpanel-agent bpanel bpanel-installer
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || echo 1767225600)
 TARFLAGS := --sort=name --mtime=@$(SOURCE_DATE_EPOCH) --owner=0 --group=0 --numeric-owner
 
-.PHONY: all web embed build dist release release-check release-keygen verify-release test test-installer validate-configs vet i18n dev clean openapi
+.PHONY: all web embed build dist release release-unsigned release-check release-keygen verify-release test test-installer validate-configs vet i18n dev clean openapi
 
 # ---- release signing (SEC-10) -------------------------------------------------
 # Releases are signed with minisign (https://jedisct1.github.io/minisign/).
@@ -62,6 +62,14 @@ release: release-check dist   ## signed tarballs in the layout install.sh downlo
 	    -t "bpanel-release file:$$n.tar.gz version:$(VERSION)" || exit 1; \
 	  (cd dist && sha256sum $$n.tar.gz > $$n.tar.gz.sha256); done
 	@$(MAKE) --no-print-directory verify-release VERSION=$(VERSION)
+
+release-unsigned: release-check dist ## UNSIGNED tarballs + .sha256 (what v1.x publishes until a release key exists)
+	@for a in $(ARCHES); do n=bpanel-$(VERSION)-linux-$$a; rm -rf dist/$$n; mkdir -p dist/$$n; \
+	  cp dist/linux-$$a/* installer/install.sh LICENSE NOTICE README.md dist/$$n/; \
+	  (cd dist/$$n && rm -f SHA256SUMS && sha256sum bpanel bpanel-api bpanel-agent bpanel-installer > SHA256SUMS) || exit 1; \
+	  tar -C dist $(TARFLAGS) -cf - $$n | gzip -n -9 > dist/$$n.tar.gz || exit 1; \
+	  (cd dist && sha256sum $$n.tar.gz > $$n.tar.gz.sha256); done
+	@cat dist/bpanel-$(VERSION)-linux-*.tar.gz.sha256
 
 # R2-WB-18: refuse to sign a release whose version strings disagree (the
 # install.sh inside would download another version than the archive holds),

@@ -515,6 +515,9 @@ func (s *Server) appxInstall(w http.ResponseWriter, r *http.Request) (any, error
 	}
 	dest := d.DocRoot
 	sub := strings.Trim(strings.TrimSpace(in.Path), "/")
+	if c.RootOnly && sub != "" {
+		return nil, badMsg("appx_root_only", "this application must be installed in the document root of a domain")
+	}
 	if sub != "" {
 		if sub, err = appx.CleanRel(sub); err != nil {
 			return nil, appxAPIErr(err)

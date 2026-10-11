@@ -39,7 +39,7 @@
 #   BPANEL_ALLOW_UNSIGNED=1  run an UNSIGNED local build (development only)
 set -euo pipefail
 
-BPANEL_DEFAULT_VERSION="1.1.0"
+BPANEL_DEFAULT_VERSION="1.2.0"
 # Release signing public key (minisign). Set by `make release-keygen`; the
 # private key never enters the repository. "UNSET" makes this script refuse
 # to install anything (fail closed).

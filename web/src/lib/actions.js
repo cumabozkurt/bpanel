@@ -4,7 +4,6 @@ import { goto } from '$app/navigation';
 
 /** Open a tool: navigate, open a link, or run an action. */
 export async function openTool(tool) {
-	if (tool.soon) return goto('/tool/' + tool.id);
 	if (tool.href) return window.open(tool.href, '_blank', 'noopener');
 	if (tool.to) return goto(tool.to);
 	try {

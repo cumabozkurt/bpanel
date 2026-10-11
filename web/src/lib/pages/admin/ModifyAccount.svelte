@@ -3,7 +3,7 @@
 	import { UserCog, Contact } from '@lucide/svelte';
 	import { api } from '$lib/api.js';
 	import { t } from '$lib/i18n/index.js';
-	import { showErr, showWarnings, ok, qs } from '$lib/util.js';
+	import { showErr, showWarnings, ok, qs, asList } from '$lib/util.js';
 	import { session } from '$lib/stores.js';
 	import PageHead from '$lib/components/PageHead.svelte';
 	const emailOnly = qs('focus') === 'email';
@@ -12,11 +12,11 @@
 	let resellers = $state([]);
 	let sel = $state(qs('id') || '');
 	let cur = $state(null);
-	let f = $state({ package_id: '', owner_id: '', shell_access: false, max_addon_domains: '', max_subdomains: '', email: '', reset: false });
+	let f = $state({ package_id: '', owner_id: '', shell_access: false, max_addon_domains: '', max_subdomains: '', email: '', reset: false, primary_domain: '' });
 	let isAdmin = $derived($session?.user?.role === 'admin');
 	async function init() {
 		try {
-			const all = (await api.get('/admin/accounts?limit=500')).items ?? [];
+			const all = asList(await api.get('/admin/accounts?limit=1000'));
 			accounts = all.filter((a) => a.role === 'user' || (emailOnly && a.role === 'reseller'));
 			resellers = all.filter((a) => a.role === 'reseller');
 			const p = await api.get('/admin/packages');
@@ -32,7 +32,7 @@
 		try {
 			cur = await api.get('/admin/accounts/' + sel + '/modify');
 			f = { package_id: cur.package_id ?? '', owner_id: cur.owner_id ?? '', shell_access: cur.overrides.shell_access,
-				max_addon_domains: cur.overrides.max_addon_domains ?? '', max_subdomains: cur.overrides.max_subdomains ?? '', email: cur.email, reset: false };
+				max_addon_domains: cur.overrides.max_addon_domains ?? '', max_subdomains: cur.overrides.max_subdomains ?? '', email: cur.email, reset: false, primary_domain: cur.primary_domain };
 		} catch (e) { showErr(e); }
 	}
 	async function save(e) {
@@ -46,6 +46,7 @@
 				if (num(f.max_addon_domains) !== null) body.max_addon_domains = num(f.max_addon_domains);
 				if (num(f.max_subdomains) !== null) body.max_subdomains = num(f.max_subdomains);
 			}
+			if (f.primary_domain && f.primary_domain !== cur.primary_domain) body.primary_domain = f.primary_domain;
 			if (isAdmin && f.owner_id !== '' && Number(f.owner_id) !== cur.owner_id) body.owner_id = Number(f.owner_id);
 		}
 		try { const r = await api.put('/admin/accounts/' + sel + '/modify', body); showWarnings(r); ok('adminx.saved'); load(); } catch (err) { showErr(err); }
@@ -83,8 +84,13 @@
 			<label>{$t('adminx.max_sub')} <input type="number" min="-1" bind:value={f.max_subdomains} disabled={f.reset} /></label>
 			<p class="muted small">{$t('adminx.override_hint')} {$t('adminx.effective', { addon: cur.effective.max_addon_domains < 0 ? $t('adminx.unlimited') : cur.effective.max_addon_domains, sub: cur.effective.max_subdomains < 0 ? $t('adminx.unlimited') : cur.effective.max_subdomains })}</p>
 			<label class="small"><input type="checkbox" bind:checked={f.reset} /> {$t('adminx.reset_overrides')}</label>
-			<label>{$t('adminx.primary_domain')} <input value={cur.primary_domain} disabled /></label>
-			<p class="muted small">{$t('adminx.rename_unsupported')}</p>
+			<label>{$t('adminx.primary_domain')}
+				<select bind:value={f.primary_domain}>
+					<option value={cur.primary_domain}>{cur.primary_domain}</option>
+					{#each cur.addon_domains ?? [] as d}<option value={d}>{d}</option>{/each}
+				</select>
+			</label>
+			<p class="muted small">{(cur.addon_domains ?? []).length ? $t('adminx.primary_hint', { old: cur.primary_domain }) : $t('adminx.primary_no_addon')}</p>
 		{/if}
 		<label>{$t('adminx.contact_email')} <input type="email" bind:value={f.email} maxlength="254" /></label>
 		<button class="btn primary" type="submit">{$t('adminx.save')}</button>

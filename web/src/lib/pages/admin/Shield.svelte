@@ -3,7 +3,7 @@
 	import { api } from '$lib/api.js';
 	import { t } from '$lib/i18n/index.js';
 	import { session } from '$lib/stores.js';
-	import { showErr, ok, ask } from '$lib/util.js';
+	import { showErr, ok, ask, asList } from '$lib/util.js';
 	import PageHead from '$lib/components/PageHead.svelte';
 	import ShieldPolicies from './ShieldPolicies.svelte';
 
@@ -37,7 +37,7 @@
 	}
 	async function load() {
 		await Promise.all([loadStatus(), loadDets(), loadQuar()]);
-		try { accounts = ((await api.get('/admin/accounts?limit=500')).items ?? []).filter((a) => a.role === 'user'); } catch { accounts = []; }
+		try { accounts = asList(await api.get('/admin/accounts?limit=1000&role=user')).filter((a) => a.role === 'user'); } catch { accounts = []; }
 	}
 	load();
 
@@ -84,7 +84,7 @@
 				{#each st.status.engines ?? [] as e (e.name)}
 					<tr><td><b>{e.name}</b><div class="small muted">{e.license}</div></td><td>{e.kind}</td>
 						<td><span class="badge {e.status === 'ok' ? 'ok' : 'warn'}">{engStatus(e.status)}</span>{#if e.reason}<div class="small muted">{e.reason}</div>{/if}</td>
-						<td>{e.version || '—'}{#if e.signature_version}<div class="small muted">{e.signature_version}</div>{/if}</td>
+						<td>{e.version || '—'}{#if e.signature_version && e.signature_version !== e.version}<div class="small muted">{e.signature_version}</div>{/if}</td>
 						<td>{e.db_age_hours ? $t('shield.hours', { n: e.db_age_hours }) : '—'}</td>
 						<td>{e.realtime ? '✓' : '—'}</td><td>{e.on_demand ? '✓' : '—'}</td></tr>
 				{/each}

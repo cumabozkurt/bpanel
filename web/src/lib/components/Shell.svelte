@@ -231,8 +231,8 @@
 							<ul>
 								{#each g.tools as tool}
 									<li>
-										<button class="cat-l" class:active={tool.id === activeToolId} class:is-soon={tool.soon} aria-current={tool.id === activeToolId ? 'page' : undefined} onclick={() => { mobileNav = false; openTool(tool); }}>
-											{$t('tools.' + tool.id)}{#if tool.soon}<span class="soon">{$t('common.soon')}</span>{/if}
+										<button class="cat-l" class:active={tool.id === activeToolId} aria-current={tool.id === activeToolId ? 'page' : undefined} onclick={() => { mobileNav = false; openTool(tool); }}>
+											{$t('tools.' + tool.id)}
 										</button>
 									</li>
 								{/each}
@@ -385,7 +385,6 @@
 	.cat-l { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: 0; color: var(--sidebar-text); font: inherit; font-size: 12.5px; padding: 4px 8px; text-align: left; cursor: pointer; border-radius: 4px; }
 	.cat-l:hover { color: #fff; background: var(--sidebar-2); }
 	.cat-l.active { color: #fff; background: var(--sidebar-active); box-shadow: inset 2px 0 0 var(--accent); }
-	.soon { font-size: 10px; padding: 0 5px; border-radius: 3px; background: var(--sidebar-2); color: var(--sidebar-text); }
 	.main { min-width: 0; display: flex; flex-direction: column; }
 	.metastrip { display: flex; flex-wrap: wrap; gap: 4px 22px; padding: 6px 24px; font-size: 12px; background: var(--card-2); border-bottom: 1px solid var(--border); color: var(--text); }
 	.metastrip em { font-style: normal; color: var(--muted); margin-right: 4px; }
@@ -448,12 +447,10 @@
 	@media (prefers-reduced-motion: reduce) { aside { transition: none; } }
 	/* R2-UX-41: explicit transparent background so contrast tools resolve the top-bar colour */
 	#um-btn { background: transparent; }
-	.cat-l.is-soon { opacity: 0.85; }
-	/* R2-UX-28: Windows High Contrast — keep the active item and the "Soon" state visible */
+	/* R2-UX-28: Windows High Contrast — keep the active item visible */
 	@media (forced-colors: active) {
 		.main-nav a.active, .cat-l.active, .home.active { forced-color-adjust: none; background: Highlight; color: HighlightText; outline: 2px solid Highlight; outline-offset: -2px; }
-		.soon { border: 1px dashed GrayText; color: GrayText; }
-		.cat-l:not(.is-soon) { color: LinkText; }
+		.cat-l { color: LinkText; }
 		.dotn { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 	}
 	@media print {

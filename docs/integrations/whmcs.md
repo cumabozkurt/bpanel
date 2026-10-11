@@ -38,7 +38,7 @@ staff to finish the termination in BPANEL.
 
 Events: `account.created`, `account.suspended`, `account.unsuspended`,
 `account.terminated`, `account.package_changed`, `account.password_changed`,
-`account.ip_changed`. Each carries `account_id` and `data.username`.
+`account.ip_changed`, `account.primary_domain_changed` (data: `old`, `domain`). Each carries `account_id` and `data.username`.
 
 Create a webhook (admin → Webhooks) with the event filter `account.*`.
 Deliveries are retried with backoff and signed:

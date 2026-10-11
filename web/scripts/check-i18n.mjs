@@ -4,7 +4,8 @@
 //  3. every tool, group and quick-action id has a name;
 //  4. every error code the Go backend can return has a translation (errors.<code>);
 //  5. every audit action the backend records has a label (audit_actions.<area>_<verb> or audit_actions.<area>);
-//  6. {placeholders} match between English and each translation.
+//  6. {placeholders} match between English and each translation;
+//  7. every App Installer catalogue entry has appx.desc_<id> / appx.post_<id> and its category a name.
 import fs from 'node:fs';
 import path from 'node:path';
 const dir = 'src/lib/i18n/locales';
@@ -76,6 +77,13 @@ if (fs.existsSync(goRoot)) {
 	const ego = path.join(goRoot, 'api', 'errcodes.go');
 	if (fs.existsSync(ego)) for (const m of fs.readFileSync(ego, 'utf8').matchAll(/^\t"([a-z0-9_]+)",$/gm)) { codes.add(m[1]); if (!en.has('errors.' + m[1])) problem('catalogued error code without translation: errors.' + m[1]); }
 	for (const a of actions) if (!en.has('audit_actions.' + a) && !en.has('audit_actions.' + a.split('_')[0])) problem('audit action without label: audit_actions.' + a);
+	// App Installer catalogue: every app has a translated description and next steps, every category a name
+	const cgo = path.join(goRoot, 'appx', 'catalog.go');
+	if (fs.existsSync(cgo)) {
+		const cs = fs.readFileSync(cgo, 'utf8');
+		for (const m of cs.matchAll(/\{ID: "([a-z0-9]+)"/g)) for (const k of ['desc_', 'post_']) if (!en.has('appx.' + k + m[1])) problem('catalogue app without text: appx.' + k + m[1]);
+		for (const m of cs.matchAll(/Category: "([a-z]+)"/g)) if (!en.has('appx.cat_' + m[1])) problem('catalogue category without name: appx.cat_' + m[1]);
+	}
 }
 
 console.log(`checked ${groupIds.length} groups, ${toolIds.length} tools, ${codes.size} backend error codes, ${actions.size} audit actions`);

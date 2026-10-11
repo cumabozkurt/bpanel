@@ -9,10 +9,8 @@
 	import Stat from '$lib/components/Stat.svelte';
 	import { pageTitle } from '$lib/stores.js';
 	$effect(() => { pageTitle.set($t('dash.tools')); return () => pageTitle.set(''); });
-	// R2-UX-33: roadmap tools leave the working grid and sit in one collapsed "Planned" list
 	// R2-SYS-16: tools of features this server does not run (mail, DNS, FTP) are not shown
 	let userGroups = $derived(visibleGroups('user', $session?.user?.role, $session?.features));
-	let planned = $derived(userGroups.flatMap((g) => g.tools.filter((x) => x.soon).map((x) => ({ ...x, group: g.id }))));
 
 	let sum = $state(null);
 	let collapsed = $state(JSON.parse(localStorage.getItem('bp_collapsed') || '[]'));
@@ -38,7 +36,7 @@
 				</button>
 				{#if open}
 					<div class="tools">
-						{#each g.tools.filter((x) => !x.soon) as tool}
+						{#each g.tools as tool}
 							<button class="tool" onclick={() => openTool(tool)}>
 								<ToolIcon icon={tool.icon} size={32} />
 								<span>{$t('tools.' + tool.id)}</span>
@@ -48,15 +46,6 @@
 				{/if}
 			</section>
 		{/each}
-		<details class="card planned">
-			<summary>{$t('dash.planned', { n: planned.length })}</summary>
-			<p class="muted small pl">{$t('dash.planned_desc')}</p>
-			<ul class="plist">
-				{#each planned as tool}
-					<li><a href={'/tool/' + tool.id}><ToolIcon icon={tool.icon} size={22} /> <span>{$t('tools.' + tool.id)}</span></a> <em class="badge amber">{$t('common.soon')}</em> <span class="muted small">{$t('groups.' + tool.group)}</span></li>
-				{/each}
-			</ul>
-		</details>
 	</div>
 	<aside class="side">
 		<section class="card">
@@ -104,12 +93,6 @@
 	.tool { display: flex; align-items: center; gap: 12px; padding: 9px 8px; background: none; border: 0; border-radius: 6px; color: var(--link); font: inherit; text-align: left; cursor: pointer; min-height: 50px; }
 	.tool:hover { background: var(--card-2); }
 	.tool:hover span { text-decoration: underline; }
-	.pl { padding: 10px 16px 0; margin: 0; }
-	.plist { list-style: none; margin: 0; padding: 8px 16px 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
-	.plist li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-	.plist a { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); }
-	.plist em { font-style: normal; font-size: 10px; }
-	@media (max-width: 760px) { .plist { grid-template-columns: 1fr; } }
 	.side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 76px; }
 	.info .kv { font-size: 13px; }
 	.ssl { margin-top: 12px; width: 100%; }

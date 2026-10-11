@@ -1,6 +1,6 @@
 // Tool registry: drives the user tool grid, the admin menu, search and the
-// command palette. Names come from i18n keys tools.<id>; "soon" tools are on
-// the roadmap and open a short explanation page instead of a feature.
+// command palette. Names come from i18n keys tools.<id>. Every tool is a
+// working feature: there is no "coming soon" state.
 import {
 	Mail, Forward, AtSign, Reply, ShieldCheck, Inbox, Filter, ShieldAlert, Users, HardDrive, FolderOpen,
 	PieChart, Server, Archive, History, Lock, GitBranch, Database, Wand2, Table2, Globe, Link2, Waypoints,

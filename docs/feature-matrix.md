@@ -73,7 +73,7 @@ Every component is free/open source (`third-party-licenses.md`); no row depends 
 | MultiPHP Manager | `multiphp` `/php` | **verified-e2e** | PHP-FPM | 5/5 (php) |  |
 | MultiPHP INI Editor | `php_ini` | **verified-e2e** | PHP-FPM | 4/4 (phpini) |  |
 | WordPress Toolkit | `wordpress` | **verified-e2e** | WP-CLI, WordPress | 8/8 (inst) |  |
-| Softaculous (App Installer) | `app_installer` | **verified-e2e** | checksum-pinned official tarballs | 3/3 (inst) | free replacement for Softaculous |
+| Softaculous (App Installer) | `app_installer` | **verified-e2e** | 16 checksum-pinned official archives (tar/zip): WordPress, Joomla, Drupal, Nextcloud, Matomo, phpBB, MediaWiki, DokuWiki, Grav, Backdrop, WonderCMS, MyBB, OpenCart, Mautic, Omeka S, FOSSBilling | 3/3 (inst) + 81/81 (apps.sh, v1.2.0) | free replacement for Softaculous |
 | Application Manager (Node.js / Python) | `nodejs` `/apps` | **verified-e2e** | Node.js, Python, systemd | 9/9 (apps) |  |
 | Ruby on Rails / Ruby Gems (Ruby apps) | `nodejs` `/apps` (runtime ruby) | **verified-e2e** | Ruby, bundler (distro) | 9/9 (ruby) | Ruby/Rack apps as systemd `bpanel-app@` units with GEM_HOME and BUNDLE_PATH=vendor/bundle (v1.1); a `bundle install` of real gems was not exercised |
 | Cron Jobs | `cron_jobs` | **verified-e2e** | cron | 5/5 (cron) |  |

@@ -38,15 +38,19 @@ natively.
   (`/var/lib/bpanel/appx/proxy/<domain>.json`) and bound to the account.
 
 ## App Installer — `/installer`
-* Catalogue in Go (`internal/appx/catalog.go`): WordPress 7.1.3, Joomla 6.1.4,
-  Drupal 11.4.9, Nextcloud 35.0.1 with pinned URLs + checksums (sources in the
-  file header); Matomo listed **disabled** (no checksum confirmed). The agent
-  only downloads URLs from this table.
+* Catalogue in Go (`internal/appx/catalog.go`), 16 enabled applications with
+  pinned URLs + checksums (sources in the file header): WordPress 7.1.3,
+  Joomla 6.1.4, Drupal 11.4.9, Nextcloud 35.0.1, Matomo 5.14.1, phpBB 3.3.19,
+  MediaWiki 1.46.2, DokuWiki 2026-07-14c, Grav 2.2.6 (+Admin), Backdrop CMS
+  1.35.1, WonderCMS 3.6.0, MyBB 1.8.41, OpenCart 4.1.0.4, Mautic 7.2.1,
+  Omeka S 4.2.1 and FOSSBilling 0.8.8 (v1.2.0). Archives are tar.gz, tar.bz2,
+  tgz or zip. Root-only apps (e.g. FOSSBilling) refuse a sub-directory install.
+  The agent only downloads URLs from this table.
 * Flow: API creates DB + DB user + grant via the existing database code
   (package limits apply) → agent downloads to a root-only temp dir, verifies
   sha256 (+ sha1 for WordPress) in constant time **before** extraction → extracts
-  into an `os.Root` of the destination as the account uid/gid; links, devices,
-  absolute and `..` entries are refused; size/entry caps. The destination must be
+  into an `os.Root` of the destination as the account uid/gid; links (except a link to a regular file of the same
+  archive, written as a copy), devices, absolute and `..` entries are refused; size/entry caps. The destination must be
   empty apart from the panel's default page (renamed to `index.html.bpanel-bak`,
   never deleted). Any failure drops the DB/user it created.
 * WordPress: `wp-config.php` (0600, owner = account) with DB settings and 8 salts

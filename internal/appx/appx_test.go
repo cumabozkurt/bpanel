@@ -4,14 +4,18 @@ package appx
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -135,8 +139,11 @@ func mkTar(t *testing.T, ents []ent) []byte {
 		if e.typ == tar.TypeDir {
 			h.Size = 0
 		}
-		if e.typ == tar.TypeSymlink {
+		if e.typ == tar.TypeSymlink || e.typ == tar.TypeLink {
 			h.Linkname, h.Size = "/etc/passwd", 0
+			if e.body != "" {
+				h.Linkname = e.body
+			}
 		}
 		if err := tw.WriteHeader(h); err != nil {
 			t.Fatal(err)
@@ -226,5 +233,235 @@ func TestWPConfig(t *testing.T) {
 	}
 	if !bytes.Contains(MaintenanceFile(), []byte("time()")) {
 		t.Fatal("maintenance")
+	}
+}
+
+func mkZip(t *testing.T, ents []ent, symlink string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for _, e := range ents {
+		h := &zip.FileHeader{Name: e.name, Method: zip.Deflate}
+		if strings.HasSuffix(e.name, "/") {
+			h.SetMode(fs.ModeDir | 0o755)
+		} else {
+			h.SetMode(0o644)
+		}
+		w, err := zw.CreateHeader(h)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.Write([]byte(e.body))
+	}
+	if symlink != "" {
+		h := &zip.FileHeader{Name: symlink}
+		h.SetMode(fs.ModeSymlink | 0o777)
+		w, _ := zw.CreateHeader(h)
+		w.Write([]byte("/etc/passwd"))
+	}
+	zw.Close()
+	return buf.Bytes()
+}
+
+func extractBytes(t *testing.T, data []byte, c CatalogApp) (string, error) {
+	t.Helper()
+	dir := t.TempDir()
+	p := filepath.Join(t.TempDir(), "a")
+	os.WriteFile(p, data, 0o600)
+	f, _ := os.Open(p)
+	defer f.Close()
+	root, _ := os.OpenRoot(dir)
+	defer root.Close()
+	_, err := ExtractApp(f, c, root, -1, -1)
+	return dir, err
+}
+
+func TestExtractZip(t *testing.T) {
+	good := mkZip(t, []ent{{"grav/", "", 0}, {"grav/index.php", "<?php", 0}, {"grav/user/config/system.yaml", "a: 1", 0}}, "")
+	dir, err := extractBytes(t, good, CatalogApp{Format: "zip", Strip: "grav"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "user/config/system.yaml")); string(b) != "a: 1" {
+		t.Fatalf("got %q", b)
+	}
+	for name, data := range map[string][]byte{
+		"traversal": mkZip(t, []ent{{"grav/../../evil", "x", 0}}, ""),
+		"absolute":  mkZip(t, []ent{{"/etc/x", "x", 0}}, ""),
+		"outside":   mkZip(t, []ent{{"other/x", "x", 0}}, ""),
+		"symlink":   mkZip(t, []ent{{"grav/a", "x", 0}}, "grav/link"),
+		"notzip":    []byte("not a zip"),
+	} {
+		if _, err := extractBytes(t, data, CatalogApp{Format: "zip", Strip: "grav"}); code(err) != "appx_archive_unsafe" {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+}
+
+func TestExtractStripOnly(t *testing.T) {
+	// MyBB / OpenCart / Matomo ship docs next to the application directory.
+	z := mkZip(t, []ent{{"Documentation/index.html", "doc", 0}, {"Upload/index.php", "<?php", 0}}, "")
+	if _, err := extractBytes(t, z, CatalogApp{Format: "zip", Strip: "Upload"}); code(err) != "appx_archive_unsafe" {
+		t.Fatalf("strict strip must refuse: %v", err)
+	}
+	dir, err := extractBytes(t, z, CatalogApp{Format: "zip", Strip: "Upload", StripOnly: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "index.php")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "Documentation")); err == nil {
+		t.Fatal("entry outside Upload/ extracted")
+	}
+	// unsafe names stay errors even with StripOnly
+	bad := mkZip(t, []ent{{"x/../../evil", "x", 0}}, "")
+	if _, err := extractBytes(t, bad, CatalogApp{Format: "zip", Strip: "Upload", StripOnly: true}); code(err) != "appx_archive_unsafe" {
+		t.Fatal(err)
+	}
+	tgz := mkTar(t, []ent{{"How to install.html", "x", tar.TypeReg}, {"matomo/index.php", "<?php", tar.TypeReg}})
+	if dir, err = extractBytes(t, tgz, CatalogApp{Format: "tar.gz", Strip: "matomo", StripOnly: true}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "index.php")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCatalogShape(t *testing.T) {
+	seen := map[string]bool{}
+	cats := map[string]bool{"cms": true, "blog": true, "wiki": true, "forum": true, "shop": true, "analytics": true, "marketing": true, "files": true}
+	enabled := 0
+	for _, c := range Catalog {
+		if seen[c.ID] || !nameRe.MatchString(c.ID) {
+			t.Errorf("bad or duplicate id %q", c.ID)
+		}
+		seen[c.ID] = true
+		if !cats[c.Category] {
+			t.Errorf("%s: category %q", c.ID, c.Category)
+		}
+		if !c.Enabled {
+			continue
+		}
+		enabled++
+		if c.Format != "tar.gz" && c.Format != "tar.bz2" && c.Format != "zip" {
+			t.Errorf("%s: format %q", c.ID, c.Format)
+		}
+		if !versionRe.MatchString(c.MinPHP) {
+			t.Errorf("%s: min php %q", c.ID, c.MinPHP)
+		}
+		if c.PostInstall == "" || c.License == "" || !strings.HasPrefix(c.Homepage, "https://") {
+			t.Errorf("%s: missing metadata", c.ID)
+		}
+		if c.StripOnly && c.Strip == "" {
+			t.Errorf("%s: StripOnly without Strip", c.ID)
+		}
+		for _, rn := range c.Renames {
+			if _, err := CleanRel(rn[0]); err != nil {
+				t.Errorf("%s: rename %v", c.ID, rn)
+			}
+			if _, err := CleanRel(rn[1]); err != nil {
+				t.Errorf("%s: rename %v", c.ID, rn)
+			}
+		}
+	}
+	if enabled < 15 {
+		t.Errorf("only %d installable apps", enabled)
+	}
+}
+
+// TestCatalogArchives checks every enabled entry against the real upstream
+// file: BPANEL_APPX_ARCHIVES=<dir> holding the downloads (named like the
+// last segment of the URL). Each one must match its pinned checksum and
+// extract cleanly (no links, no escaping entries, Strip present).
+func TestCatalogArchives(t *testing.T) {
+	dir := os.Getenv("BPANEL_APPX_ARCHIVES")
+	if dir == "" {
+		t.Skip("BPANEL_APPX_ARCHIVES not set")
+	}
+	for _, c := range Catalog {
+		if !c.Enabled {
+			continue
+		}
+		t.Run(c.ID, func(t *testing.T) {
+			p := filepath.Join(dir, path.Base(c.URL))
+			if _, err := os.Stat(p); err != nil {
+				t.Skip("not downloaded")
+			}
+			if err := VerifyFile(p, c.SHA256, c.SHA1); err != nil {
+				t.Fatal(err)
+			}
+			f, _ := os.Open(p)
+			defer f.Close()
+			out := t.TempDir()
+			root, _ := os.OpenRoot(out)
+			defer root.Close()
+			n, err := ExtractApp(f, c, root, -1, -1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := os.Stat(filepath.Join(out, "index.php")); err != nil {
+				t.Errorf("no index.php at the top after extracting %d entries", n)
+			}
+		})
+	}
+}
+
+func TestExtractLinksBecomeCopies(t *testing.T) {
+	ok := mkTar(t, []ent{
+		{"nc/dist/a.js.map.license", "a.js.license", tar.TypeSymlink}, // link before its target
+		{"nc/dist/a.js.license", "SPDX: AGPL", tar.TypeReg},
+		{"nc/lib/b.txt", "../dist/a.js.license", tar.TypeSymlink},
+		{"nc/hard.txt", "nc/dist/a.js.license", tar.TypeLink},
+	})
+	dir, err := extractBytes(t, ok, CatalogApp{Format: "tar.gz", Strip: "nc"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{"dist/a.js.map.license", "lib/b.txt", "hard.txt"} {
+		st, err := os.Lstat(filepath.Join(dir, p))
+		if err != nil || !st.Mode().IsRegular() {
+			t.Fatalf("%s: %v %v", p, st, err)
+		}
+		if b, _ := os.ReadFile(filepath.Join(dir, p)); string(b) != "SPDX: AGPL" {
+			t.Fatalf("%s = %q", p, b)
+		}
+	}
+	for name, bad := range map[string][]ent{
+		"absolute": {{"nc/x", "/etc/passwd", tar.TypeSymlink}},
+		"escape":   {{"nc/x", "../../etc/passwd", tar.TypeSymlink}},
+		"outside":  {{"nc/x", "../other", tar.TypeSymlink}},
+		"dangling": {{"nc/x", "missing", tar.TypeSymlink}},
+		"dir":      {{"nc/d/", "", tar.TypeDir}, {"nc/x", "d", tar.TypeSymlink}},
+		"cycle":    {{"nc/x", "y", tar.TypeSymlink}, {"nc/y", "x", tar.TypeSymlink}},
+		"hardout":  {{"nc/x", "other/y", tar.TypeLink}},
+	} {
+		if _, err := extractBytes(t, mkTar(t, bad), CatalogApp{Format: "tar.gz", Strip: "nc"}); code(err) != "appx_archive_unsafe" {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+}
+
+func TestExtractChownsImplicitParents(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("needs root to chown")
+	}
+	// no directory entries at all: every parent is implicit
+	data := mkTar(t, []ent{{"app/a/b/c/file.php", "<?php", tar.TypeReg}})
+	dir := t.TempDir()
+	p := filepath.Join(t.TempDir(), "a.tgz")
+	os.WriteFile(p, data, 0o600)
+	f, _ := os.Open(p)
+	defer f.Close()
+	root, _ := os.OpenRoot(dir)
+	defer root.Close()
+	if _, err := ExtractApp(f, CatalogApp{Format: "tar.gz", Strip: "app"}, root, 65534, 65534); err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []string{"a", "a/b", "a/b/c", "a/b/c/file.php"} {
+		st, _ := os.Lstat(filepath.Join(dir, d))
+		if uid := st.Sys().(*syscall.Stat_t).Uid; uid != 65534 {
+			t.Errorf("%s owned by %d", d, uid)
+		}
 	}
 }

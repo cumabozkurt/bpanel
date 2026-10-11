@@ -22,7 +22,9 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
@@ -54,7 +56,8 @@ var (
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "bpanel-agent/"+Version)
+		// some mirrors (download.phpbb.com) only serve wget/curl-style clients
+		req.Header.Set("User-Agent", "Wget/1.21 (compatible; bpanel-agent/"+Version+"; +https://github.com/cumabozkurt/bpanel)")
 		resp, err := (&http.Client{Timeout: 10 * time.Minute}).Do(req)
 		if err != nil {
 			return err
@@ -571,7 +574,19 @@ func appxExtractInto(home *os.Root, dest string, c appx.CatalogApp, archive stri
 		return 0, err
 	}
 	defer f.Close()
-	return appx.Extract(f, c.Format, c.Strip, sub, uid, gid)
+	n, err := appx.ExtractApp(f, c, sub, uid, gid)
+	if err != nil {
+		return n, err
+	}
+	for _, rn := range c.Renames {
+		if _, err := sub.Lstat(rn[1]); err == nil {
+			continue
+		}
+		if err := sub.Rename(rn[0], rn[1]); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return n, errf("appx_write_failed", "cannot rename %s", rn[0])
+		}
+	}
+	return n, nil
 }
 
 func (a *Agent) appxInstall(ctx context.Context, p rpc.AppxInstallParams) (rpc.AppxInstallResult, error) {

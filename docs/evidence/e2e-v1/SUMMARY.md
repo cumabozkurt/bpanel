@@ -1,4 +1,26 @@
-# BPANEL v1.1.0 — container end-to-end verification (E2E)
+# BPANEL E2E evidence
+
+## v1.2.0 — re-run on the final build (2026-10-11)
+
+Build under test: the 1.2.0 source tree that was tagged `v1.2.0` (`bpanel-api` SHA-256
+`49595d2d88716388825d8fae6099d97d8281404e2d3b376b6b3525c9bb53882c`; built before the commit, so it
+reports the previous commit id — the source is identical), installed over the 1.1.0/1.2.0 test
+builds on the same Ubuntu 24.04 container (systemd as PID 1, real services).
+
+| Suite | Scope | Checks | Result |
+|---|---|---|---|
+| `core.sh` | v0.1–v0.3 core (accounts … suspend/terminate, OpenAPI of the installed build) | 129 | **129 PASS** ([`results/v12-core.tsv`](results/v12-core.tsv), [`logs/v12-core.log`](logs/v12-core.log)) |
+| `apps.sh` (new) | all 16 App Installer apps: install through the API, pinned checksum, files owned by the account with no symlinks, database reachable with the shown password, served by nginx/PHP-FPM; root-only app refused in a sub-directory; second install into a used directory refused; Change Primary Domain swap and back | 81 | **81 PASS** ([`results/v12-apps.tsv`](results/v12-apps.tsv), [`logs/v12-apps.log`](logs/v12-apps.log)) |
+| UI smoke | every user and admin route, EN and TR: no JS errors, no API 5xx, no untranslated keys, no "coming soon" text | 176 page loads | **176 / 176 OK** ([`ui/ui-smoke-v12.json`](ui/ui-smoke-v12.json)) |
+| `TestCatalogArchives` | the 16 real upstream archives: pinned checksum + full extraction | 16 | **16 PASS** |
+
+Screenshots of this build: [`docs/screenshots/v12/`](../../screenshots/v12/) (EN + TR).
+The full-matrix v1.1.0 run below (521 checks) still applies to every other row; v1.2.0 did not
+change those features apart from the fixes listed in `CHANGELOG.md`.
+
+---
+
+## v1.1.0 — container end-to-end verification (E2E)
 
 **Result: every cPanel/WHM feature row of [`docs/feature-matrix.md`](../../feature-matrix.md) (97 / 97)
 was driven end to end and passed. 520 checks passed, 0 failed, 1 skipped (environment; the same

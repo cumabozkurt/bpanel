@@ -143,6 +143,28 @@ table.table tr:hover td { background: color-mix(in srgb, var(--card-2) 70%, tran
 	.actions { gap: 10px; justify-content: flex-start; }
 }
 .stack > * + * { margin-top: 16px; }
+/* v1.2 polish: utilities the pages used but app.css never defined (cards without padding, unstyled tabs/badges) */
+.pad { padding: 16px 18px; }
+.card.pad > :first-child, .card-body > :first-child { margin-top: 0; }
+.card.pad > :last-child, .card-body > :last-child { margin-bottom: 0; }
+.card.pad h2, .card.pad h3, .h3 { font-size: 15px; font-weight: 650; margin: 0 0 10px; }
+.card.pad + .card, .card + .card.pad, .card.pad + .card.pad { margin-top: 16px; }
+.card.pad.warn, p.warn, small.warn, span.warn { color: var(--amber-text); }
+.card.pad.warn { background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+.right, td.right, th.right { text-align: right; }
+.nowrap { white-space: nowrap; }
+.row.gap, .gap { gap: 10px; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px 16px; align-items: start; }
+.grid.cards { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-items: stretch; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+label.check { display: inline-flex; align-items: center; gap: 8px; margin: 4px 16px 10px 0; cursor: pointer; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 16px; padding-bottom: 0; }
+.tabs > button, .tabs > a { border-radius: var(--radius) var(--radius) 0 0; border: 1px solid transparent; border-bottom: 0; margin-bottom: -1px; color: var(--text-2); }
+.tabs > .active, .tabs > [aria-selected='true'] { background: var(--card); border-color: var(--border); color: var(--text); font-weight: 600; box-shadow: inset 0 2px 0 var(--primary); }
+.badge.ok, .badge.on, .badge.succeeded, .badge.active { background: var(--green-soft); color: var(--green-text); border-color: transparent; }
+.badge.warn, .badge.pending, .badge.running { background: var(--amber-soft); color: var(--amber-text); border-color: transparent; }
+.badge.err, .badge.failed, .badge.infected, .badge.revoked { background: var(--red-soft); color: var(--red-text); border-color: transparent; }
+.badge.gray { background: var(--card-2); color: var(--muted); }
 .toolbar { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .toolbar input[type='search'] { max-width: 280px; flex: 1 1 180px; }
 .toolbar select { flex: 0 1 auto; }
@@ -185,9 +207,6 @@ select[multiple] { background-image: none; padding-right: 10px; }
 .limit .input-group { flex: 1 1 110px; min-width: 0; }
 .limit label.unl { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 500; white-space: nowrap; cursor: pointer; }
 .limit input:disabled { background: var(--card-2); color: var(--muted); }
-/* coming-soon tools (R2-UX-33) */
-.planned > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
-.planned[open] > summary { border-bottom: 1px solid var(--border); }
 /* R2-UX-28: Windows High Contrast / forced colors */
 @media (forced-colors: active) {
 	.progress { border: 1px solid CanvasText; background: Canvas; }
@@ -196,8 +215,7 @@ select[multiple] { background-image: none; padding-right: 10px; }
 	.badge { border: 1px solid CanvasText; }
 	.badge.amber { border-style: dashed; }
 	.btn, .chip, .tbtn { border: 1px solid ButtonText; }
-	.tool:not(.soon), .fav b { color: LinkText; }
-	.tool.soon { color: GrayText; }
+	.tool, .fav b { color: LinkText; }
 	small.counter.over, .field-err { color: CanvasText; text-decoration: underline; }
 	.dot { forced-color-adjust: none; border: 1px solid CanvasText; }
 }
@@ -213,3 +231,19 @@ select[multiple] { background-image: none; padding-right: 10px; }
 	.tw { overflow: visible !important; }
 	.printhead { display: block !important; margin-bottom: 12pt; font-size: 9pt; color: #444; border-bottom: 1px solid #bbb; padding-bottom: 4pt; }
 }
+
+/* v1.2 polish: bare form cards (cards with labels/fieldsets as direct children
+   and no .card-body) get the same padding and stacked label layout as .field. */
+form.card:not(.pad):not(:has(> .card-body, > .card-head)),
+div.card:not(.pad):has(> label, > fieldset):not(:has(> .card-body, > .card-head)) { padding: 16px 18px; }
+.card > label:not(.field):not(.check):not(.small) { display: block; font-weight: 600; font-size: 13px; margin: 0 0 14px; }
+.card > label:not(.field):not(.check):not(.small) > :is(input:not([type='checkbox']):not([type='radio']), select, textarea) { display: block; margin-top: 5px; font-weight: 400; font-size: 14px; }
+.card > label.small { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; cursor: pointer; }
+.card > label + p.small, .card > label + p.muted { margin: -8px 0 14px; }
+.card > p.small + label, .card > p.muted + label { margin-top: 2px; }
+.card > fieldset { margin-bottom: 14px; }
+.card > button.btn:last-child, .card > .btn:last-child { margin-top: 4px; }
+form.card + form.card, div.card + form.card, form.card + div.card { margin-top: 16px; }
+
+/* v1.2 polish: section headings that follow a card/table get breathing room */
+:where(.card, form.card, .tabs, table) + :is(h2, h3) { margin-top: 24px; margin-bottom: 10px; }

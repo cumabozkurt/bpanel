@@ -1,0 +1,176 @@
+OK  user en / | Tools
+OK  user en /domains | Domains
+OK  user en /dns | Zone Editor
+OK  user en /email/accounts | Email Accounts
+OK  user en /email/forwarders | Forwarders
+OK  user en /email/autoresponders | Autoresponders
+OK  user en /email/filters | Email Filters
+OK  user en /email/spam | Spam Filters
+OK  user en /email/track | Track Delivery
+OK  user en /email/lists | Mailing Lists
+OK  user en /dnsx | DNSSEC & Zone Tools
+OK  user en /email/deliverability | Email Deliverability
+OK  user en /databases | MariaDB Databases
+OK  user en /databases/remote | Remote Database Access
+OK  user en /databases/processes | Database Processes
+OK  user en /postgresql | PostgreSQL Databases
+OK  user en /files | File Manager
+OK  user en /ftp | FTP Accounts
+OK  user en /cron | Cron Jobs
+OK  user en /ssl | SSL/TLS Status
+OK  user en /php | MultiPHP Manager
+OK  user en /disk | Disk Usage
+OK  user en /usage | Resource Usage
+OK  user en /bandwidth | Bandwidth
+OK  user en /php-ini | PHP INI Editor
+OK  user en /api-tokens | API Tokens
+OK  user en /modsecurity | ModSecurity
+OK  user en /malware-scans | Malware Scans
+OK  user en /git | Git Version Control
+OK  user en /terminal | Terminal
+OK  user en /track-dns | Track DNS
+OK  user en /ddns | Dynamic DNS
+OK  user en /apps | Application Manager
+OK  user en /installer | Application Installer
+OK  user en /wordpress | WordPress Toolkit
+OK  user en /backups | Backups
+OK  user en /contact-email | Contact Information
+OK  user en /user-manager | User Manager
+OK  user en /stats/visitors | Visitors
+OK  user en /email/routing | Email Routing
+OK  user en /email/boxtrapper | BoxTrapper
+OK  user en /email/encryption | Encryption
+OK  user en /calendars | Calendars and Contacts
+OK  user en /ssh-keys | SSH Keys
+OK  user en /site-publisher | Site Publisher
+OK  user en /images | Images
+OK  user en /postgresql/browser | phpPgAdmin (PostgreSQL UI)
+OK  user en /cloudflare | Cloudflare
+OK  user en /security | Password & Security
+OK  user en /preferences | Preferences
+OK  user tr / | Araçlar
+OK  user tr /domains | Alan Adları
+OK  user tr /dns | DNS Bölge Düzenleyici
+OK  user tr /email/accounts | E-posta Hesapları
+OK  user tr /email/forwarders | Yönlendiriciler
+OK  user tr /email/autoresponders | Otomatik Yanıtlayıcılar
+OK  user tr /email/filters | E-posta Filtreleri
+OK  user tr /email/spam | Spam Filtreleri
+OK  user tr /email/track | Teslim İzleme
+OK  user tr /email/lists | Posta Listeleri
+OK  user tr /dnsx | DNSSEC ve Bölge Araçları
+OK  user tr /email/deliverability | E-posta Teslim Edilebilirliği
+OK  user tr /databases | MariaDB Veritabanları
+OK  user tr /databases/remote | Uzak Veritabanı Erişimi
+OK  user tr /databases/processes | Veritabanı İşlemleri
+OK  user tr /postgresql | PostgreSQL Veritabanları
+OK  user tr /files | Dosya Yöneticisi
+OK  user tr /ftp | FTP Hesapları
+OK  user tr /cron | Cron Görevleri
+OK  user tr /ssl | SSL/TLS Durumu
+OK  user tr /php | MultiPHP Yöneticisi
+OK  user tr /disk | Disk Kullanımı
+OK  user tr /usage | Kaynak Kullanımı
+OK  user tr /bandwidth | Bant Genişliği
+OK  user tr /php-ini | PHP INI Düzenleyici
+OK  user tr /api-tokens | API Anahtarları
+OK  user tr /modsecurity | ModSecurity
+OK  user tr /malware-scans | Güvenlik Taramaları
+OK  user tr /git | Git Sürüm Kontrolü
+OK  user tr /terminal | Terminal
+OK  user tr /track-dns | DNS İzle
+OK  user tr /ddns | Dinamik DNS
+OK  user tr /apps | Uygulama Yöneticisi
+OK  user tr /installer | Uygulama Yükleyici
+OK  user tr /wordpress | WordPress Araç Seti
+OK  user tr /backups | Yedekler
+OK  user tr /contact-email | İletişim Bilgileri
+OK  user tr /user-manager | Kullanıcı Yöneticisi
+OK  user tr /stats/visitors | Ziyaretçiler
+OK  user tr /email/routing | E-posta Yönlendirme
+OK  user tr /email/boxtrapper | BoxTrapper
+OK  user tr /email/encryption | Şifreleme
+OK  user tr /calendars | Takvim ve Kişiler
+OK  user tr /ssh-keys | SSH Anahtarları
+OK  user tr /site-publisher | Site Yayımlayıcı
+OK  user tr /images | Görseller
+OK  user tr /postgresql/browser | phpPgAdmin (PostgreSQL arayüzü)
+OK  user tr /cloudflare | Cloudflare
+OK  user tr /security | Parola ve Güvenlik
+OK  user tr /preferences | Tercihler
+OK  admin en / | Server Administration
+OK  admin en /accounts | List Accounts
+OK  admin en /accounts/new | Create a New Account
+OK  admin en /packages | Packages
+OK  admin en /limits | Resource Limits
+OK  admin en /shield | BPanel Shield
+OK  admin en /firewall | Firewall
+OK  admin en /brute-force | Brute-Force Protection
+OK  admin en /bandwidth | Bandwidth
+OK  admin en /services | Service Manager
+OK  admin en /integrations | Integrations
+OK  admin en /php | MultiPHP Manager
+OK  admin en /server | Server Information
+OK  admin en /audit | Audit Log
+OK  admin en /webhooks | Webhooks
+OK  admin en /events | Security Events
+OK  admin en /backups | Backups
+OK  admin en /db-settings | Database Settings
+OK  admin en /dns-cluster | DNS Cluster
+OK  admin en /plugins | Plugins
+OK  admin en /servers | Servers
+OK  admin en /transfer | Transfer Tool (cPanel import)
+OK  admin en /settings | Basic Server Setup
+OK  admin en /modify-account | Modify an Account
+OK  admin en /edit-reseller | Edit Reseller Limits and Privileges
+OK  admin en /update-prefs | Update Preferences
+OK  admin en /monitoring | Monitoring & Health
+OK  admin en /alerts | Alerts & Incidents
+OK  admin en /mail-queue | Mail Queue Manager
+OK  admin en /mail-troubleshooter | Mail Troubleshooter
+OK  admin en /ips | IP Functions
+OK  admin en /hostname | Change Hostname
+OK  admin en /tweak-settings | Tweak Settings
+OK  admin en /php-extensions | PHP Extensions
+OK  admin en /billing | Billing (WHMCS)
+OK  admin en /security | Password & Security
+OK  admin en /preferences | Preferences
+OK  admin en /modify-account?id=32 | Modify an Account
+OK  admin tr / | Sunucu Yönetimi
+OK  admin tr /accounts | Hesapları Listele
+OK  admin tr /accounts/new | Yeni Hesap Oluştur
+OK  admin tr /packages | Paketler
+OK  admin tr /limits | Kaynak Limitleri
+OK  admin tr /shield | BPanel Shield
+OK  admin tr /firewall | Güvenlik Duvarı
+OK  admin tr /brute-force | Kaba Kuvvet Koruması
+OK  admin tr /bandwidth | Bant Genişliği
+OK  admin tr /services | Hizmet Yöneticisi
+OK  admin tr /integrations | Entegrasyonlar
+OK  admin tr /php | MultiPHP Yöneticisi
+OK  admin tr /server | Sunucu Bilgileri
+OK  admin tr /audit | Denetim Günlüğü
+OK  admin tr /webhooks | Webhook'lar
+OK  admin tr /events | Güvenlik Olayları
+OK  admin tr /backups | Yedekler
+OK  admin tr /db-settings | Veritabanı Ayarları
+OK  admin tr /dns-cluster | DNS Kümesi
+OK  admin tr /plugins | Eklentiler
+OK  admin tr /servers | Sunucular
+OK  admin tr /transfer | Taşıma Aracı (cPanel içe aktarma)
+OK  admin tr /settings | Temel Sunucu Ayarları
+OK  admin tr /modify-account | Hesabı Değiştir
+OK  admin tr /edit-reseller | Bayi Sınırlarını ve Yetkilerini Düzenle
+OK  admin tr /update-prefs | Güncelleme Tercihleri
+OK  admin tr /monitoring | İzleme ve Sağlık
+OK  admin tr /alerts | Uyarılar ve Olaylar
+OK  admin tr /mail-queue | Posta Kuyruğu Yöneticisi
+OK  admin tr /mail-troubleshooter | Posta Sorun Giderici
+OK  admin tr /ips | IP İşlevleri
+OK  admin tr /hostname | Sunucu Adını Değiştir
+OK  admin tr /tweak-settings | İnce Ayarlar
+OK  admin tr /php-extensions | PHP Eklentileri
+OK  admin tr /billing | Faturalama (WHMCS)
+OK  admin tr /security | Parola ve Güvenlik
+OK  admin tr /preferences | Tercihler
+OK  admin tr /modify-account?id=32 | Hesabı Değiştir

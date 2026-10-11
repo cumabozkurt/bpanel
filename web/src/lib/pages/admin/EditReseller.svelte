@@ -3,14 +3,14 @@
 	import { UserCog } from '@lucide/svelte';
 	import { api } from '$lib/api.js';
 	import { t } from '$lib/i18n/index.js';
-	import { showErr, ok, qs } from '$lib/util.js';
+	import { showErr, ok, qs, asList } from '$lib/util.js';
 	import PageHead from '$lib/components/PageHead.svelte';
 	let resellers = $state([]);
 	let sel = $state(qs('id') || '');
 	let cur = $state(null);
 	let f = $state({ max_accounts: -1, disk_mb: -1, bandwidth_mb: -1, allowed: [], acl: [] });
 	async function init() {
-		try { resellers = ((await api.get('/admin/accounts?limit=500&role=reseller')).items ?? []).filter((a) => a.role === 'reseller'); if (sel) load(); } catch (e) { showErr(e); }
+		try { resellers = asList(await api.get('/admin/accounts?limit=1000&role=reseller')).filter((a) => a.role === 'reseller'); if (sel) load(); } catch (e) { showErr(e); }
 	}
 	init();
 	async function load() {

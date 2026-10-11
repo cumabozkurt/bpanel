@@ -2,6 +2,77 @@
 
 All notable changes to BOZKURT PANEL (BPANEL). Dates are Europe/Istanbul.
 
+## v1.2.0 — 2026-10-11 (App Installer catalogue, no unfinished surfaces, UI polish)
+
+v1.2.0 removes every "coming soon" surface from the panel, grows the App Installer from 4 to 16
+free applications with pinned, verified checksums, implements Change Primary Domain (the last
+"not supported yet" message in WHM) and polishes the UI. Archives are still **unsigned**.
+
+### Added
+- **App Installer: 12 new applications** — Matomo 5.14.1, phpBB 3.3.19, MediaWiki 1.46.2,
+  DokuWiki 2026-07-14c, Grav 2.2.6 (+Admin), Backdrop CMS 1.35.1, WonderCMS 3.6.0, MyBB 1.8.41,
+  OpenCart 4.1.0.4, Mautic 7.2.1, Omeka S 4.2.1 and FOSSBilling 0.8.8 (Matomo was listed but
+  disabled in v1.1.0). Every archive was downloaded and hashed; the SHA-256 matches the value the
+  project publishes (phpBB `.sha256`, GitHub release asset digests) or the file's upstream GPG
+  signature was verified first (Matomo, MediaWiki). Sources are documented in
+  `internal/appx/catalog.go`.
+- **zip archives** in the installer (Grav, Backdrop, WonderCMS, MyBB, OpenCart, Mautic, Omeka S,
+  FOSSBilling), with the same containment rules as tar: no absolute or `..` names, no links or
+  special files, entry and size limits counted on the bytes actually written.
+- `StripOnly` catalogue option (skip READMEs next to the application directory instead of refusing
+  the archive) and post-extract `Renames` (OpenCart `config-dist.php` → `config.php`).
+- Installer page redesign: search, category filter (CMS, wiki, forum, e-commerce, analytics,
+  marketing, files), per-app EN/TR description, PHP/database badges, "Installed" badge,
+  translated next steps and a clear credentials box after an install.
+- **Change Primary Domain** (WHM › Modify Account): an addon domain of the account becomes the
+  primary domain and the old primary becomes an addon domain, in one transaction; vhosts, DNS
+  zones, mail domains, SSL certificates and document roots stay untouched. New error code
+  `primary_domain_not_addon`, audit action `account.primary_domain`, webhook/billing event
+  `account.primary_domain_changed`.
+- `make release-unsigned` builds the unsigned tarballs + `.sha256` files the GitHub releases use.
+- i18n check: every catalogue app needs `appx.desc_<id>` / `appx.post_<id>` and every category a
+  name, in EN and TR.
+
+### Fixed
+- **Nextcloud could not be installed**: its 35.0.1 tarball ships 121 relative symlinks
+  (`*.js.map.license` → `*.js.license`), which the extractor refused. Links are still never
+  created; a link whose target is a regular file of the same archive is now written as a copy
+  (absolute, escaping, dangling, directory and cyclic links are refused).
+- The user dashboard always showed an empty "Planned tools (0)" box; removed with the whole
+  "coming soon" machinery (`/tool/:id` route, `Soon` page, `soon` badges in the sidebar, the
+  command palette and both dashboards, `common.soon` / `soon.*` / `dash.planned*` strings).
+- 26 pages used `card pad`, and others `right`, `nowrap`, `tabs`, `grid`, `check`, `h3`,
+  `tablewrap` and `badge ok|warn|err` classes that no stylesheet defined: content touched card
+  borders, tab bars and status badges were unstyled. They are now shared utilities in `app.css`.
+- **Mailbox logins and password changes could lag behind** (found by the E2E): Dovecot's
+  passwd-file driver re-reads the file only when its whole-second mtime or size changes, so an
+  edit in the same second as a lookup stayed invisible — a new mailbox failed to log in for up to
+  a second, and a same-length password change could leave the old password valid until the next
+  unrelated edit. The agent now waits for the next second and touches the file after every edit.
+- **BPanel Shield showed "COMMAND UNAVAILABLE" as the ClamAV version** next to an "OK" status
+  (ClamAV 1.5 can disable clamd's `VERSION` command). The version and signature age now come from
+  `clamscan --version` in that case; without it the engine is reported as degraded with a reason.
+- Shield: the built-in engine's version was printed twice; section headings that follow a table
+  or card (Shield "Coverage" and similar) had no top margin.
+- Site Publisher: the template formerly labelled "Coming soon" is now called "Launch page"
+  ("Lansman sayfası"); the generated page itself is unchanged.
+- `account.primary_domain_changed` is listed among the billing events (WHM › Billing, WHMCS docs).
+
+### Changed
+- README and the project site use only new screenshots of the 1.2.0 build (EN + TR, taken from the
+  E2E server, `docs/screenshots/v12/`); the outdated v0.x / v1.0 PNGs (which still showed the old
+  "planned tools" boxes) were removed. The site has a "New in v1.2.0" section.
+- `test/e2e/core.sh` checks the OpenAPI version against the installed build instead of a fixed value.
+
+### Verified
+- Final 1.2.0 build on the Ubuntu 24.04 E2E container: `core.sh` 129 / 129 passed, `apps.sh` 81 / 81 passed,
+  UI smoke 176 / 176 page loads (every user and admin route, EN and TR: no JS errors, no API 5xx, no
+  untranslated keys, no "coming soon" text).
+- `go test ./...`, `go test -race ./...`, `go vet`, i18n parity (EN/TR, 3068 keys), `TestCatalogArchives` against all 16 real
+  upstream archives (checksum + full extraction), and every catalogue app installed through the
+  API on the Ubuntu 24.04 E2E container and served by nginx/PHP-FPM
+  (`test/e2e/apps.sh`, evidence in `docs/evidence/e2e-v1/`).
+
 ## v1.1.0 — 2026-10-11 (cPanel/WHM parity + container E2E)
 
 v1.1.0 closes the cPanel/WHM rows that v1.0.0 listed as **not planned** or **partial**, and runs

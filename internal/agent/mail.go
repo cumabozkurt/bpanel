@@ -280,12 +280,31 @@ func (a *Agent) mailDomainDisable(ctx context.Context, p rpc.MailDomain) (rpc.Em
 	return rpc.Empty{}, a.reloadPostfix(ctx)
 }
 
+// fixDovecotPerms runs after every edit of the Dovecot passwd-file: it
+// restores the group and then makes the edit visible to Dovecot at once.
 func (a *Agent) fixDovecotPerms() {
 	if g, err := groupID("dovecot"); err == nil {
 		if err := os.Chown(a.dovecotPasswd(), 0, g); err != nil {
 			a.Log.Warn("dovecot passwd owner", "err", err)
 		}
 	}
+	dovecotSettle(a.dovecotPasswd())
+}
+
+// dovecotSettle closes a staleness window of Dovecot's passwd-file driver.
+// Dovecot re-stats the file at most once per wall-clock second and reloads
+// it only when the whole-second mtime or the size changed, so an edit made
+// in the same second as a lookup was invisible: a new mailbox could not log
+// in for up to a second, and a same-length password change (every hash has
+// the same length) could stay unseen until the next unrelated edit, leaving
+// the old password valid. Waiting for the next second and touching the file
+// gives it an mtime Dovecot cannot have cached, so the next lookup reloads.
+// The wait is at most ~1s and only happens on mailbox writes. Tests stub it.
+var dovecotSettle = func(path string) {
+	now := time.Now()
+	time.Sleep(now.Truncate(time.Second).Add(time.Second + 20*time.Millisecond).Sub(now))
+	t := time.Now()
+	_ = os.Chtimes(path, t, t)
 }
 
 func passwdLine(hash string, e passwdEntry, home string, quotaMB int64, v24 bool) string {

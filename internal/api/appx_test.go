@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	rpc "github.com/cumabozkurt/bpanel/internal/agentrpc"
+	"github.com/cumabozkurt/bpanel/internal/appx"
 )
 
 func TestAppxAPI(t *testing.T) {
@@ -81,10 +82,17 @@ func TestAppxAPI(t *testing.T) {
 	}
 
 	// installer
-	if code, m := a.call("GET", "/api/v1/user/installer/catalog", nil); code != 200 || len(m["apps"].([]any)) < 4 {
+	if code, m := a.call("GET", "/api/v1/user/installer/catalog", nil); code != 200 || len(m["apps"].([]any)) < 16 {
 		t.Fatalf("catalog: %d %v", code, m)
 	}
-	if code, m := a.call("POST", "/api/v1/user/installer/install", map[string]any{"app": "matomo", "domain_id": did}); code != 400 || m["error"] != "appx_app_unavailable" {
+	if code, m := a.call("POST", "/api/v1/user/installer/install", map[string]any{"app": "nosuchapp", "domain_id": did}); code != 400 || m["error"] != "appx_app_unavailable" {
+		t.Fatalf("unknown app: %d %v", code, m)
+	}
+	saved := appx.Catalog
+	appx.Catalog = append(append([]appx.CatalogApp{}, saved...), appx.CatalogApp{ID: "offapp", Name: "Off", Category: "cms", Disabled: "test"})
+	code, m = a.call("POST", "/api/v1/user/installer/install", map[string]any{"app": "offapp", "domain_id": did})
+	appx.Catalog = saved
+	if code != 400 || m["error"] != "appx_app_unavailable" {
 		t.Fatalf("disabled app: %d %v", code, m)
 	}
 	if code, m := a.call("POST", "/api/v1/user/installer/install", map[string]any{"app": "wordpress", "domain_id": did, "path": "../../etc"}); code != 400 || m["error"] != "appx_invalid_path" {

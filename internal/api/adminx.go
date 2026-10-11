@@ -8,10 +8,14 @@ package api
 //   - Modify Account (admin / owning reseller): package, owner reseller (admin
 //     only), shell access (re-renders the sshd jail via isolation.ssh.apply),
 //     max addon/sub domain overrides (applied in packageOf), contact email.
-//     Primary domain rename is NOT supported: it would have to move the vhost,
-//     DNS zone, mail domain, SSL material and every app config atomically, and
-//     there is no tested path for that yet. The API answers 422
-//     rename_unsupported instead of a partial rename.
+//     Change primary domain (v1.2): an addon domain of the account becomes the
+//     primary domain and the old primary domain becomes an addon domain. Both
+//     already have their vhost, DNS zone, mail domain, SSL certificate and
+//     document root, which stay as they are: the swap is one transaction on
+//     domains.kind + users.primary_domain, nothing is moved on disk and the
+//     agent keeps no main/addon distinction. A name that is not an addon
+//     domain of the account answers 422 primary_domain_not_addon (add it as
+//     an addon domain first).
 //   - Change Contact Email (user realm): own address, validated, audited. The
 //     panel has no outbound mail path, so the old address is NOT notified; the
 //     change is recorded in the audit log only.
@@ -135,7 +139,7 @@ type ModifyAccountReq struct {
 	MaxSubdomains   *int64  `json:"max_subdomains,omitempty"`
 	ResetOverrides  bool    `json:"reset_overrides,omitempty"` // back to the package values
 	Email           *string `json:"email,omitempty"`
-	PrimaryDomain   *string `json:"primary_domain,omitempty"` // rename: unsupported (see file comment)
+	PrimaryDomain   *string `json:"primary_domain,omitempty"` // an addon domain of the account to promote (see file comment)
 	Version         *int64  `json:"version,omitempty"`
 }
 
@@ -149,7 +153,24 @@ func (s *Server) getModifyAccount(w http.ResponseWriter, r *http.Request) (any, 
 	return map[string]any{"id": u.ID, "username": u.Username, "role": u.Role, "package_id": u.PackageID, "owner_id": u.OwnerID,
 		"email": u.Email, "primary_domain": u.PrimaryDomain, "version": u.Version, "overrides": o,
 		"effective":        map[string]int64{"max_addon_domains": pkg.MaxDomains, "max_subdomains": pkg.MaxSubdomains},
-		"rename_supported": false}, nil
+		"rename_supported": true, "addon_domains": s.addonDomainNames(r.Context(), u.ID)}, nil
+}
+
+// addonDomainNames lists the addon domains that can become the primary domain.
+func (s *Server) addonDomainNames(ctx context.Context, uid int64) []string {
+	out := []string{}
+	rows, err := s.Store.R.QueryContext(ctx, `SELECT name FROM domains WHERE user_id=? AND kind='addon' ORDER BY name`, uid)
+	if err != nil {
+		return out
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var n string
+		if rows.Scan(&n) == nil {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 func validOverride(v *int64, field string) error {
@@ -182,8 +203,15 @@ func (s *Server) putModifyAccount(w http.ResponseWriter, r *http.Request) (any, 
 	if err := checkVersion(w, r, in.Version, u.Version); err != nil {
 		return nil, err
 	}
+	var newPrimaryID int64
+	var newPrimary string
 	if in.PrimaryDomain != nil && !strings.EqualFold(strings.TrimSpace(*in.PrimaryDomain), u.PrimaryDomain) {
-		return nil, &apiError{Status: 422, Code: "rename_unsupported", Field: "primary_domain"}
+		newPrimary = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(*in.PrimaryDomain), "."))
+		var kind string
+		err := s.Store.DB.QueryRowContext(r.Context(), `SELECT id, kind FROM domains WHERE user_id=? AND name=?`, u.ID, newPrimary).Scan(&newPrimaryID, &kind)
+		if err != nil || kind != "addon" {
+			return nil, &apiError{Status: 422, Code: "primary_domain_not_addon", Field: "primary_domain"}
+		}
 	}
 	if in.OwnerID != nil && me.Role != "admin" {
 		return nil, &apiError{Status: 403, Code: "permission_denied", Field: "owner_id"}
@@ -263,6 +291,19 @@ func (s *Server) putModifyAccount(w http.ResponseWriter, r *http.Request) (any, 
 		if n, err := res.RowsAffected(); err == nil && n == 0 {
 			return &apiError{Status: http.StatusPreconditionFailed, Code: "version_conflict"}
 		}
+		if newPrimaryID != 0 {
+			if _, err := tx.ExecContext(ctx, `UPDATE domains SET kind='addon' WHERE user_id=? AND kind='main'`, u.ID); err != nil {
+				return err
+			}
+			if res, err := tx.ExecContext(ctx, `UPDATE domains SET kind='main' WHERE id=? AND user_id=? AND kind='addon'`, newPrimaryID, u.ID); err != nil {
+				return err
+			} else if n, _ := res.RowsAffected(); n != 1 {
+				return &apiError{Status: 409, Code: "version_conflict"}
+			}
+			if _, err := tx.ExecContext(ctx, `UPDATE users SET primary_domain=? WHERE id=?`, newPrimary, u.ID); err != nil {
+				return err
+			}
+		}
 		o := old
 		if in.ResetOverrides {
 			o.MaxAddonDomains, o.MaxSubdomains = nil, nil
@@ -316,6 +357,11 @@ func (s *Server) putModifyAccount(w http.ResponseWriter, r *http.Request) (any, 
 	}
 	if in.Email != nil {
 		parts = append(parts, "contact_email")
+	}
+	if newPrimaryID != 0 {
+		parts = append(parts, "primary_domain="+newPrimary)
+		s.audit(r, "account.primary_domain", u.Username, u.PrimaryDomain+" -> "+newPrimary, true)
+		s.billingEvent(r, "account.primary_domain_changed", u.ID, u.Username, map[string]any{"old": u.PrimaryDomain, "domain": newPrimary})
 	}
 	s.audit(r, "account.modify", u.Username, strings.Join(parts, " "), true)
 	return map[string]any{"ok": true, "warnings": warnings, "ssh": shellStatus}, nil

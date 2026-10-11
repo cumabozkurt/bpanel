@@ -1,0 +1,82 @@
+id	status	area	check	detail
+T001	PASS	apps-setup	admin login	 
+T002	PASS	apps-setup	package with 40 databases	 
+T003	PASS	apps-setup	create account av12h	 
+T004	PASS	apps-setup	user login	 
+T005	PASS	apps	catalogue lists 16 installable apps	true 
+T006	PASS	apps	wordpress: install via API (download, verify pinned checksum, extract)	 
+T007	PASS	apps	wordpress 7.1.3: files owned by av12h, no symlinks (6s)	 
+T008	PASS	apps	wordpress: wp-config.php written (0600) with the database	 
+T009	PASS	apps	wordpress: served by nginx/PHP-FPM (200 https://av12h.e2e.test/wordpress/wp-admin/install.php)	 
+T010	PASS	apps	joomla: install via API (download, verify pinned checksum, extract)	 
+T011	PASS	apps	joomla 6.1.4: files owned by av12h, no symlinks (13s)	 
+T012	PASS	apps	joomla: database av12h_joom9hge reachable as av12h_joom9hge with the shown password	 
+T013	PASS	apps	joomla: served by nginx/PHP-FPM (200 https://av12h.e2e.test/joomla/installation/index.php)	 
+T014	PASS	apps	drupal: install via API (download, verify pinned checksum, extract)	 
+T015	PASS	apps	drupal 11.4.9: files owned by av12h, no symlinks (32s)	 
+T016	PASS	apps	drupal: database av12h_drup2a3z reachable as av12h_drup2a3z with the shown password	 
+T017	PASS	apps	drupal: served by nginx/PHP-FPM (200 https://av12h.e2e.test/drupal/core/install.php)	 
+T018	PASS	apps	nextcloud: install via API (download, verify pinned checksum, extract)	 
+T019	PASS	apps	nextcloud 35.0.1: files owned by av12h, no symlinks (83s)	 
+T020	PASS	apps	nextcloud: database av12h_next24d2 reachable as av12h_next24d2 with the shown password	 
+T021	PASS	apps	nextcloud: served by nginx/PHP-FPM (200 https://av12h.e2e.test/nextcloud/)	 
+T022	PASS	apps	matomo: install via API (download, verify pinned checksum, extract)	 
+T023	PASS	apps	matomo 5.14.1: files owned by av12h, no symlinks (9s)	 
+T024	PASS	apps	matomo: database av12h_matozfay reachable as av12h_matozfay with the shown password	 
+T025	PASS	apps	matomo: served by nginx/PHP-FPM (200 https://av12h.e2e.test/matomo/)	 
+T026	PASS	apps	phpbb: install via API (download, verify pinned checksum, extract)	 
+T027	PASS	apps	phpbb 3.3.19: files owned by av12h, no symlinks (4s)	 
+T028	PASS	apps	phpbb: database av12h_phpb9jlh reachable as av12h_phpb9jlh with the shown password	 
+T029	PASS	apps	phpbb: served by nginx/PHP-FPM (200 https://av12h.e2e.test/phpbb/install/app.php)	 
+T030	PASS	apps	mediawiki: install via API (download, verify pinned checksum, extract)	 
+T031	PASS	apps	mediawiki 1.46.2: files owned by av12h, no symlinks (30s)	 
+T032	PASS	apps	mediawiki: database av12h_medi75nc reachable as av12h_medi75nc with the shown password	 
+T033	PASS	apps	mediawiki: served by nginx/PHP-FPM (200 https://av12h.e2e.test/mediawiki/)	 
+T034	PASS	apps	dokuwiki: install via API (download, verify pinned checksum, extract)	 
+T035	PASS	apps	dokuwiki 2026-07-14c: files owned by av12h, no symlinks (5s)	 
+T036	PASS	apps	dokuwiki: served by nginx/PHP-FPM (200 https://av12h.e2e.test/dokuwiki/doku.php?id=start)	 
+T037	PASS	apps	grav: install via API (download, verify pinned checksum, extract)	 
+T038	PASS	apps	grav 2.2.6: files owned by av12h, no symlinks (5s)	 
+T039	PASS	apps	grav: served by nginx/PHP-FPM (200 https://av12h.e2e.test/grav/admin)	 
+T040	PASS	apps	backdrop: install via API (download, verify pinned checksum, extract)	 
+T041	PASS	apps	backdrop 1.35.1: files owned by av12h, no symlinks (4s)	 
+T042	PASS	apps	backdrop: database av12h_backjn51 reachable as av12h_backjn51 with the shown password	 
+T043	PASS	apps	backdrop: served by nginx/PHP-FPM (200 https://av12h.e2e.test/backdrop/core/install.php)	 
+T044	PASS	apps	wondercms: install via API (download, verify pinned checksum, extract)	 
+T045	PASS	apps	wondercms 3.6.0: files owned by av12h, no symlinks (0s)	 
+T046	PASS	apps	wondercms: served by nginx/PHP-FPM (200 https://av12h.e2e.test/wondercms/)	 
+T047	PASS	apps	mybb: install via API (download, verify pinned checksum, extract)	 
+T048	PASS	apps	mybb 1.8.41: files owned by av12h, no symlinks (1s)	 
+T049	PASS	apps	mybb: database av12h_mybbc5c3 reachable as av12h_mybbc5c3 with the shown password	 
+T050	PASS	apps	mybb: served by nginx/PHP-FPM (200 https://av12h.e2e.test/mybb/install/index.php)	 
+T051	PASS	apps	opencart: install via API (download, verify pinned checksum, extract)	 
+T052	PASS	apps	opencart 4.1.0.4: files owned by av12h, no symlinks (5s)	 
+T053	PASS	apps	opencart: database av12h_open0a2g reachable as av12h_open0a2g with the shown password	 
+T054	PASS	apps	opencart: served by nginx/PHP-FPM (200 https://av12h.e2e.test/opencart/install/index.php)	 
+T055	PASS	apps	mautic: sub-directory install refused (root-only app)	 
+T056	PASS	apps	mautic: addon domain mautic-av12h.e2e.test	 
+T057	PASS	apps	mautic: install via API (download, verify pinned checksum, extract)	 
+T058	PASS	apps	mautic 7.2.1: files owned by av12h, no symlinks (30s)	 
+T059	PASS	apps	mautic: database av12h_mautcxb6 reachable as av12h_mautcxb6 with the shown password	 
+T060	PASS	apps	mautic: served by nginx/PHP-FPM (200 https://mautic-av12h.e2e.test/installer)	 
+T061	PASS	apps	omekas: install via API (download, verify pinned checksum, extract)	 
+T062	PASS	apps	omekas 4.2.1: files owned by av12h, no symlinks (10s)	 
+T063	PASS	apps	omekas: database av12h_omekyghj reachable as av12h_omekyghj with the shown password	 
+T064	PASS	apps	omekas: served by nginx/PHP-FPM (200 https://av12h.e2e.test/omekas/install)	 
+T065	PASS	apps	fossbilling: sub-directory install refused (root-only app)	 
+T066	PASS	apps	fossbilling: addon domain fossbilling-av12h.e2e.test	 
+T067	PASS	apps	fossbilling: install via API (download, verify pinned checksum, extract)	 
+T068	PASS	apps	fossbilling 0.8.8: files owned by av12h, no symlinks (12s)	 
+T069	PASS	apps	fossbilling: database av12h_fossgs5z reachable as av12h_fossgs5z with the shown password	 
+T070	PASS	apps	fossbilling: served by nginx/PHP-FPM (200 https://fossbilling-av12h.e2e.test/install/install.php)	 
+T071	PASS	apps	installs list has every app	 
+T072	PASS	apps	second install into a used directory refused	 
+T073	PASS	primary	addon domain shop-av12h.e2e.test	 
+T074	PASS	primary	Modify Account offers the addon domain	true 
+T075	PASS	primary	change primary domain to shop-av12h.e2e.test	 
+T076	PASS	primary	a non-addon name is refused (422 primary_domain_not_addon)	 
+T077	PASS	primary	account lists shop-av12h.e2e.test as primary domain	true 
+T078	PASS	primary	domain kinds swapped (new main, old addon)	true 
+T079	PASS	primary	old primary still serves its sites (200)	 
+T080	PASS	primary	new primary serves its document root (200)	 
+T081	PASS	primary	swap back to av12h.e2e.test	 

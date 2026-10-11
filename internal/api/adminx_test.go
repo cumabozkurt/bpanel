@@ -97,9 +97,12 @@ func TestAdminxModifyAccountOwnership(t *testing.T) {
 	if c, m := s1.call("PUT", fmt.Sprintf("/api/v1/admin/accounts/%d/modify", c1.ID), map[string]any{"owner_id": r2}); c != 403 {
 		t.Fatalf("owner by reseller: %d %v", c, m)
 	}
-	// rename refused honestly
-	if c, m := s1.call("PUT", fmt.Sprintf("/api/v1/admin/accounts/%d/modify", c1.ID), map[string]any{"primary_domain": "new.test"}); c != 422 || m["error"] != "rename_unsupported" {
+	// a name that is not an addon domain of the account cannot become primary
+	if c, m := s1.call("PUT", fmt.Sprintf("/api/v1/admin/accounts/%d/modify", c1.ID), map[string]any{"primary_domain": "new.test"}); c != 422 || m["error"] != "primary_domain_not_addon" {
 		t.Fatalf("rename: %d %v", c, m)
+	}
+	if c, m := s1.call("PUT", fmt.Sprintf("/api/v1/admin/accounts/%d/modify", c1.ID), map[string]any{"primary_domain": "ctwo.test"}); c != 422 || m["error"] != "primary_domain_not_addon" {
+		t.Fatalf("foreign domain as primary: %d %v", c, m)
 	}
 	// own account: shell + overrides + email
 	e.ag.mu.Lock()
@@ -232,5 +235,46 @@ func TestAdminxUpdatePrefs(t *testing.T) {
 	}
 	if c, _ := rs.call("POST", "/api/v1/admin/updates/apply", nil); c != 403 {
 		t.Fatalf("reseller apply: %d", c)
+	}
+}
+
+func TestAdminxChangePrimaryDomain(t *testing.T) {
+	e := newEnv(t)
+	c1 := e.tenant("pone", "pone.test")
+	db := e.srv.Store.DB
+	if _, err := db.Exec(`INSERT INTO domains(user_id,name,kind,docroot,created_at) VALUES(?,?,?,?,1)`, c1.ID, "shop-pone.test", "addon", "shop-pone.test"); err != nil {
+		t.Fatal(err)
+	}
+	var subParent int64
+	db.QueryRow(`SELECT id FROM domains WHERE name='pone.test'`).Scan(&subParent)
+	db.Exec(`INSERT INTO domains(user_id,name,kind,parent_id,docroot,created_at) VALUES(?,?,?,?,?,1)`, c1.ID, "blog.pone.test", "sub", subParent, "public_html/blog")
+	s := mustLoginAdmin(t, e)
+	path := fmt.Sprintf("/api/v1/admin/accounts/%d/modify", c1.ID)
+	c, m := s.call("GET", path, nil)
+	if c != 200 || m["rename_supported"] != true || fmt.Sprint(m["addon_domains"]) != "[shop-pone.test]" {
+		t.Fatalf("get: %d %v", c, m)
+	}
+	if c, m = s.call("PUT", path, map[string]any{"primary_domain": "SHOP-pone.test."}); c != 200 {
+		t.Fatalf("swap: %d %v", c, m)
+	}
+	kind := func(n string) (k string) { db.QueryRow(`SELECT kind FROM domains WHERE name=?`, n).Scan(&k); return }
+	var prim string
+	db.QueryRow(`SELECT primary_domain FROM users WHERE id=?`, c1.ID).Scan(&prim)
+	if prim != "shop-pone.test" || kind("shop-pone.test") != "main" || kind("pone.test") != "addon" || kind("blog.pone.test") != "sub" {
+		t.Fatalf("after swap: primary=%s kinds %s/%s/%s", prim, kind("shop-pone.test"), kind("pone.test"), kind("blog.pone.test"))
+	}
+	var n int
+	db.QueryRow(`SELECT COUNT(*) FROM domains WHERE user_id=? AND kind='main'`, c1.ID).Scan(&n)
+	if n != 1 {
+		t.Fatalf("%d main domains", n)
+	}
+	// and back again
+	if c, m = s.call("PUT", path, map[string]any{"primary_domain": "pone.test"}); c != 200 || kind("pone.test") != "main" || kind("shop-pone.test") != "addon" {
+		t.Fatalf("swap back: %d %v", c, m)
+	}
+	var audits int
+	db.QueryRow(`SELECT COUNT(*) FROM audit_log WHERE action='account.primary_domain'`).Scan(&audits)
+	if audits != 2 {
+		t.Fatalf("audit rows: %d", audits)
 	}
 }

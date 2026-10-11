@@ -70,3 +70,9 @@ export function auditLabel(action) {
 	return a !== 'audit_actions.' + area ? a + ' · ' + rest.join('.') : action;
 }
 
+
+/** Normalise a list response: the API returns bare arrays for most lists, a few wrap them in {items} or {accounts}. */
+export function asList(v) {
+	if (Array.isArray(v)) return v;
+	return v?.items ?? v?.accounts ?? [];
+}
